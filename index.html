@@ -725,7 +725,7 @@ function viewAuth() {
   return `<div class="auth">
     <img class="logo" src="icons/icon-192.png" alt="">
     <h1>FitTracker</h1>
-    <p class="sub">Your weight-loss tracker</p>
+    <p class="sub">Your weight-loss tracker · v4</p>
     <div class="seg">
       <button data-act="authMode" data-v="login" class="${login ? 'on' : ''}">Log in</button>
       <button data-act="authMode" data-v="create" class="${!login ? 'on' : ''}">Create account</button>
@@ -1098,7 +1098,7 @@ function viewProfile() {
       </form>
     </div>
     <button class="btn danger block" data-act="logout" style="margin-top:6px">Log out</button>
-    <p class="explain" style="text-align:center;margin-top:14px">FitTracker · estimates only, not medical advice</p>
+    <p class="explain" style="text-align:center;margin-top:14px">FitTracker v4 · estimates only, not medical advice</p>
   </main>`;
 }
 
@@ -1507,7 +1507,11 @@ document.addEventListener('keydown', (e) => {
 /* ================================================================
    BOOT
    ================================================================ */
-if ('serviceWorker' in navigator && location.protocol === 'https:') navigator.serviceWorker.register('sw.js').catch(() => {});
+if ('serviceWorker' in navigator && location.protocol === 'https:') {
+  navigator.serviceWorker.register('sw.js', { updateViaCache: 'none' }).then(r => r.update()).catch(() => {});
+  let reloaded = false;
+  navigator.serviceWorker.addEventListener('controllerchange', () => { if (!reloaded) { reloaded = true; location.reload(); } });
+}
 async function boot() {
   const saved = SS.get('ft_session') || LS.get('ft_session');
   if (saved && saved.token && saved.username && saved.dataPath) { S.session = saved; return loadData(); }
