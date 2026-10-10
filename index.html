@@ -236,21 +236,48 @@ const FOOD = [
 
 // Workouts. calc: tread = ACSM treadmill equation, bike = ACSM cycle equation, met = MET table, custom = you enter kcal
 const INTENSITY = ['Light', 'Moderate', 'Hard'];
+const STR = [3.5, 5.0, 6.0]; // MET for resistance training: light / moderate / hard
 const WORKOUTS = [
-  { id: 'treadmill', name: 'Treadmill', icon: '🏃', calc: 'tread', incline: true },
-  { id: 'walkrun',   name: 'Walk / run outside', icon: '🚶', calc: 'tread', incline: false },
-  { id: 'bike',      name: 'Exercise bike', icon: '🚴', calc: 'bike' },
-  { id: 'elliptical',name: 'Elliptical / cross trainer', icon: '〰️', calc: 'met', mets: [4.0, 5.0, 7.0] },
-  { id: 'rower',     name: 'Rowing machine', icon: '🚣', calc: 'met', mets: [4.8, 7.0, 8.5] },
-  { id: 'stair',     name: 'Stair climber', icon: '🪜', calc: 'met', mets: [6.0, 8.8, 10.0] },
-  { id: 'weights',   name: 'Weight training', icon: '🏋️', calc: 'met', mets: [3.5, 5.0, 6.0] },
-  { id: 'hiit',      name: 'HIIT / circuit', icon: '🔥', calc: 'met', mets: [6.0, 8.0, 9.0] },
-  { id: 'cycle',     name: 'Cycling outside', icon: '🚲', calc: 'met', mets: [4.0, 6.8, 10.0] },
-  { id: 'swim',      name: 'Swimming', icon: '🏊', calc: 'met', mets: [5.8, 7.0, 9.8] },
-  { id: 'skip',      name: 'Skipping rope', icon: '🪢', calc: 'met', mets: [8.8, 11.8, 12.3] },
-  { id: 'yoga',      name: 'Yoga / stretching', icon: '🧘', calc: 'met', mets: [2.5, 3.0, 4.0] },
-  { id: 'sports',    name: 'Badminton / sports', icon: '🏸', calc: 'met', mets: [4.5, 5.5, 7.0] },
-  { id: 'other',     name: 'Other', icon: '➕', calc: 'custom' },
+  // Cardio machines
+  { id: 'treadmill', g: 'Cardio machines', name: 'Treadmill', icon: '🏃', calc: 'tread', incline: true },
+  { id: 'elliptical', g: 'Cardio machines', name: 'Elliptical / Cross trainer', icon: '〰️', calc: 'met', mets: [4.0, 5.0, 7.0] },
+  { id: 'bike', g: 'Cardio machines', name: 'Upright exercise bike', icon: '🚴', calc: 'bike' },
+  { id: 'recumbent', g: 'Cardio machines', name: 'Recumbent bike', icon: '🚴', calc: 'bike' },
+  { id: 'spin', g: 'Cardio machines', name: 'Spin bike', icon: '🚴', calc: 'met', mets: [5.5, 8.5, 11.0] },
+  { id: 'airbike', g: 'Cardio machines', name: 'Air bike (fan bike)', icon: '🌀', calc: 'met', mets: [6.0, 9.0, 12.0] },
+  { id: 'rower', g: 'Cardio machines', name: 'Rowing machine', icon: '🚣', calc: 'met', mets: [4.8, 7.0, 8.5] },
+  { id: 'stair', g: 'Cardio machines', name: 'Stair climber / Stepper', icon: '🪜', calc: 'met', mets: [6.0, 8.8, 10.0] },
+  { id: 'skierg', g: 'Cardio machines', name: 'Ski erg', icon: '⛷️', calc: 'met', mets: [5.0, 7.0, 9.0] },
+  // Strength machines
+  { id: 'legpress', g: 'Strength machines', name: 'Leg press', icon: '🦵', calc: 'met', mets: STR },
+  { id: 'legext', g: 'Strength machines', name: 'Leg extension', icon: '🦵', calc: 'met', mets: STR },
+  { id: 'legcurl', g: 'Strength machines', name: 'Leg curl', icon: '🦵', calc: 'met', mets: STR },
+  { id: 'hipmachine', g: 'Strength machines', name: 'Hip abductor / adductor', icon: '🦵', calc: 'met', mets: STR },
+  { id: 'chestpress', g: 'Strength machines', name: 'Chest press machine', icon: '🏋️', calc: 'met', mets: STR },
+  { id: 'pecdeck', g: 'Strength machines', name: 'Pec deck / Fly machine', icon: '🏋️', calc: 'met', mets: STR },
+  { id: 'latpull', g: 'Strength machines', name: 'Lat pulldown', icon: '🏋️', calc: 'met', mets: STR },
+  { id: 'seatedrow', g: 'Strength machines', name: 'Seated row machine', icon: '🏋️', calc: 'met', mets: STR },
+  { id: 'shoulderpress', g: 'Strength machines', name: 'Shoulder press machine', icon: '🏋️', calc: 'met', mets: STR },
+  { id: 'cable', g: 'Strength machines', name: 'Cable machine / Crossover', icon: '🏋️', calc: 'met', mets: STR },
+  { id: 'smith', g: 'Strength machines', name: 'Smith machine', icon: '🏋️', calc: 'met', mets: STR },
+  { id: 'abmachine', g: 'Strength machines', name: 'Ab crunch machine', icon: '🧱', calc: 'met', mets: [3.0, 3.8, 5.0] },
+  { id: 'assistpull', g: 'Strength machines', name: 'Assisted pull-up / Dip', icon: '🏋️', calc: 'met', mets: STR },
+  // Free weights & bodyweight
+  { id: 'dumbbells', g: 'Free weights & bodyweight', name: 'Dumbbells', icon: '💪', calc: 'met', mets: STR },
+  { id: 'barbell', g: 'Free weights & bodyweight', name: 'Barbell (squat, deadlift, bench)', icon: '🏋️', calc: 'met', mets: [3.5, 5.0, 6.0] },
+  { id: 'kettlebell', g: 'Free weights & bodyweight', name: 'Kettlebell', icon: '🔔', calc: 'met', mets: [4.0, 6.0, 9.8] },
+  { id: 'weights', g: 'Free weights & bodyweight', name: 'General weight training', icon: '🏋️', calc: 'met', mets: STR },
+  { id: 'bodyweight', g: 'Free weights & bodyweight', name: 'Bodyweight (push-ups, squats, planks)', icon: '🤸', calc: 'met', mets: [3.0, 3.8, 8.0] },
+  { id: 'battlerope', g: 'Free weights & bodyweight', name: 'Battle ropes', icon: '〰️', calc: 'met', mets: [6.0, 8.0, 10.3] },
+  { id: 'hiit', g: 'Free weights & bodyweight', name: 'HIIT / Circuit', icon: '🔥', calc: 'met', mets: [6.0, 8.0, 9.0] },
+  // Outside & sports
+  { id: 'walkrun', g: 'Outside & sports', name: 'Walk / Run outside', icon: '🚶', calc: 'tread', incline: false },
+  { id: 'cycle', g: 'Outside & sports', name: 'Cycling outside', icon: '🚲', calc: 'met', mets: [4.0, 6.8, 10.0] },
+  { id: 'swim', g: 'Outside & sports', name: 'Swimming', icon: '🏊', calc: 'met', mets: [5.8, 7.0, 9.8] },
+  { id: 'skip', g: 'Outside & sports', name: 'Skipping rope', icon: '🪢', calc: 'met', mets: [8.8, 11.8, 12.3] },
+  { id: 'yoga', g: 'Outside & sports', name: 'Yoga / Stretching', icon: '🧘', calc: 'met', mets: [2.5, 3.0, 4.0] },
+  { id: 'sports', g: 'Outside & sports', name: 'Badminton / Sports', icon: '🏸', calc: 'met', mets: [4.5, 5.5, 7.0] },
+  { id: 'other', g: 'Outside & sports', name: 'Other', icon: '➕', calc: 'custom' },
 ];
 const WK = Object.fromEntries(WORKOUTS.map(w => [w.id, w]));
 
@@ -428,7 +455,8 @@ function dayStats(date) {
   const stepsK = Math.max(0, (d.steps || 0) - 3000) * 0.0005 * w; // steps beyond normal daily movement
   const burn = base + exNet + stepsK;
   const logged = meals.length > 0;
-  return { date, w, d, intake, protein: sum('protein'), carbs: sum('carbs'), fat: sum('fat'), base, exGross, exNet, stepsK, burn, logged, deficit: logged ? burn - intake : null };
+  const exShow = exGross + stepsK;
+  return { date, w, d, exShow, intake, protein: sum('protein'), carbs: sum('carbs'), fat: sum('fat'), base, exGross, exNet, stepsK, burn, logged, deficit: logged ? burn - intake : null };
 }
 
 function plan() {
@@ -833,45 +861,58 @@ function syncPill() {
 }
 const ICONS = {
   home: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10.5 12 3l9 7.5V20a1 1 0 0 1-1 1h-5v-6h-6v6H4a1 1 0 0 1-1-1z"/></svg>',
-  today: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="17" rx="3"/><path d="M8 2v4M16 2v4M3 10h18M12 13v5M9.5 15.5h5"/></svg>',
-  progress: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="m7 15 4-4 3 3 6-7"/></svg>',
+  food: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 2v20M4 2v6a3 3 0 0 0 6 0V2M17 2c-2 1.5-3 4-3 7s1 4 3 4v9"/></svg>',
+  burn: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22c4.4 0 7-3 7-7 0-4-3-6.5-4-10-1.5 2-2 3.5-2 5-1.5-1-2.5-3-2.5-5C7 7.5 5 11 5 15c0 4 2.6 7 7 7z"/></svg>',
   profile: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21c1.5-4 4.5-6 8-6s6.5 2 8 6"/></svg>',
 };
 function tabbar() {
-  const t = [['home', 'Home'], ['today', 'Daily log'], ['progress', 'Progress'], ['profile', 'Profile']];
+  const t = [['home', 'Home'], ['food', 'Intake'], ['burn', 'Burn'], ['profile', 'Profile']];
   return `<nav class="tabbar"><div class="tabbar-in">${t.map(([id, l]) => `<button class="${S.tab === id ? 'on' : ''}" data-act="tab" data-v="${id}">${ICONS[id]}${l}</button>`).join('')}</div></nav>`;
 }
 function header(title) { return `<header class="top"><div class="top-in"><h1>${title}</h1>${syncPill()}</div></header>`; }
 
 function viewHome() {
-  const p = P(), pl = plan(), t = todayStr(), st = dayStats(t);
-  const b = bmiOf(pl.curW, p.heightCm), [cat, cls] = bmiCat(b);
-  const lost = p.startWeight - pl.curW;
+  const p = P(), pl = plan(), t = todayStr();
   const notStarted = pl.sinceStart < 0, finished = pl.sinceStart >= pl.N;
-  const dayPct = Math.min(100, Math.max(0, pl.dayN / pl.N * 100));
+  const lost = p.startWeight - pl.curW;
   const lossPct = Math.min(100, Math.max(0, lost / p.targetLoss * 100));
-  const proteinTarget = Math.round(1.4 * pl.curW);
-  const waterTarget = Math.round(pl.curW * 35 / 250) * 250;
+  const dayPct = Math.min(100, Math.max(0, pl.dayN / pl.N * 100));
+  const b = bmiOf(pl.curW, p.heightCm), [cat, cls] = bmiCat(b);
 
-  let projHtml;
-  if (pl.projByDeficit != null) {
-    const diff = pl.projByDeficit - pl.targetW;
-    const onTrack = diff <= 0.3;
-    projHtml = `<div class="proj">
-      <p style="margin:0 0 4px" class="muted">If you continue like ${pl.avgBasis === 'today' ? 'today so far' : `your last ${pl.recentN} logged day${pl.recentN > 1 ? 's' : ''}`} (avg ${pl.avg >= 0 ? 'deficit' : 'surplus'} ${r0(Math.abs(pl.avg))} kcal/day), on Day ${pl.N} — ${niceDate(pl.end, { day: 'numeric', month: 'short' })} — you'd weigh about</p>
-      <b class="big ${onTrack ? 'good' : 'warnc'}">${r1(pl.projByDeficit)} kg</b>
-      <span class="tag ${onTrack ? 'good' : 'warn'}" style="margin-left:6px">${onTrack ? 'On track' : `${r1(diff)} kg above target`}</span>
-      ${pl.trend != null ? `<p class="explain">Your weigh-in trend says ~${r1(pl.trend)} kg (${pl.slopeWeek <= 0 ? '−' : '+'}${r1(Math.abs(pl.slopeWeek))} kg/week).</p>` : ''}
-      ${pl.needDaily != null && pl.daysLeft > 0 ? `<p class="explain">To reach ${r1(pl.targetW)} kg from today you need about <b>${r0(Math.max(0, pl.needDaily))} kcal/day</b> deficit for the next ${pl.daysLeft} days.</p>` : ''}
-    </div>`;
-  } else {
-    projHtml = `<p class="muted" style="margin:0">Log your meals for a day and I'll project your Day ${pl.N} weight. You need about <b>${r0(pl.reqDaily)} kcal/day</b> deficit.</p>`;
+  // day-by-day rows from start to today (or plan end)
+  const last = t > pl.end ? pl.end : t;
+  let totIn = 0, totEx = 0, totDef = 0, nLogged = 0;
+  const rows = [];
+  for (let ds = last; ds >= p.startDate; ds = addDays(ds, -1)) {
+    const st = dayStats(ds), d = S.data.days[ds] || {};
+    if (st.logged) { totIn += st.intake; totDef += st.deficit; nLogged++; }
+    totEx += st.exShow;
+    rows.push(`<tr data-act="openDay" data-v="${ds}">
+      <td>${niceDate(ds, { day: 'numeric', month: 'short' })}</td>
+      <td>${st.logged ? r0(st.intake) : '—'}</td><td>${st.exShow ? r0(st.exShow) : '—'}</td>
+      <td class="${st.deficit == null ? '' : st.deficit >= 0 ? 'good' : 'bad'}">${st.deficit == null ? '—' : r0(st.deficit)}</td>
+      <td>${st.deficit == null ? '—' : (st.deficit >= 0 ? '−' : '+') + r0(Math.abs(st.deficit) / 7.7) + 'g'}</td>
+      <td>${d.weight ? r1(d.weight) : '—'}</td></tr>`);
+    if (rows.length > 400) break;
   }
+
+  // forecast
+  let fc;
+  if (notStarted) fc = `<p class="muted" style="margin:0">Your plan starts on ${niceDate(p.startDate)}. Log your food and workouts from then to see your forecast.</p>`;
+  else if (pl.projByDeficit != null) {
+    const diff = pl.projByDeficit - pl.targetW, onTrack = diff <= 0.3;
+    fc = `<p style="margin:0 0 6px" class="muted">If your average of ${pl.avgBasis === 'today' ? 'today so far' : `the last ${pl.recentN} day${pl.recentN > 1 ? 's' : ''}`} — <b>${pl.avg >= 0 ? 'deficit' : 'surplus'} ${r0(Math.abs(pl.avg))} kcal/day</b> — continues until <b>${niceDate(pl.end, { day: 'numeric', month: 'short', year: 'numeric' })}</b>, your weight would be about</p>
+      <div class="row" style="align-items:baseline;gap:10px"><b class="${onTrack ? 'good' : 'warnc'}" style="font-size:34px;font-weight:800;letter-spacing:-.02em">${r1(pl.projByDeficit)} kg</b>
+      <span class="tag ${onTrack ? 'good' : 'warn'}">${onTrack ? 'Goal reached ✓' : `${r1(diff)} kg above goal`}</span></div>
+      <div class="kv" style="margin-top:8px"><span>Your goal weight</span><span>${r1(pl.targetW)} kg</span></div>
+      ${pl.trend != null ? `<div class="kv"><span>By your weigh-in trend</span><span>${r1(pl.trend)} kg</span></div>` : ''}
+      ${pl.daysLeft > 0 && pl.needDaily != null ? `<div class="kv"><span>Deficit needed from today</span><span>${r0(Math.max(0, pl.needDaily))} kcal/day</span></div>` : ''}`;
+  } else fc = `<p class="muted" style="margin:0">Log a day's meals and I'll show what you'll weigh on ${niceDate(pl.end, { day: 'numeric', month: 'short', year: 'numeric' })}. To reach your goal you need about <b>${r0(pl.reqDaily)} kcal/day</b> deficit.</p>`;
 
   const warns = [];
   const minIntake = p.sex === 'male' ? 1500 : 1200;
   if (pl.avgIntake != null && pl.avgBasis === 'days' && pl.avgIntake < minIntake)
-    warns.push(`<div class="note warn">Your recent intake (~${r0(pl.avgIntake)} kcal/day) is very low. That risks muscle loss and fatigue — eat a bit more and keep protein high.</div>`);
+    warns.push(`<div class="note warn">Your recent intake (~${r0(pl.avgIntake)} kcal/day) is very low. That risks muscle loss — eat a bit more and keep protein high.</div>`);
   if (pl.avg != null && pl.avgBasis === 'days' && pl.avg > 1100)
     warns.push(`<div class="note warn">Your deficit is very aggressive (${r0(pl.avg)} kcal/day). Slow and steady keeps the weight off.</div>`);
 
@@ -879,37 +920,38 @@ function viewHome() {
     <div class="card">
       <div class="hero">
         <div><small class="muted">${notStarted ? `Starts ${niceDate(p.startDate)}` : finished ? 'Plan complete' : `Day ${pl.dayN} of ${pl.N}`}</small><div class="w">${r1(pl.curW)}<span> kg</span></div></div>
-        <div style="text-align:right"><small class="muted">Lost so far</small><div style="font-size:22px;font-weight:800" class="${lost >= 0 ? 'good' : 'bad'}">${lost >= 0 ? '−' : '+'}${r1(Math.abs(lost))} kg</div><small class="muted">of ${r1(p.targetLoss)} kg goal</small></div>
+        <div style="text-align:right"><small class="muted">Weight lost</small><div style="font-size:22px;font-weight:800" class="${lost >= 0 ? 'good' : 'bad'}">${lost >= 0 ? '−' : '+'}${r1(Math.abs(lost))} kg</div><small class="muted">goal ${r1(p.targetLoss)} kg by ${niceDate(pl.end, { day: 'numeric', month: 'short' })}</small></div>
       </div>
       <div class="bar"><i style="width:${lossPct}%"></i></div>
       <div class="bar blue" style="height:4px;margin-top:6px"><i style="width:${dayPct}%"></i></div>
       <div class="legend"><span><i style="background:var(--accent)"></i>weight goal</span><span><i style="background:var(--blue)"></i>days passed</span></div>
     </div>
 
+    <div class="card"><h3>Weight</h3>${weightChart(p, pl)}</div>
+
+    <div class="section-label">So far · ${nLogged} day${nLogged === 1 ? '' : 's'} logged</div>
+    <div class="grid2" style="margin-bottom:12px">
+      <div class="stat" style="background:var(--card)"><small>Calories eaten</small><b>${r0(totIn).toLocaleString('en-IN')}</b><span>kcal</span></div>
+      <div class="stat" style="background:var(--card)"><small>Burned in exercise</small><b>${r0(totEx).toLocaleString('en-IN')}</b><span>kcal</span></div>
+      <div class="stat" style="background:var(--card)"><small>Total deficit</small><b class="${totDef >= 0 ? 'good' : 'bad'}">${r0(totDef).toLocaleString('en-IN')}</b><span>kcal</span></div>
+      <div class="stat" style="background:var(--card)"><small>Fat loss (from deficit)</small><b class="${totDef >= 0 ? 'good' : 'bad'}">${r1(totDef / KCAL_PER_KG)} kg</b><span>scale shows ${lost >= 0 ? '−' : '+'}${r1(Math.abs(lost))} kg</span></div>
+    </div>
+
+    <div class="card"><h3>Day by day <button class="btn small" data-act="exportCsv">Export</button></h3>
+      <div class="scroll-x"><table class="log">
+        <thead><tr><th>Date</th><th>Eaten</th><th>Burned</th><th>Deficit</th><th>Fat</th><th>Kg</th></tr></thead>
+        <tbody>${rows.join('') || `<tr><td colspan="6" class="muted">Your plan starts ${niceDate(p.startDate)}.</td></tr>`}</tbody>
+      </table></div>
+      <p class="explain">Burned = workouts + extra steps. Deficit also counts what your body uses at rest. Tap a row to open that day.</p>
+    </div>
+
+    <div class="section-label">Forecast for your end date</div>
+    <div class="card">${fc}${warns.join('')}</div>
+
     <div class="grid3" style="margin-bottom:12px">
       <div class="stat" style="background:var(--card)"><small>BMI</small><b>${r1(b)}</b><span class="tag ${cls}">${cat}</span></div>
-      <div class="stat" style="background:var(--card)"><small>Body fat</small><b>${r1(pl.fatNowPct)}%</b><span>est.</span></div>
-      <div class="stat" style="background:var(--card)"><small>Fat mass</small><b>${r1(pl.fatKg)}</b><span>kg (start ${r1(pl.startFatKg)})</span></div>
-    </div>
-
-    <div class="section-label">Today · ${niceDate(t)}</div>
-    ${summaryCard(st)}
-    <div class="grid2" style="margin-bottom:12px">
-      <div class="stat" style="background:var(--card)"><small>Protein</small><b>${r0(st.protein)}<span> / ${proteinTarget} g</span></b><div class="bar"><i style="width:${Math.min(100, st.protein / proteinTarget * 100)}%"></i></div></div>
-      <div class="stat" style="background:var(--card)"><small>Water</small><b>${r1((st.d.water || 0) / 1000)}<span> / ${r1(waterTarget / 1000)} L</span></b><div class="bar blue"><i style="width:${Math.min(100, (st.d.water || 0) / waterTarget * 100)}%"></i></div></div>
-    </div>
-    <button class="btn primary block" style="margin-bottom:12px" data-act="goToday">Open today's log</button>
-
-    <div class="section-label">Day ${pl.N} forecast</div>
-    <div class="card">${projHtml}${warns.join('')}</div>
-
-    <div class="card"><h3>Weight <small class="muted">target ${r1(pl.targetW)} kg</small></h3>${weightChart(p, pl)}</div>
-
-    <div class="card">
-      <h3>So far</h3>
-      <div class="kv"><span>Total deficit (${pl.loggedDays} logged day${pl.loggedDays === 1 ? '' : 's'})</span><span>${r0(pl.cum)} kcal</span></div>
-      <div class="kv"><span>Fat burned (estimate)</span><span>${r0(pl.cum / 7.7)} g</span></div>
-      <div class="kv"><span>Daily deficit needed for goal</span><span>${r0(pl.reqDaily)} kcal</span></div>
+      <div class="stat" style="background:var(--card)"><small>Body fat</small><b>${r1(pl.fatNowPct)}%</b><span>estimate</span></div>
+      <div class="stat" style="background:var(--card)"><small>Fat mass</small><b>${r1(pl.fatKg)}</b><span>kg</span></div>
     </div>
   </main>`;
 }
@@ -919,33 +961,38 @@ function summaryCard(st) {
   return `<div class="card">
     <div class="sum-grid">
       <div><small class="muted">Eaten</small><b>${r0(st.intake)}</b><span>kcal</span></div>
-      <div><small class="muted">Burned</small><b>${r0(st.burn)}</b><span>kcal</span></div>
+      <div><small class="muted">Burned</small><b>${r0(st.exShow)}</b><span>kcal exercise</span></div>
       <div><small class="muted">${def != null && def < 0 ? 'Surplus' : 'Deficit'}</small><b class="${def == null ? '' : def >= 0 ? 'good' : 'bad'}">${def == null ? '—' : r0(Math.abs(def))}</b><span>kcal</span></div>
     </div>
-    <div class="sum-foot ${def == null ? 'muted' : def >= 0 ? 'good' : 'bad'}">${def == null ? 'Log food to see your deficit' : def >= 0 ? `≈ ${r0(def / 7.7)} g of fat burned` : `≈ ${r0(-def / 7.7)} g gained`}</div>
-    <details><summary>How "burned" is calculated</summary>
+    <div class="sum-foot ${def == null ? 'muted' : def >= 0 ? 'good' : 'bad'}">${def == null ? 'Add your food to see the deficit' : def >= 0 ? `≈ ${r0(def / 7.7)} g of fat burned` : `≈ ${r0(-def / 7.7)} g gained`}</div>
+    <details><summary>How the deficit is worked out</summary>
       <div class="explain">
-        <div><span>Resting + normal daily life (BMR × 1.2)</span><span>${r0(st.base)}</span></div>
-        <div><span>Workouts (${r0(st.exGross)} shown − resting part)</span><span>${r0(st.exNet)}</span></div>
-        <div><span>Extra steps (above 3,000)</span><span>${r0(st.stepsK)}</span></div>
+        <div><span>Your body uses just to live (rest + daily life)</span><span>${r0(st.base)}</span></div>
+        <div><span>+ Workouts (above resting)</span><span>${r0(st.exNet)}</span></div>
+        <div><span>+ Extra steps (above 3,000)</span><span>${r0(st.stepsK)}</span></div>
+        <div><span>− Eaten</span><span>${r0(st.intake)}</span></div>
         <p style="margin:6px 0 0">1 kg of body fat ≈ 7,700 kcal. These are estimates — your weigh-ins are the real check.</p>
       </div>
     </details>
   </div>`;
 }
 
-function viewToday() {
-  const p = P(), date = S.date, d = dayOf(date), st = dayStats(date), t = todayStr();
+function dateBar() {
+  const p = P(), date = S.date, t = todayStr();
   const dn = diffDays(p.startDate, date) + 1;
-  const waterTarget = Math.round(st.w * 35 / 250) * 250;
-  return header('Daily log') + `<main>
-    <div class="datebar">
+  return `<div class="datebar">
       <button data-act="prevDay" aria-label="Previous day">‹</button>
-      <div><b>${date === t ? 'Today' : niceDate(date)}</b><small class="muted">${dn >= 1 && dn <= p.targetDays ? `Day ${dn} of ${p.targetDays}` : dn < 1 ? 'Before your plan' : 'After your plan'} · ${niceDate(date, { day: 'numeric', month: 'short', year: 'numeric' })}</small></div>
+      <div><b>${date === t ? 'Today' : niceDate(date)}</b><small class="muted">${dn >= 1 && dn <= p.targetDays ? `Day ${dn} of ${p.targetDays}` : dn < 1 ? `Plan starts ${niceDate(p.startDate, { day: 'numeric', month: 'short' })}` : 'After your plan'} · ${niceDate(date, { day: 'numeric', month: 'short', year: 'numeric' })}</small></div>
       <button data-act="nextDay" ${date >= t ? 'disabled' : ''} aria-label="Next day">›</button>
-    </div>
-    ${summaryCard(st)}
+    </div>`;
+}
 
+function viewFood() {
+  const date = S.date, d = dayOf(date), st = dayStats(date);
+  const waterTarget = Math.round(st.w * 35 / 250) * 250;
+  return header('Intake') + `<main>
+    ${dateBar()}
+    ${summaryCard(st)}
     <div class="card"><h3>Meals <small class="muted">${r0(st.protein)} g protein · ${r0(st.carbs)} g carbs · ${r0(st.fat)} g fat</small></h3>
       ${SLOTS.map(s => {
         const items = (d.meals || []).filter(m => m.slot === s.id);
@@ -955,7 +1002,6 @@ function viewToday() {
         </div>`;
       }).join('')}
     </div>
-
     <div class="card"><h3>Water <small class="muted">goal ${r1(waterTarget / 1000)} L</small></h3>
       <div class="water">
         <button class="round" data-act="water" data-v="-1" aria-label="Less water">−</button>
@@ -964,16 +1010,25 @@ function viewToday() {
       </div>
       <div class="bar blue"><i style="width:${Math.min(100, (d.water || 0) / waterTarget * 100)}%"></i></div>
     </div>
+  </main>`;
+}
 
+function viewBurn() {
+  const date = S.date, d = dayOf(date), st = dayStats(date);
+  return header('Burn') + `<main>
+    ${dateBar()}
+    ${summaryCard(st)}
     <div class="card"><h3>Workouts <button class="add" data-act="addWorkout">+ Add</button></h3>
-      ${(d.workouts || []).length ? d.workouts.map(w => `<button class="li" data-act="editWorkout" data-id="${w.id}"><span>${(WK[w.type] || WK.other).icon} ${esc(w.name)} <small>${r0(w.minutes)} min${w.speed ? ` · ${w.speed} km/h` : ''}${w.incline ? ` · ${w.incline}%` : ''}${w.intensity != null && WK[w.type] && WK[w.type].calc !== 'tread' && WK[w.type].calc !== 'custom' ? ' · ' + INTENSITY[w.intensity] : ''}</small></span><span class="r">${r0(w.kcal)} kcal</span></button>`).join('') : '<p class="muted" style="margin:0;font-size:14px">No workout logged.</p>'}
+      ${(d.workouts || []).length ? d.workouts.map(w => {
+        const m = WK[w.type] || WK.other;
+        return `<button class="li" data-act="editWorkout" data-id="${w.id}"><span>${m.icon} ${esc(w.name)} <small>${r0(w.minutes)} min${w.speed ? ` · ${w.speed} km/h` : ''}${w.incline ? ` · ${w.incline}%` : ''}${w.intensity != null && m.calc !== 'tread' && m.calc !== 'custom' ? ' · ' + INTENSITY[w.intensity] : ''}</small></span><span class="r">${r0(w.kcal)} kcal</span></button>`;
+      }).join('') : '<p class="muted" style="margin:0;font-size:14px">No workout yet. Tap + Add and pick the gym equipment you used.</p>'}
     </div>
-
-    <div class="card"><h3>Body &amp; day</h3>
+    <div class="card"><h3>Steps, weight &amp; sleep</h3>
       <form id="bodyForm" onsubmit="return false">
         <div class="grid3 field">
-          <label>Weight (kg)<input name="weight" type="number" step="any" inputmode="decimal" value="${d.weight ?? ''}" placeholder="${r1(weightOn(date))}"></label>
           <label>Steps<input name="steps" type="number" inputmode="numeric" value="${d.steps ?? ''}"></label>
+          <label>Weight (kg)<input name="weight" type="number" step="any" inputmode="decimal" value="${d.weight ?? ''}" placeholder="${r1(weightOn(date))}"></label>
           <label>Sleep (hrs)<input name="sleep" type="number" step="any" inputmode="decimal" value="${d.sleep ?? ''}"></label>
         </div>
         <div class="field"><label>Remark about the day<textarea name="remark" placeholder="How did you feel? Cheat meal? Tired?">${esc(d.remark || '')}</textarea></label></div>
@@ -1008,35 +1063,6 @@ function weightChart(p, pl) {
     ${actual.map(q => `<circle cx="${X(q.x)}" cy="${Y(q.y)}" r="3" fill="var(--accent)"/>`).join('')}
   </svg>
   <div class="legend"><span><i style="background:var(--accent)"></i>your weigh-ins</span><span><i style="background:var(--muted)"></i>goal line</span>${proj ? '<span><i style="background:var(--blue)"></i>forecast at current pace</span>' : ''}</div>`;
-}
-
-function viewProgress() {
-  const p = P(), pl = plan(), t = todayStr();
-  const last = t < p.startDate ? p.startDate : (addDays(p.startDate, p.targetDays - 1) < t ? addDays(p.startDate, p.targetDays - 1) : t);
-  const rows = [];
-  for (let ds = last; ds >= p.startDate; ds = addDays(ds, -1)) {
-    const st = dayStats(ds), d = S.data.days[ds] || {};
-    rows.push(`<tr data-act="openDay" data-v="${ds}">
-      <td>${niceDate(ds, { day: 'numeric', month: 'short' })}</td>
-      <td>${st.logged ? r0(st.intake) : '—'}</td><td>${r0(st.burn)}</td>
-      <td class="${st.deficit == null ? '' : st.deficit >= 0 ? 'good' : 'bad'}">${st.deficit == null ? '—' : r0(st.deficit)}</td>
-      <td>${d.weight ? r1(d.weight) : '—'}</td><td>${d.steps ? r0(d.steps) : '—'}</td><td>${d.sleep ? r1(d.sleep) : '—'}</td><td>${d.water ? r1(d.water / 1000) : '—'}</td></tr>`);
-    if (rows.length > 400) break;
-  }
-  return header('Progress') + `<main>
-    <div class="card"><h3>Weight</h3>${weightChart(p, pl)}</div>
-    <div class="grid2" style="margin-bottom:12px">
-      <div class="stat" style="background:var(--card)"><small>Fat burned (est.)</small><b>${r1(pl.cum / KCAL_PER_KG)} kg</b><span>${r0(pl.cum)} kcal deficit</span></div>
-      <div class="stat" style="background:var(--card)"><small>Scale change</small><b>${(pl.curW - p.startWeight) <= 0 ? '−' : '+'}${r1(Math.abs(pl.curW - p.startWeight))} kg</b><span>from ${r1(p.startWeight)} kg</span></div>
-    </div>
-    <div class="card"><h3>Every day <button class="btn small" data-act="exportCsv">Export CSV</button></h3>
-      <div class="scroll-x"><table class="log">
-        <thead><tr><th>Date</th><th>In</th><th>Out</th><th>Deficit</th><th>Kg</th><th>Steps</th><th>Sleep</th><th>Water L</th></tr></thead>
-        <tbody>${rows.join('') || '<tr><td colspan="8" class="muted">Your plan starts ' + niceDate(p.startDate) + '.</td></tr>'}</tbody>
-      </table></div>
-      <p class="explain">Tap a row to open that day.</p>
-    </div>
-  </main>`;
 }
 
 function viewProfile() {
@@ -1219,7 +1245,7 @@ function sheetWorkout() {
     fields = `<div class="field"><label>Activity name<input data-wf="name" value="${esc(w.name || '')}"></label></div><div class="field">${fields}</div>`;
   }
   return `<div class="sheet-h"><h2>${sh.editId ? 'Edit workout' : 'Add workout'}</h2><button class="x" data-act="closeSheet">✕</button></div>
-    <div class="machines">${WORKOUTS.map(x => `<button class="machine ${x.id === w.type ? 'on' : ''}" data-act="wkType" data-v="${x.id}"><span class="ic">${x.icon}</span>${x.name}</button>`).join('')}</div>
+    <div class="field"><label>Gym equipment / activity<select id="wkTypeSel">${[...new Set(WORKOUTS.map(x => x.g))].map(g => `<optgroup label="${g}">${WORKOUTS.filter(x => x.g === g).map(x => `<option value="${x.id}" ${x.id === w.type ? 'selected' : ''}>${x.icon} ${x.name}</option>`).join('')}</optgroup>`).join('')}</select></label></div>
     ${fields}
     <div class="card" style="margin-top:4px">
       <p class="sugg" id="wkSugg">${m.calc === 'custom' ? 'Enter the calories from your watch or machine.' : `Suggested: <b>${sugg} kcal</b> for ${r1(kg)} kg body weight`}</p>
@@ -1262,7 +1288,7 @@ function render() {
   else if (S.screen === 'error') app.innerHTML = viewError();
   else if (S.screen === 'onboard') { app.innerHTML = viewOnboard(); updateProfilePreview(); }
   else {
-    const v = { home: viewHome, today: viewToday, progress: viewProgress, profile: viewProfile }[S.tab] || viewHome;
+    const v = { home: viewHome, food: viewFood, burn: viewBurn, profile: viewProfile }[S.tab] || viewHome;
     app.innerHTML = v() + tabbar();
     if (S.tab === 'profile') updateProfilePreview();
   }
@@ -1280,9 +1306,9 @@ const ACT = {
   async setup(el) { try { await doSetup(el); } finally { unbusy(el); } },
   retryLoad() { if (S.session) loadData(); else boot(); },
   logout() { logout(); },
-  tab(el) { S.tab = el.dataset.v; if (S.tab === 'today') S.date = S.date || todayStr(); render(); window.scrollTo(0, 0); },
-  goToday() { S.tab = 'today'; S.date = todayStr(); render(); window.scrollTo(0, 0); },
-  openDay(el) { S.tab = 'today'; S.date = el.dataset.v; render(); window.scrollTo(0, 0); },
+  tab(el) { S.tab = el.dataset.v; render(); window.scrollTo(0, 0); },
+  goToday() { S.tab = 'food'; S.date = todayStr(); render(); window.scrollTo(0, 0); },
+  openDay(el) { S.tab = 'food'; S.date = el.dataset.v; render(); window.scrollTo(0, 0); },
   prevDay() { S.date = addDays(S.date, -1); render(); },
   nextDay() { if (S.date < todayStr()) { S.date = addDays(S.date, 1); render(); } },
   syncInfo() {
@@ -1456,6 +1482,7 @@ document.addEventListener('change', async (e) => {
     catch (err) { toast(err.message, 'bad'); }
     return;
   }
+  if (t.id === 'wkTypeSel') { ACT.wkType({ dataset: { v: t.value } }); return; }
   if (t.dataset.wf) onWorkoutInput(t);
   if (t.closest && t.closest('#pf')) updateProfilePreview();
 });
@@ -1480,7 +1507,7 @@ async function boot() {
 boot();
 
 // expose for testing
-window.__fittrack = { bmiOf, bmiCat, fatPct, bmr, treadKcal, bikeKcal, wkSuggest, S, plan, dayStats };
+window.__fittrack = { viewHome, viewFood, viewBurn, sheetWorkout, bmiOf, bmiCat, fatPct, bmr, treadKcal, bikeKcal, wkSuggest, S, plan, dayStats };
 })();
 </script>
 </body>
