@@ -1,0 +1,14 @@
+{
+ "v": 2,
+ "owner": "rajkumar71234-ui",
+ "appRepo": "fittracker",
+ "dataRepo": "fittracker-data",
+ "sealed": {
+  "v": 1,
+  "kdf": "PBKDF2-SHA256",
+  "iter": 310000,
+  "salt": "rQS3s6qCkWMAvsUL/0LwVw==",
+  "iv": "Ti31VUVSgvpSeres",
+  "ct": "58/ZpE1bW51N1QGsWwm4XBS6CrOwhi9DYkR2AGJbjQTEi56n2nGcK5PBm9CkgAOJl15CyqnvyEwa4Z1Pto6VjWaARVyHxI3cQz8v4NGF2yYlXfE7gtEnus78ncfLqGaewgD67tBGllCdCFYZy72KLeTpFaK7j8fJNnFE0qKw4/dT//QA1q1sOi+1bYZp0MPLaqONerET1r4AL5QPxDeyEfo="
+ }
+}
