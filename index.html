@@ -725,7 +725,7 @@ function viewAuth() {
   return `<div class="auth">
     <img class="logo" src="icons/icon-192.png" alt="">
     <h1>FitTracker</h1>
-    <p class="sub">Your weight-loss tracker · v4</p>
+    <p class="sub">Your weight-loss tracker · v5</p>
     <div class="seg">
       <button data-act="authMode" data-v="login" class="${login ? 'on' : ''}">Log in</button>
       <button data-act="authMode" data-v="create" class="${!login ? 'on' : ''}">Create account</button>
@@ -883,88 +883,133 @@ function tabbar() {
 }
 function header(title) { return `<header class="top"><div class="top-in"><h1>${title}</h1>${syncPill()}</div></header>`; }
 
+function healthyFat(sex, age) { // Gallagher et al. healthy body-fat ranges
+  if (sex === 'male') return age < 40 ? [8, 19] : age < 60 ? [11, 21] : [13, 24];
+  return age < 40 ? [21, 32] : age < 60 ? [23, 33] : [24, 35];
+}
+function fatCat(pct, rng) {
+  if (pct < rng[0]) return ['Low', 'warn'];
+  if (pct <= rng[1]) return ['Healthy', 'good'];
+  if (pct <= rng[1] + 6) return ['High', 'warn'];
+  return ['Very high', 'bad'];
+}
+
 function viewHome() {
   const p = P(), pl = plan(), t = todayStr();
   const notStarted = pl.sinceStart < 0, finished = pl.sinceStart >= pl.N;
   const lost = p.startWeight - pl.curW;
   const lossPct = Math.min(100, Math.max(0, lost / p.targetLoss * 100));
   const dayPct = Math.min(100, Math.max(0, pl.dayN / pl.N * 100));
-  const b = bmiOf(pl.curW, p.heightCm), [cat, cls] = bmiCat(b);
+  const endTxt = niceDate(pl.end, { day: 'numeric', month: 'short', year: 'numeric' });
+  const daysLeft = Math.max(0, diffDays(t < p.startDate ? p.startDate : t, pl.end) + (t < p.startDate ? 1 : 0));
 
-  // day-by-day rows from start to today (or plan end)
+  // ---- daily plan from now ----
+  const base = bmr(p, pl.curW) * 1.2;
+  const toLose = pl.curW - pl.targetW;
+  const minEat = p.sex === 'male' ? 1500 : 1200;
+  let ex7 = 0, exN = 0;
+  for (let i = 1; i <= 7; i++) { const ds = addDays(t, -i); if (ds < p.startDate) break; const st = dayStats(ds); if (st.logged || st.exShow) { ex7 += st.exShow; exN++; } }
+  let planHtml;
+  if (toLose <= 0) planHtml = `<p style="margin:0" class="good"><b>You've reached your goal weight! 🎉</b> To stay here, eat about <b>${r0(base)} kcal/day</b> plus whatever you burn in exercise.</p>`;
+  else if (daysLeft <= 0) planHtml = `<p style="margin:0" class="muted">Your end date has passed. Set a new goal in Profile.</p>`;
+  else {
+    const need = toLose * KCAL_PER_KG / daysLeft;
+    let burn = Math.max(300, exN ? ex7 / exN : 0);
+    let eat = base + burn * 0.85 - need;
+    if (eat < minEat) { burn = Math.ceil((minEat - base + need) / 0.85 / 10) * 10; eat = minEat; }
+    burn = Math.round(burn / 10) * 10; eat = Math.round(eat / 10) * 10;
+    const eatNoEx = Math.round((base - need) / 10) * 10;
+    planHtml = `<p class="muted" style="margin:0 0 10px">To reach <b>${r1(pl.targetW)} kg</b> by <b>${endTxt}</b> (${r1(toLose)} kg in ${daysLeft} day${daysLeft > 1 ? 's' : ''}), every day from now:</p>
+      <div class="grid2">
+        <div class="stat"><small>Eat up to</small><b class="good">${eat.toLocaleString('en-IN')}</b><span>kcal per day</span></div>
+        <div class="stat"><small>Burn at least</small><b class="warnc">${burn.toLocaleString('en-IN')}</b><span>kcal per day in exercise</span></div>
+      </div>
+      <p class="explain" style="margin-top:10px">That's a deficit of <b>${r0(need)} kcal/day</b> ≈ ${r0(need / 7.7)} g of fat a day. Your body uses about ${r0(base)} kcal/day on its own.${eatNoEx >= minEat ? ` Without any exercise you'd need to eat only ${eatNoEx.toLocaleString('en-IN')} kcal/day.` : ''}</p>
+      ${need > 1000 ? `<div class="note warn">This pace is aggressive (${r0(need)} kcal/day). Consider a later end date in Profile.</div>` : ''}`;
+  }
+
+  // ---- body now vs at goal ----
+  const hM = p.heightCm / 100, fr = healthyFat(p.sex, p.age);
+  const bNow = bmiOf(pl.curW, p.heightCm), [bcN, bcNc] = bmiCat(bNow);
+  const bGoal = bmiOf(pl.targetW, p.heightCm), [bcG, bcGc] = bmiCat(bGoal);
+  const fatGoalKg = Math.max(0, pl.fatKg - Math.max(0, pl.curW - pl.targetW));
+  const fatGoalPct = fatGoalKg / pl.targetW * 100;
+  const [fcN, fcNc] = fatCat(pl.fatNowPct, fr), [fcG, fcGc] = fatCat(fatGoalPct, fr);
+  const wLo = 18.5 * hM * hM, wHi = 22.9 * hM * hM;
+
+  // ---- day-by-day ----
   const last = t > pl.end ? pl.end : t;
   let totIn = 0, totEx = 0, totDef = 0, nLogged = 0;
   const rows = [];
   for (let ds = last; ds >= p.startDate; ds = addDays(ds, -1)) {
-    const st = dayStats(ds), d = S.data.days[ds] || {};
+    const st = dayStats(ds);
     if (st.logged) { totIn += st.intake; totDef += st.deficit; nLogged++; }
     totEx += st.exShow;
     rows.push(`<tr data-act="openDay" data-v="${ds}">
-      <td>${niceDate(ds, { day: 'numeric', month: 'short' })}</td>
+      <td>${ds === t ? 'Today' : niceDate(ds, { day: 'numeric', month: 'short' })}</td>
       <td>${st.logged ? r0(st.intake) : '—'}</td><td>${st.exShow ? r0(st.exShow) : '—'}</td>
       <td class="${st.deficit == null ? '' : st.deficit >= 0 ? 'good' : 'bad'}">${st.deficit == null ? '—' : r0(st.deficit)}</td>
-      <td>${st.deficit == null ? '—' : (st.deficit >= 0 ? '−' : '+') + r0(Math.abs(st.deficit) / 7.7) + 'g'}</td>
-      <td>${d.weight ? r1(d.weight) : '—'}</td></tr>`);
+      <td class="${st.deficit == null ? '' : st.deficit >= 0 ? 'good' : 'bad'}"><b>${st.deficit == null ? '—' : (st.deficit >= 0 ? '−' : '+') + r0(Math.abs(st.deficit) / 7.7) + ' g'}</b></td></tr>`);
     if (rows.length > 400) break;
   }
 
-  // forecast
+  // ---- forecast ----
   let fc;
-  if (notStarted) fc = `<p class="muted" style="margin:0">Your plan starts on ${niceDate(p.startDate)}. Log your food and workouts from then to see your forecast.</p>`;
+  if (notStarted) fc = `<p class="muted" style="margin:0">Your plan starts on ${niceDate(p.startDate)}. Log food and workouts from then to see your forecast.</p>`;
   else if (pl.projByDeficit != null) {
     const diff = pl.projByDeficit - pl.targetW, onTrack = diff <= 0.3;
-    fc = `<p style="margin:0 0 6px" class="muted">If your average of ${pl.avgBasis === 'today' ? 'today so far' : `the last ${pl.recentN} day${pl.recentN > 1 ? 's' : ''}`} — <b>${pl.avg >= 0 ? 'deficit' : 'surplus'} ${r0(Math.abs(pl.avg))} kcal/day</b> — continues until <b>${niceDate(pl.end, { day: 'numeric', month: 'short', year: 'numeric' })}</b>, your weight would be about</p>
+    fc = `<p style="margin:0 0 6px" class="muted">If your average of ${pl.avgBasis === 'today' ? 'today so far' : `the last ${pl.recentN} day${pl.recentN > 1 ? 's' : ''}`} (<b>${pl.avg >= 0 ? 'deficit' : 'surplus'} ${r0(Math.abs(pl.avg))} kcal/day</b>) continues until <b>${endTxt}</b>, you'd weigh about</p>
       <div class="row" style="align-items:baseline;gap:10px"><b class="${onTrack ? 'good' : 'warnc'}" style="font-size:34px;font-weight:800;letter-spacing:-.02em">${r1(pl.projByDeficit)} kg</b>
       <span class="tag ${onTrack ? 'good' : 'warn'}">${onTrack ? 'Goal reached ✓' : `${r1(diff)} kg above goal`}</span></div>
-      <div class="kv" style="margin-top:8px"><span>Your goal weight</span><span>${r1(pl.targetW)} kg</span></div>
-      ${pl.trend != null ? `<div class="kv"><span>By your weigh-in trend</span><span>${r1(pl.trend)} kg</span></div>` : ''}
-      ${pl.daysLeft > 0 && pl.needDaily != null ? `<div class="kv"><span>Deficit needed from today</span><span>${r0(Math.max(0, pl.needDaily))} kcal/day</span></div>` : ''}`;
-  } else fc = `<p class="muted" style="margin:0">Log a day's meals and I'll show what you'll weigh on ${niceDate(pl.end, { day: 'numeric', month: 'short', year: 'numeric' })}. To reach your goal you need about <b>${r0(pl.reqDaily)} kcal/day</b> deficit.</p>`;
-
+      ${pl.trend != null ? `<div class="kv" style="margin-top:8px"><span>By your weigh-in trend</span><span>${r1(pl.trend)} kg</span></div>` : ''}`;
+  } else fc = `<p class="muted" style="margin:0">Log a day's meals and I'll show what you'll weigh on ${endTxt}.</p>`;
   const warns = [];
-  const minIntake = p.sex === 'male' ? 1500 : 1200;
-  if (pl.avgIntake != null && pl.avgBasis === 'days' && pl.avgIntake < minIntake)
+  if (pl.avgIntake != null && pl.avgBasis === 'days' && pl.avgIntake < minEat)
     warns.push(`<div class="note warn">Your recent intake (~${r0(pl.avgIntake)} kcal/day) is very low. That risks muscle loss — eat a bit more and keep protein high.</div>`);
-  if (pl.avg != null && pl.avgBasis === 'days' && pl.avg > 1100)
-    warns.push(`<div class="note warn">Your deficit is very aggressive (${r0(pl.avg)} kcal/day). Slow and steady keeps the weight off.</div>`);
 
   return header(`Hi${p.name ? ', ' + esc(p.name.split(' ')[0]) : ''}`) + `<main>
     <div class="card">
-      <div class="hero">
-        <div><small class="muted">${notStarted ? `Starts ${niceDate(p.startDate)}` : finished ? 'Plan complete' : `Day ${pl.dayN} of ${pl.N}`}</small><div class="w">${r1(pl.curW)}<span> kg</span></div></div>
-        <div style="text-align:right"><small class="muted">Weight lost</small><div style="font-size:22px;font-weight:800" class="${lost >= 0 ? 'good' : 'bad'}">${lost >= 0 ? '−' : '+'}${r1(Math.abs(lost))} kg</div><small class="muted">goal ${r1(p.targetLoss)} kg by ${niceDate(pl.end, { day: 'numeric', month: 'short' })}</small></div>
+      <small class="muted">${notStarted ? `Starts ${niceDate(p.startDate)}` : finished ? 'Plan complete' : `Day ${pl.dayN} of ${pl.N}`}</small>
+      <div class="hero" style="margin-top:4px">
+        <div><small class="muted">Goal weight</small><div class="w">${r1(pl.targetW)}<span> kg</span></div><small class="muted">by ${endTxt}</small></div>
+        <div style="text-align:right"><small class="muted">Now</small><div style="font-size:26px;font-weight:800">${r1(pl.curW)} kg</div><small class="${lost >= 0 ? 'good' : 'bad'}"><b>${lost >= 0 ? '−' : '+'}${r1(Math.abs(lost))} kg</b> of ${r1(p.targetLoss)} kg</small></div>
       </div>
       <div class="bar"><i style="width:${lossPct}%"></i></div>
       <div class="bar blue" style="height:4px;margin-top:6px"><i style="width:${dayPct}%"></i></div>
-      <div class="legend"><span><i style="background:var(--accent)"></i>weight goal</span><span><i style="background:var(--blue)"></i>days passed</span></div>
+      <div class="legend"><span><i style="background:var(--accent)"></i>weight lost</span><span><i style="background:var(--blue)"></i>days passed</span></div>
+    </div>
+
+    <div class="section-label">Your daily target</div>
+    <div class="card">${planHtml}</div>
+
+    <div class="section-label">Your body · now vs at goal</div>
+    <div class="card">
+      <div class="scroll-x"><table class="log" style="font-size:14px">
+        <thead><tr><th></th><th>Now</th><th>At goal</th><th>Healthy</th></tr></thead>
+        <tbody>
+          <tr><td>Weight</td><td>${r1(pl.curW)} kg</td><td>${r1(pl.targetW)} kg</td><td>${r0(wLo)}–${r0(wHi)} kg</td></tr>
+          <tr><td>BMI</td><td>${r1(bNow)} <span class="tag ${bcNc}">${bcN}</span></td><td>${r1(bGoal)} <span class="tag ${bcGc}">${bcG}</span></td><td>18.5–22.9</td></tr>
+          <tr><td>Body fat</td><td>${r1(pl.fatNowPct)}% <span class="tag ${fcNc}">${fcN}</span></td><td>${r1(fatGoalPct)}% <span class="tag ${fcGc}">${fcG}</span></td><td>${fr[0]}–${fr[1]}%</td></tr>
+          <tr><td>Fat mass</td><td>${r1(pl.fatKg)} kg</td><td>${r1(fatGoalKg)} kg</td><td>${r1(pl.targetW * fr[0] / 100)}–${r1(pl.targetW * fr[1] / 100)} kg</td></tr>
+        </tbody>
+      </table></div>
+      <p class="explain">Healthy ranges for your height, sex and age (BMI uses Indian cut-offs). "At goal" assumes the weight you lose is mostly fat. ${pl.targetW > wHi ? `To reach a healthy BMI you'd need to get to about ${r0(wHi)} kg.` : 'Your goal weight is in the healthy range. 👍'}</p>
+    </div>
+
+    <div class="section-label">Every day · eaten, burned &amp; weight loss</div>
+    <div class="card">
+      <div class="scroll-x"><table class="log">
+        <thead><tr><th>Date</th><th>Eaten</th><th>Burned</th><th>Deficit</th><th>Loss</th></tr></thead>
+        <tbody>${rows.join('') || `<tr><td colspan="5" class="muted">Your plan starts ${niceDate(p.startDate)}.</td></tr>`}</tbody>
+        ${nLogged ? `<tfoot><tr><td><b>Total</b></td><td><b>${r0(totIn)}</b></td><td><b>${r0(totEx)}</b></td><td><b>${r0(totDef)}</b></td><td class="${totDef >= 0 ? 'good' : 'bad'}"><b>${totDef >= 0 ? '−' : '+'}${r0(Math.abs(totDef) / 7.7)} g</b></td></tr></tfoot>` : ''}
+      </table></div>
+      <p class="explain">kcal. Burned = workouts + extra steps. Loss = fat lost from that day's deficit (7.7 kcal ≈ 1 g). Tap a day to open it. <button class="btn small" style="margin-left:4px" data-act="exportCsv">Export</button></p>
     </div>
 
     <div class="card"><h3>Weight</h3>${weightChart(p, pl)}</div>
 
-    <div class="section-label">So far · ${nLogged} day${nLogged === 1 ? '' : 's'} logged</div>
-    <div class="grid2" style="margin-bottom:12px">
-      <div class="stat" style="background:var(--card)"><small>Calories eaten</small><b>${r0(totIn).toLocaleString('en-IN')}</b><span>kcal</span></div>
-      <div class="stat" style="background:var(--card)"><small>Burned in exercise</small><b>${r0(totEx).toLocaleString('en-IN')}</b><span>kcal</span></div>
-      <div class="stat" style="background:var(--card)"><small>Total deficit</small><b class="${totDef >= 0 ? 'good' : 'bad'}">${r0(totDef).toLocaleString('en-IN')}</b><span>kcal</span></div>
-      <div class="stat" style="background:var(--card)"><small>Fat loss (from deficit)</small><b class="${totDef >= 0 ? 'good' : 'bad'}">${r1(totDef / KCAL_PER_KG)} kg</b><span>scale shows ${lost >= 0 ? '−' : '+'}${r1(Math.abs(lost))} kg</span></div>
-    </div>
-
-    <div class="card"><h3>Day by day <button class="btn small" data-act="exportCsv">Export</button></h3>
-      <div class="scroll-x"><table class="log">
-        <thead><tr><th>Date</th><th>Eaten</th><th>Burned</th><th>Deficit</th><th>Fat</th><th>Kg</th></tr></thead>
-        <tbody>${rows.join('') || `<tr><td colspan="6" class="muted">Your plan starts ${niceDate(p.startDate)}.</td></tr>`}</tbody>
-      </table></div>
-      <p class="explain">Burned = workouts + extra steps. Deficit also counts what your body uses at rest. Tap a row to open that day.</p>
-    </div>
-
-    <div class="section-label">Forecast for your end date</div>
+    <div class="section-label">Forecast for ${endTxt}</div>
     <div class="card">${fc}${warns.join('')}</div>
-
-    <div class="grid3" style="margin-bottom:12px">
-      <div class="stat" style="background:var(--card)"><small>BMI</small><b>${r1(b)}</b><span class="tag ${cls}">${cat}</span></div>
-      <div class="stat" style="background:var(--card)"><small>Body fat</small><b>${r1(pl.fatNowPct)}%</b><span>estimate</span></div>
-      <div class="stat" style="background:var(--card)"><small>Fat mass</small><b>${r1(pl.fatKg)}</b><span>kg</span></div>
-    </div>
   </main>`;
 }
 
@@ -1098,7 +1143,7 @@ function viewProfile() {
       </form>
     </div>
     <button class="btn danger block" data-act="logout" style="margin-top:6px">Log out</button>
-    <p class="explain" style="text-align:center;margin-top:14px">FitTracker v4 · estimates only, not medical advice</p>
+    <p class="explain" style="text-align:center;margin-top:14px">FitTracker v5 · estimates only, not medical advice</p>
   </main>`;
 }
 
