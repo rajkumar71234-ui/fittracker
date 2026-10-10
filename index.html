@@ -665,13 +665,13 @@ async function doLogin(btn) {
   if (!r) throw fail('No account with that username.');
   const rec = JSON.parse(r.text);
   if (await pwHash(f.password, b64ToBytes(rec.salt), rec.iter || PBKDF2_ITER) !== rec.hash) throw fail('Wrong password.');
-  await startSession(sessionFor(u), f.keep === 'on');
+  await startSession(sessionFor(u), true);
 }
 
 async function startSession(secret, keep) {
   S.session = secret;
   SS.set('ft_session', secret);
-  if (keep) LS.set('ft_session', secret); else LS.del('ft_session');
+  LS.set('ft_session', secret); // always stay signed in until Log out
   await loadData();
 }
 
@@ -722,7 +722,6 @@ function viewAuth() {
       <form id="loginForm" onsubmit="return false" autocomplete="on">
         <div class="field"><label>Username<input name="username" autocomplete="username" autocapitalize="none" autocorrect="off"></label></div>
         <div class="field"><label>Password<input name="password" type="password" autocomplete="current-password"></label></div>
-        <label class="row" style="margin-bottom:14px;color:var(--text);font-size:15px"><input type="checkbox" name="keep" checked style="width:auto;margin:0"> Keep me signed in</label>
         <button class="btn primary block" data-act="login">Log in</button>
       </form>` : `
       <form id="createForm" onsubmit="return false" autocomplete="on">
