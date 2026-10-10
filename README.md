@@ -1,4 +1,4 @@
-# FitTracker
+# Minimal Health Tracker
 
 A weight-loss tracker (you choose the number of days) that runs like an iPhone app from a GitHub Pages link. All your data is saved to a **private GitHub repo** — nothing is kept on the phone.
 
