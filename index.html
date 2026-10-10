@@ -668,8 +668,21 @@ async function doLogin(btn) {
   await startSession(sessionFor(u), true);
 }
 
+function rememberUser(u) {
+  LS.set('ft_user', u);
+  try { document.cookie = 'ft_user=' + encodeURIComponent(u) + '; max-age=31536000; path=/; SameSite=Lax; Secure'; } catch (e) {}
+}
+function rememberedUser() {
+  const a = LS.get('ft_user'); if (a) return a;
+  try { const m = document.cookie.match(/(?:^|; )ft_user=([^;]+)/); return m ? decodeURIComponent(m[1]) : null; } catch (e) { return null; }
+}
+function forgetUser() {
+  LS.del('ft_user');
+  try { document.cookie = 'ft_user=; max-age=0; path=/; SameSite=Lax; Secure'; } catch (e) {}
+}
 async function startSession(secret, keep) {
   S.session = secret;
+  rememberUser(secret.username);
   SS.set('ft_session', secret);
   LS.set('ft_session', secret); // always stay signed in until Log out
   await loadData();
@@ -696,7 +709,7 @@ async function loadData() {
 
 function logout() {
   if ((S.dirtyDays.size || S.profileDirty) && !confirm('Some changes are not saved to GitHub yet. Log out anyway?')) return;
-  SS.del('ft_session'); LS.del('ft_session');
+  SS.del('ft_session'); LS.del('ft_session'); forgetUser();
   Object.assign(S, { session: null, data: null, sha: null, screen: 'auth', authMode: 'login', sheet: null, dirtyDays: new Set(), profileDirty: false, sync: 'idle' });
   render();
 }
@@ -760,7 +773,7 @@ function viewSetup() {
 
 function viewLoading() { return `<div class="center"><div class="spinner"></div><p class="muted">${esc(S.loadingMsg || 'Loading…')}</p></div>`; }
 function viewError() {
-  return `<div class="center"><h2>Couldn't load your data</h2><p class="muted">${esc(S.errorMsg)}</p>
+  return `<div class="center"><h2>Couldn't reach GitHub</h2><p class="muted">${esc(S.errorMsg)}</p><p class="muted" style="font-size:14px">You're still signed in — check your internet and tap Try again.</p>
     <div class="row"><button class="btn primary" data-act="retryLoad">Try again</button><button class="btn" data-act="logout">Log out</button></div></div>`;
 }
 
@@ -1501,6 +1514,8 @@ async function boot() {
   S.screen = 'loading'; S.loadingMsg = 'Starting…'; render();
   try { CONFIG = await loadConfig(); }
   catch (e) { if (e.offline) { S.screen = 'error'; S.errorMsg = e.message; return render(); } CONFIG = null; }
+  const u = rememberedUser();
+  if (CONFIG && u) { S.session = sessionFor(u); return loadData(); }   // stay signed in
   S.screen = CONFIG ? 'auth' : 'setup'; render();
 }
 boot();
