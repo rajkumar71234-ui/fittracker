@@ -859,7 +859,7 @@ function viewAuth() {
   return `<div class="auth">
     <img class="logo" src="icons/logo.png" alt="">
     <h1>Minimal Health Tracker</h1>
-    <p class="sub">Your weight-loss tracker · v10</p>
+    <p class="sub">Your weight-loss tracker · v11</p>
     <div class="seg">
       <button data-act="authMode" data-v="login" class="${login ? 'on' : ''}">Log in</button>
       <button data-act="authMode" data-v="create" class="${!login ? 'on' : ''}">Create account</button>
@@ -1412,6 +1412,11 @@ function viewBurn() {
     ${dateBar()}
     ${summaryCard(st)}
     <div class="card"><h3>Workouts <button class="add" data-act="addWorkout">+ Add</button></h3>
+      <div class="photo-btns" style="margin-bottom:10px">
+        <label class="btn primary">📸 Take photo<input type="file" accept="image/*" capture="environment" class="wk-photo-input" aria-label="Take photo of machine"></label>
+        <label class="btn">🖼️ Upload photo<input type="file" accept="image/*" class="wk-photo-input" aria-label="Upload photo of machine"></label>
+      </div>
+      <p class="explain" style="margin:-4px 0 8px">Snap the machine or its screen — I'll detect it and read the time, speed and calories.</p>
       ${(d.workouts || []).length ? d.workouts.map(w => {
         const m = WK[w.type] || WK.other;
         return `<button class="li" data-act="editWorkout" data-id="${w.id}"><span>${m.icon} ${esc(w.name)} <small>${r0(w.minutes)} min${w.speed ? ` · ${w.speed} km/h` : ''}${w.incline ? ` · ${w.incline}%` : ''}${w.intensity != null && m.calc !== 'tread' && m.calc !== 'custom' ? ' · ' + INTENSITY[w.intensity] : ''}</small></span><span class="r">${r0(w.kcal)} kcal</span></button>`;
@@ -1470,7 +1475,7 @@ function viewProfile() {
   return header('Profile') + `<main>
     ${profileForm(p, true)}
     <button class="btn danger block" data-act="logout" style="margin-top:6px">Log out</button>
-    <p class="explain" style="text-align:center;margin-top:14px">Minimal Health Tracker v10 · estimates only, not medical advice</p>
+    <p class="explain" style="text-align:center;margin-top:14px">Minimal Health Tracker v11 · estimates only, not medical advice</p>
   </main>`;
 }
 
@@ -1574,6 +1579,30 @@ function resizeImage(file, max) {
     img.src = url;
   });
 }
+async function askClaude(key, model, b64, prompt) {
+  let res;
+  try {
+    res = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json', 'x-api-key': key, 'anthropic-version': '2023-06-01', 'anthropic-dangerous-direct-browser-access': 'true' },
+      body: JSON.stringify({ model: model || DEFAULT_MODEL, max_tokens: 1500, messages: [{ role: 'user', content: [
+        { type: 'image', source: { type: 'base64', media_type: 'image/jpeg', data: b64 } }, { type: 'text', text: prompt } ] }] }),
+    });
+  } catch (e) { throw fail('No internet connection — could not reach the AI.'); }
+  if (!res.ok) {
+    let m = ''; try { m = ((await res.json()).error || {}).message || ''; } catch (e) {}
+    if (res.status === 401) throw fail('Claude API key is invalid.');
+    throw fail('AI error ' + res.status + (m ? ': ' + m : ''));
+  }
+  const j = await res.json();
+  return (j.content || []).filter(c => c.type === 'text').map(c => c.text).join('');
+}
+async function askVision(b64, prompt) {
+  const s = S.session;
+  if (s.geminiKey) return askGemini(s.geminiKey, b64, prompt);
+  if (s.apiKey) return askClaude(s.apiKey, s.model, b64, prompt);
+  throw fail('Add your free Gemini key first.');
+}
 async function analyzeFood(dataUrl) {
   const s = S.session;
   if (!s.geminiKey && !s.apiKey) throw fail('Add your free Gemini key on the Photo screen to analyse photos.');
@@ -1583,28 +1612,7 @@ Reply with ONLY a JSON object, no other text, exactly in this shape:
 {"items":[{"name":"Idli","grams":120,"kcal":175,"protein":5.4,"carbs":36,"fat":0.5,"fiber":1.8,"sugar":0.6,"calcium":24,"iron":1,"magnesium":24,"potassium":96,"sodium":310,"zinc":0.6,"vitA":0,"vitC":0,"vitB12":0,"folate":18}],"note":"One short sentence on anything you were unsure about."}
 Units for the item's full weight: grams for fiber and sugar; mg for calcium, iron, magnesium, potassium, sodium, zinc, vitC; micrograms for vitA (RAE), vitB12 and folate.
 If no food is visible, return {"items":[],"note":"No food found"}.`;
-  const b64 = dataUrl.split(',')[1];
-  let text = '';
-  if (s.geminiKey) text = await askGemini(s.geminiKey, b64, prompt);
-  else {
-    let res;
-    try {
-      res = await fetch('https://api.anthropic.com/v1/messages', {
-        method: 'POST',
-        headers: { 'content-type': 'application/json', 'x-api-key': s.apiKey, 'anthropic-version': '2023-06-01', 'anthropic-dangerous-direct-browser-access': 'true' },
-        body: JSON.stringify({ model: s.model || DEFAULT_MODEL, max_tokens: 1500, messages: [{ role: 'user', content: [
-          { type: 'image', source: { type: 'base64', media_type: 'image/jpeg', data: b64 } },
-          { type: 'text', text: prompt } ] }] }),
-      });
-    } catch (e) { throw fail('No internet connection — could not reach the AI.'); }
-    if (!res.ok) {
-      let m = ''; try { m = ((await res.json()).error || {}).message || ''; } catch (e) {}
-      if (res.status === 401) throw fail('Claude API key is invalid — update it in Profile → App settings.');
-      throw fail('AI error ' + res.status + (m ? ': ' + m : ''));
-    }
-    const j = await res.json();
-    text = (j.content || []).filter(c => c.type === 'text').map(c => c.text).join('');
-  }
+  const text = await askVision(dataUrl.split(',')[1], prompt);
   const m = text.match(/\{[\s\S]*\}/);
   if (!m) throw fail('Could not read the AI answer — try again or add manually.');
   const out = JSON.parse(m[0]);
@@ -1658,6 +1666,59 @@ async function runAnalysis() {
 /* ================================================================
    SHEETS — WORKOUT
    ================================================================ */
+function workoutPrompt() {
+  return `This photo was taken in a gym. Identify the exercise machine or equipment in it.
+Pick the closest "type" id from this list: ${WORKOUTS.map(w => w.id + ' = ' + w.name).join('; ')}.
+If the machine has a display screen, read the numbers shown on it:
+- elapsed time → "minutes" as a decimal number (e.g. 25:30 → 25.5)
+- speed → "speed" in km/h (if the screen shows mph, multiply by 1.609)
+- incline → "incline" in %
+- calories → "kcal"
+- watts → "watts"; resistance/level → put it in "note"
+Guess "intensity" as "light", "moderate" or "hard" from speed/level if possible, else "moderate".
+Reply with ONLY a JSON object, no other text:
+{"type":"treadmill","machine":"what you see, e.g. Life Fitness treadmill","minutes":null,"speed":null,"incline":null,"kcal":null,"watts":null,"intensity":"moderate","note":"one short sentence"}
+Use null for any number you cannot clearly see. If there is no gym equipment, use "type":"other" and explain in "note".`;
+}
+async function startWorkoutPhoto(file) {
+  let photo;
+  try { photo = await resizeImage(file, 1024); } catch (e) { return toast(e.message, 'bad'); }
+  S.sheet = { kind: 'workout', editId: null, photo, busy: true, detectNote: '', detectErr: '',
+    w: { type: 'treadmill', minutes: null, speed: null, incline: null, intensity: 1, watts: null, kcal: null, manual: false } };
+  const s = S.session;
+  if (!s.geminiKey && !s.apiKey) { S.sheet.busy = false; S.sheet.changeKey = true; renderSheet(); return; }
+  renderSheet();
+  try {
+    const text = await askVision(photo.split(',')[1], workoutPrompt());
+    const mt = text.match(/\{[\s\S]*\}/); if (!mt) throw fail('Could not read the AI answer — pick the machine yourself.');
+    const d = JSON.parse(mt[0]);
+    const sh = S.sheet; if (!sh || sh.photo !== photo) return;
+    const n = x => (x == null || x === '' || isNaN(Number(x))) ? null : Number(x);
+    const type = WK[d.type] ? d.type : 'other', w = sh.w, kg = weightOn(S.date);
+    w.type = type; if (type === 'other') w.name = d.machine || 'Workout';
+    w.minutes = n(d.minutes); w.speed = n(d.speed); w.incline = n(d.incline); w.watts = n(d.watts);
+    w.intensity = { light: 0, moderate: 1, hard: 2 }[String(d.intensity || '').toLowerCase()] ?? 1;
+    const k = n(d.kcal);
+    if (k != null) { w.kcal = r0(k); w.manual = true; } else { w.kcal = r0(wkSuggest(w, kg)); w.manual = false; }
+    const read = [];
+    if (w.minutes != null) read.push(r1(w.minutes) + ' min');
+    if (w.speed != null) read.push(r1(w.speed) + ' km/h');
+    if (w.incline != null) read.push(r1(w.incline) + '% incline');
+    if (k != null) read.push(r0(k) + ' kcal');
+    const ask = [];
+    if (w.minutes == null) ask.push('minutes');
+    if (WK[type].calc === 'tread' && w.speed == null) ask.push('speed');
+    sh.detectNote = `Detected: <b>${esc(WK[type].name)}</b>${d.machine && type !== 'other' ? ` <small>(${esc(d.machine)})</small>` : ''}.<br>` +
+      (read.length ? `Read from the screen: <b>${esc(read.join(', '))}</b>.` : 'No numbers found on a screen.') +
+      (ask.length ? ` Please enter the <b>${ask.join(' and ')}</b> below.` : '') + ' Check everything, then tap <b>Save workout</b>.';
+  } catch (e) { if (S.sheet) S.sheet.detectErr = e.message + ' You can still pick the machine below.'; }
+  if (S.sheet && S.sheet.photo === photo) { S.sheet.busy = false; renderSheet(); }
+}
+function keyBox() {
+  return `<div class="card" style="margin:0 0 12px"><b style="font-size:15px">Turn on photo recognition (free)</b>
+    <p class="explain" style="margin:4px 0 8px">Open <b>aistudio.google.com/apikey</b>, sign in with Google, tap <b>Create API key</b>, copy it and paste here. One time only.</p>
+    <div class="row"><input id="gemKeyIn" class="grow" style="margin:0" type="password" placeholder="Paste key (AQ… or AIza…)" autocapitalize="none" autocorrect="off" spellcheck="false"><button class="btn primary small" data-act="saveGemini">Save</button></div></div>`;
+}
 function sheetWorkout() {
   const sh = S.sheet, w = sh.w, m = WK[w.type], kg = weightOn(S.date);
   const sugg = r0(wkSuggest(w, kg));
@@ -1673,7 +1734,17 @@ function sheetWorkout() {
   } else {
     fields = `<div class="field"><label>Activity name<input data-wf="name" value="${esc(w.name || '')}"></label></div><div class="field">${fields}</div>`;
   }
+  const photoTop = `${sh.photo ? `<img class="photo-prev" src="${sh.photo}" alt="Gym equipment">` : ''}
+    ${sh.busy ? `<div class="center" style="min-height:80px"><div class="spinner"></div><p class="muted">Finding the machine &amp; reading the screen…</p></div>` : ''}
+    ${sh.changeKey ? keyBox() : ''}
+    ${sh.detectNote && !sh.busy ? `<div class="note info" style="margin:0 0 12px">${sh.detectNote}</div>` : ''}
+    ${sh.detectErr && !sh.busy ? `<div class="note bad" style="margin:0 0 12px">${esc(sh.detectErr)}</div>` : ''}
+    ${!sh.editId && !sh.busy ? `<div class="photo-btns" style="margin-bottom:12px">
+      <label class="btn">📸 ${sh.photo ? 'Retake' : 'Take photo'}<input type="file" accept="image/*" capture="environment" class="wk-photo-input" aria-label="Take photo of machine"></label>
+      <label class="btn">🖼️ Upload photo<input type="file" accept="image/*" class="wk-photo-input" aria-label="Upload photo of machine"></label></div>` : ''}`;
+  if (sh.busy) return `<div class="sheet-h"><h2>Scanning machine</h2><button class="x" data-act="closeSheet">✕</button></div>${photoTop}`;
   return `<div class="sheet-h"><h2>${sh.editId ? 'Edit workout' : 'Add workout'}</h2><button class="x" data-act="closeSheet">✕</button></div>
+    ${photoTop}
     <div class="field"><label>Gym equipment / activity<select id="wkTypeSel">${[...new Set(WORKOUTS.map(x => x.g))].map(g => `<optgroup label="${g}">${WORKOUTS.filter(x => x.g === g).map(x => `<option value="${x.id}" ${x.id === w.type ? 'selected' : ''}>${x.icon} ${x.name}</option>`).join('')}</optgroup>`).join('')}</select></label></div>
     ${fields}
     <div class="card" style="margin-top:4px">
@@ -1878,7 +1949,8 @@ const ACT = {
       Object.assign(s, next); CONFIG = Object.assign(CONFIG || {}, next);
       SS.set('ft_session', s); LS.set('ft_session', s);
       S.sheet.changeKey = false; LS.del('ft_gem_way');
-      toast('Photo recognition is on', 'good'); renderSheet();
+      toast('Photo recognition is on', 'good');
+      if (S.sheet.kind === 'workout' && S.sheet.photo) { const blob = await (await fetch(S.sheet.photo)).blob(); startWorkoutPhoto(blob); } else renderSheet();
     } finally { unbusy(el); }
   },
   useMeal(el) {
@@ -1940,6 +2012,7 @@ document.addEventListener('input', (e) => {
 });
 document.addEventListener('change', async (e) => {
   const t = e.target;
+  if (t.classList.contains('wk-photo-input') && t.files && t.files[0]) { const f = t.files[0]; t.value = ''; startWorkoutPhoto(f); return; }
   if (t.classList.contains('photo-input') && t.files && t.files[0]) {
     try { S.sheet.photo = await resizeImage(t.files[0], 1024); S.sheet.items = []; S.sheet.note = ''; t.value = ''; await runAnalysis(); }
     catch (err) { toast(err.message, 'bad'); }
@@ -1976,7 +2049,7 @@ async function boot() {
 boot();
 
 // expose for testing
-window.__fittrack = { FOOD, nutritionCard, needsCard, todayTable, viewSuggest, viewHome, viewFood, viewBurn, sheetWorkout, bmiOf, bmiCat, fatPct, bmr, treadKcal, bikeKcal, wkSuggest, S, plan, dayStats };
+window.__fittrack = { startWorkoutPhoto, sheetWorkout, FOOD, nutritionCard, needsCard, todayTable, viewSuggest, viewHome, viewFood, viewBurn, sheetWorkout, bmiOf, bmiCat, fatPct, bmr, treadKcal, bikeKcal, wkSuggest, S, plan, dayStats };
 })();
 </script>
 </body>
