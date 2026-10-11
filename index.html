@@ -865,7 +865,7 @@ function viewAuth() {
   return `<div class="auth">
     <img class="logo" src="icons/logo.png" alt="">
     <h1>Minimal Health Tracker</h1>
-    <p class="sub">Your weight-loss tracker · v12</p>
+    <p class="sub">Your weight-loss tracker · v13</p>
     <div class="seg">
       <button data-act="authMode" data-v="login" class="${login ? 'on' : ''}">Log in</button>
       <button data-act="authMode" data-v="create" class="${!login ? 'on' : ''}">Create account</button>
@@ -1178,6 +1178,7 @@ function viewHome() {
     <div class="card">${dailyCharts(p, last)}</div>
 
     <div class="card"><h3>Weight</h3>${weightChart(p, pl)}</div>
+    <button class="btn block" data-act="exportXlsx" style="margin-bottom:12px">⬇️ Export all days to Excel</button>
   </main>`;
 }
 
@@ -1480,8 +1481,12 @@ function viewProfile() {
   const dataUrl = `https://github.com/${encodeURIComponent(s.owner)}/${encodeURIComponent(s.dataRepo)}/blob/HEAD/${s.dataPath}`;
   return header('Profile') + `<main>
     ${profileForm(p, true)}
+    <div class="card"><h3>Download your data</h3>
+      <p class="explain" style="margin:0 0 10px">Excel file with every day: summary, each meal, nutrients, workouts, steps and weight.</p>
+      <button class="btn blue block" data-act="exportXlsx">⬇️ Export to Excel</button>
+    </div>
     <button class="btn danger block" data-act="logout" style="margin-top:6px">Log out</button>
-    <p class="explain" style="text-align:center;margin-top:14px">Minimal Health Tracker v12 · estimates only, not medical advice</p>
+    <p class="explain" style="text-align:center;margin-top:14px">Minimal Health Tracker v13 · estimates only, not medical advice</p>
   </main>`;
 }
 
@@ -1987,6 +1992,52 @@ const ACT = {
     } finally { unbusy(el); }
   },
 
+  async exportXlsx(el) {
+    busy(el, 'Preparing Excel…');
+    try {
+      if (!window.XLSX) await new Promise((ok, bad) => {
+        const sc = document.createElement('script');
+        sc.src = 'https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js';
+        sc.onload = ok; sc.onerror = () => bad(fail('Could not load the Excel tool — check your internet.'));
+        document.head.appendChild(sc);
+      });
+      const p = P(), days = Object.keys(S.data.days).sort();
+      const R = v => v == null || v === '' ? '' : Math.round(v * 10) / 10;
+      const summary = [], meals = [], works = [], micro = [];
+      days.forEach(ds => {
+        const st = dayStats(ds), d = S.data.days[ds] || {}, dn = dayNutrition(ds), t = dn.tot;
+        const dayNo = diffDays(p.startDate, ds) + 1;
+        summary.push({ Date: ds, 'Plan day': dayNo >= 1 ? dayNo : '', 'Weight (kg)': d.weight ?? '', 'Eaten (kcal)': R(t.kcal), 'Protein (g)': R(t.protein), 'Carbs (g)': R(t.carbs), 'Sugar (g)': R(t.sugar), 'Fat (g)': R(t.fat), 'Fibre (g)': R(t.fiber),
+          'Workouts (kcal)': R(st.exGross), 'Workout minutes': (d.workouts || []).reduce((a, x) => a + (x.minutes || 0), 0), Steps: d.steps ?? '', 'Steps (kcal)': R(st.stepsK),
+          'Body uses (kcal)': R(st.base), 'Total burned (kcal)': R(st.burn), 'Deficit (kcal)': st.deficit == null ? '' : R(st.deficit), 'Fat lost (g)': st.deficit == null ? '' : R(st.deficit / 7.7),
+          'Meals logged': (d.meals || []).length, Remark: d.remark || '' });
+        micro.push({ Date: ds, 'Vitamin A (µg)': R(t.vitA), 'Vitamin C (mg)': R(t.vitC), 'Vitamin B12 (µg)': R(t.vitB12), 'Folate (µg)': R(t.folate), 'Calcium (mg)': R(t.calcium), 'Iron (mg)': R(t.iron), 'Magnesium (mg)': R(t.magnesium), 'Potassium (mg)': R(t.potassium), 'Zinc (mg)': R(t.zinc), 'Sodium (mg)': R(t.sodium) });
+        (d.meals || []).forEach(m => {
+          const mi = microOfMeal(m) || {};
+          meals.push({ Date: ds, Meal: slotLabel(m.slot), Food: m.name, 'Grams': R(m.grams), kcal: R(m.kcal), 'Protein (g)': R(m.protein), 'Carbs (g)': R(m.carbs), 'Fat (g)': R(m.fat), 'Fibre (g)': R(mi.fiber), 'Sugar (g)': R(mi.sugar),
+            'Calcium (mg)': R(mi.calcium), 'Iron (mg)': R(mi.iron), 'Vit C (mg)': R(mi.vitC), 'Sodium (mg)': R(mi.sodium), Source: { ai: 'Photo AI', list: 'Food list', suggest: 'Suggestion', manual: 'Manual' }[m.source] || (m.source || 'Manual') });
+        });
+        (d.workouts || []).forEach(w => works.push({ Date: ds, Equipment: w.name, Minutes: R(w.minutes), 'Speed (km/h)': w.speed ?? '', 'Incline (%)': w.incline ?? '', Effort: w.intensity != null ? INTENSITY[w.intensity] : '', kcal: R(w.kcal) }));
+      });
+      const pl = plan();
+      const prof = [['Name', p.name || ''], ['Username', S.session.username], ['Sex', p.sex], ['Age', p.age], ['Height (cm)', p.heightCm], ['Starting weight (kg)', p.startWeight],
+        ['Goal: lose (kg)', p.targetLoss], ['Goal: days', p.targetDays], ['Start date', p.startDate], ['End date', pl.end], ['Target weight (kg)', R(pl.targetW)],
+        ['Current weight (kg)', R(pl.curW)], ['Body fat now (est. %)', R(pl.fatNowPct)], ['Food preference', p.diet || 'nonveg'], ['Health issues', (p.health || []).join(', ')], ['Exported on', new Date().toLocaleString('en-IN')]];
+      const wb = XLSX.utils.book_new();
+      const add = (rows, name, widths) => {
+        const ws = Array.isArray(rows[0]) ? XLSX.utils.aoa_to_sheet(rows) : XLSX.utils.json_to_sheet(rows.length ? rows : [{ Note: 'No data yet' }]);
+        if (widths) ws['!cols'] = widths.map(w => ({ wch: w }));
+        XLSX.utils.book_append_sheet(wb, ws, name);
+      };
+      add(summary, 'Daily summary', [11, 8, 11, 11, 10, 9, 9, 8, 9, 14, 14, 8, 11, 15, 17, 13, 11, 12, 30]);
+      add(meals, 'Meals', [11, 10, 28, 8, 7, 10, 9, 8, 9, 9, 11, 9, 9, 11, 11]);
+      add(micro, 'Vitamins & minerals', [11, 13, 13, 15, 11, 12, 10, 14, 14, 10, 12]);
+      add(works, 'Workouts', [11, 30, 9, 12, 11, 10, 8]);
+      add([['Field', 'Value'], ...prof], 'Profile', [22, 40]);
+      XLSX.writeFile(wb, `Minimal-Health-${S.session.username}-${todayStr()}.xlsx`);
+      toast('Excel downloaded', 'good');
+    } finally { unbusy(el); }
+  },
   exportCsv() {
     const p = P(), rows = [['date', 'weight_kg', 'intake_kcal', 'protein_g', 'burn_kcal', 'workout_kcal', 'steps', 'sleep_h', 'water_ml', 'deficit_kcal', 'remark']];
     Object.keys(S.data.days).sort().forEach(ds => {
@@ -2055,7 +2106,7 @@ async function boot() {
 boot();
 
 // expose for testing
-window.__fittrack = { profileForm, startWorkoutPhoto, sheetWorkout, FOOD, nutritionCard, needsCard, todayTable, viewSuggest, viewHome, viewFood, viewBurn, sheetWorkout, bmiOf, bmiCat, fatPct, bmr, treadKcal, bikeKcal, wkSuggest, S, plan, dayStats };
+window.__fittrack = { ACT, profileForm, startWorkoutPhoto, sheetWorkout, FOOD, nutritionCard, needsCard, todayTable, viewSuggest, viewHome, viewFood, viewBurn, sheetWorkout, bmiOf, bmiCat, fatPct, bmr, treadKcal, bikeKcal, wkSuggest, S, plan, dayStats };
 })();
 </script>
 </body>
