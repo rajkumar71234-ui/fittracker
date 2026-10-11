@@ -888,7 +888,7 @@ function viewAuth() {
   return `<div class="auth">
     <img class="logo" src="icons/logo.png" alt="">
     <h1>Minimal Health Tracker</h1>
-    <p class="sub">Your weight-loss tracker · v19</p>
+    <p class="sub">Your weight-loss tracker · v20</p>
     <div class="seg">
       <button data-act="authMode" data-v="login" class="${login ? 'on' : ''}">Log in</button>
       <button data-act="authMode" data-v="create" class="${!login ? 'on' : ''}">Create account</button>
@@ -1698,7 +1698,6 @@ function viewBurn() {
       ${d.body ? `<div class="chips" style="margin-bottom:10px">${bodyChips(d.body)}</div>` : ''}
       <form id="bodyForm" onsubmit="return false">
         <div class="field"><label>Body weight today (kg)<input name="weight" type="number" step="any" inputmode="decimal" value="${d.weight ?? ''}" placeholder="${r1(weightOn(date))}"></label></div>
-        <div class="field"><label>Remark about the day<textarea name="remark" placeholder="How did you feel? Cheat meal? Tired?">${esc(d.remark || '')}</textarea></label></div>
         <button class="btn primary block" data-act="saveBody">Save weight</button>
       </form>
     </div>
@@ -1752,7 +1751,7 @@ function viewProfile() {
       <button class="btn blue block" data-act="exportXlsx">⬇️ Export to Excel</button>
     </div>
     <button class="btn danger block" data-act="logout" style="margin-top:6px">Log out</button>
-    <p class="explain" style="text-align:center;margin-top:14px">Minimal Health Tracker v19 · estimates only, not medical advice</p>
+    <p class="explain" style="text-align:center;margin-top:14px">Minimal Health Tracker v20 · estimates only, not medical advice</p>
   </main>`;
 }
 
@@ -2230,7 +2229,6 @@ const ACT = {
     if (w != null && (w < 30 || w > 300)) throw fail('Check the weight (kg).');
     mutateDay(S.date, d => {
       d.weight = w == null ? undefined : r1(w);
-      d.remark = String(fd.get('remark') || '').trim();
     });
     toast('Saved', 'good'); render();
   },
