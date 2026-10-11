@@ -858,7 +858,7 @@ function viewAuth() {
   return `<div class="auth">
     <img class="logo" src="icons/logo.png" alt="">
     <h1>Minimal Health Tracker</h1>
-    <p class="sub">Your weight-loss tracker · v8</p>
+    <p class="sub">Your weight-loss tracker · v9</p>
     <div class="seg">
       <button data-act="authMode" data-v="login" class="${login ? 'on' : ''}">Log in</button>
       <button data-act="authMode" data-v="create" class="${!login ? 'on' : ''}">Create account</button>
@@ -1469,7 +1469,7 @@ function viewProfile() {
   return header('Profile') + `<main>
     ${profileForm(p, true)}
     <button class="btn danger block" data-act="logout" style="margin-top:6px">Log out</button>
-    <p class="explain" style="text-align:center;margin-top:14px">Minimal Health Tracker v8 · estimates only, not medical advice</p>
+    <p class="explain" style="text-align:center;margin-top:14px">Minimal Health Tracker v9 · estimates only, not medical advice</p>
   </main>`;
 }
 
@@ -1499,9 +1499,10 @@ function sheetFood() {
           <label class="btn"><input type="file" accept="image/*" capture="environment" class="photo-input">📸 Take photo</label>
           <label class="btn"><input type="file" accept="image/*" class="photo-input">🖼️ From gallery</label>
         </div>
-        ${!S.session.geminiKey && !S.session.apiKey ? `<div class="card" style="margin-top:10px"><b style="font-size:15px">Turn on photo recognition (free)</b>
+        ${(!S.session.geminiKey && !S.session.apiKey) || sh.changeKey ? `<div class="card" style="margin-top:10px"><b style="font-size:15px">Turn on photo recognition (free)</b>
           <p class="explain" style="margin:4px 0 8px">Open <b>aistudio.google.com/apikey</b>, sign in with Google, tap <b>Create API key</b>, copy it and paste here. One time only.</p>
-          <div class="row"><input id="gemKeyIn" class="grow" style="margin:0" type="password" placeholder="AIza…" autocapitalize="none"><button class="btn primary small" data-act="saveGemini">Save</button></div></div>` : ''}
+          <div class="row"><input id="gemKeyIn" class="grow" style="margin:0" type="password" placeholder="Paste key (AQ… or AIza…)" autocapitalize="none" autocorrect="off" spellcheck="false"><button class="btn primary small" data-act="saveGemini">Save</button></div></div>` : ''}
+        ${S.session.geminiKey && !sh.changeKey ? `<p style="margin:10px 0 0;text-align:center"><button class="muted" style="font-size:13px;text-decoration:underline" data-act="changeKey">Change photo key</button></p>` : ''}
         ${sh.error ? `<div class="note bad">${esc(sh.error)}</div>${sh.photo ? '<button class="btn block" style="margin-top:8px" data-act="retryPhoto">Try again</button>' : ''}` : ''}` : ''}
       ${sh.note && sh.items.length ? `<div class="note info" style="margin-bottom:10px">${esc(sh.note)}</div>` : ''}`;
   } else if (sh.mode === 'search') {
@@ -1610,30 +1611,37 @@ If no food is visible, return {"items":[],"note":"No food found"}.`;
 }
 const GEMINI_MODELS = ['gemini-3.8-flash', 'gemini-3.6-flash', 'gemini-3.5-flash-lite', 'gemini-3-flash-preview'];
 async function askGemini(key, b64, prompt) {
+  const body = JSON.stringify({ contents: [{ parts: [{ inline_data: { mime_type: 'image/jpeg', data: b64 } }, { text: prompt }] }],
+    generationConfig: { responseMimeType: 'application/json', temperature: 0.2 } });
+  const authWays = [
+    m => ({ url: `https://generativelanguage.googleapis.com/v1beta/models/${m}:generateContent`, headers: { 'content-type': 'application/json', 'x-goog-api-key': key } }),
+    m => ({ url: `https://generativelanguage.googleapis.com/v1beta/models/${m}:generateContent?key=${encodeURIComponent(key)}`, headers: { 'content-type': 'application/json' } }),
+    m => ({ url: `https://generativelanguage.googleapis.com/v1beta/models/${m}:generateContent`, headers: { 'content-type': 'application/json', Authorization: 'Bearer ' + key } }),
+  ];
   let lastErr = 'Gemini could not read the photo.';
+  let wayIdx = Number(LS.get('ft_gem_way') || 0);
   for (const model of GEMINI_MODELS) {
-    let res;
-    try {
-      res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`, {
-        method: 'POST',
-        headers: { 'content-type': 'application/json', 'x-goog-api-key': key },
-        body: JSON.stringify({ contents: [{ parts: [{ inline_data: { mime_type: 'image/jpeg', data: b64 } }, { text: prompt }] }],
-          generationConfig: { responseMimeType: 'application/json', temperature: 0.2 } }),
-      });
-    } catch (e) { throw fail('No internet connection — could not reach Google Gemini.'); }
-    if (res.ok) {
-      const j = await res.json();
-      return ((((j.candidates || [])[0] || {}).content || {}).parts || []).map(p => p.text || '').join('');
+    for (let a = 0; a < authWays.length; a++) {
+      const wi = (wayIdx + a) % authWays.length, w = authWays[wi](model);
+      let res;
+      try { res = await fetch(w.url, { method: 'POST', headers: w.headers, body }); }
+      catch (e) { throw fail('No internet connection — could not reach Google Gemini.'); }
+      if (res.ok) {
+        LS.set('ft_gem_way', wi);
+        const j = await res.json();
+        return ((((j.candidates || [])[0] || {}).content || {}).parts || []).map(p => p.text || '').join('');
+      }
+      let m = ''; try { m = ((await res.json()).error || {}).message || ''; } catch (e) {}
+      lastErr = 'Gemini error ' + res.status + (m ? ': ' + m : '');
+      if (res.status === 429) throw fail('Free Gemini limit reached for now — try again in a minute, or use the food list.');
+      const authProblem = res.status === 401 || res.status === 403 || (res.status === 400 && /key|auth|credential/i.test(m));
+      if (!authProblem) break;           // model problem → try next model
     }
-    let m = ''; try { m = ((await res.json()).error || {}).message || ''; } catch (e) {}
-    if (res.status === 400 && /api key/i.test(m)) throw fail('Gemini key is not valid — create a new one at aistudio.google.com/apikey.');
-    if (res.status === 403) throw fail('Gemini key was refused — create a new free key at aistudio.google.com/apikey.');
-    lastErr = 'Gemini error ' + res.status + (m ? ': ' + m : '');
-    if (res.status === 429) throw fail('Free Gemini limit reached for now — try again in a minute, or use the food list.');
-    // 404 / model not available → try the next model
   }
+  if (/key|auth|credential|401|403/i.test(lastErr)) throw fail('Google did not accept this key (' + lastErr.slice(0, 120) + '). Create a new key at aistudio.google.com/apikey and paste it on the Photo screen.');
   throw fail(lastErr);
 }
+
 async function runAnalysis() {
   const sh = S.sheet; if (!sh || !sh.photo) return;
   sh.busy = true; sh.error = ''; renderSheet();
@@ -1858,15 +1866,17 @@ const ACT = {
     S.sheet = null; render(); toast('Deleted');
   },
   closeSheet() { S.sheet = null; renderSheet(); },
+  changeKey() { S.sheet.changeKey = true; renderSheet(); },
   async saveGemini(el) {
     const k = (($('#gemKeyIn') || {}).value || '').trim(), s = S.session;
-    if (!/^AIza[\w-]{20,}$/.test(k)) throw fail('That does not look like a Gemini key — it starts with AIza.');
+    if (k.length < 20 || /\s/.test(k)) throw fail('That does not look like a Gemini key — copy the whole key from AI Studio.');
     busy(el, '…');
     try {
       const next = { token: s.token, apiKey: s.apiKey || '', geminiKey: k, model: s.model || DEFAULT_MODEL };
       await writeConfig(s.owner, s.appRepo, s.dataRepo, next, 'Add Gemini key');
       Object.assign(s, next); CONFIG = Object.assign(CONFIG || {}, next);
       SS.set('ft_session', s); LS.set('ft_session', s);
+      S.sheet.changeKey = false; LS.del('ft_gem_way');
       toast('Photo recognition is on', 'good'); renderSheet();
     } finally { unbusy(el); }
   },
