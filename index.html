@@ -244,6 +244,128 @@ const FOOD = [
   ['Sugar',387,0,100,0,5,'1 tsp'],['Ghee',900,0,0,100,5,'1 tsp'],['Cooking oil',884,0,0,100,5,'1 tsp'],
 ].map(a => ({ n: a[0], k: a[1], p: a[2], c: a[3], f: a[4], s: a[5], sl: a[6] }));
 
+const MICRO_KEYS = ['fiber', 'sugar', 'calcium', 'iron', 'magnesium', 'potassium', 'sodium', 'zinc', 'vitA', 'vitC', 'vitB12', 'folate'];
+// per 100 g (approximate, IFCT/USDA-style values)
+const MICRO = {"Idli":[1.5,0.5,20,0.8,20,80,260,0.5,0,0,0,15],"Plain dosa":[1.5,0.5,20,1.2,25,90,300,0.6,0,0,0,15],"Masala dosa":[2,1.5,25,1.3,25,200,350,0.6,10,6,0,18],"Rava dosa":[1,0.5,20,1,15,70,320,0.4,0,0,0,10],"Onion uttapam":[1.8,1.5,25,1.1,22,120,300,0.5,5,3,0,15],"Ven pongal":[1.5,0.5,20,1,25,90,280,0.6,20,0,0.05,15],"Rava upma":[1.5,1,15,1,20,90,330,0.4,30,3,0,12],"Poori":[3,1,20,2,30,120,250,0.8,0,0,0,20],"Chapati / roti":[4,1,30,2.5,60,200,250,1.5,0,0,0,30],"Parotta":[2,1.5,20,1.5,20,100,450,0.6,30,0,0,20],"Appam":[1,3,15,0.6,15,70,150,0.4,0,0,0,8],"Idiyappam":[0.8,0.2,8,0.5,15,40,50,0.5,0,0,0,5],"Ragi dosa":[3,0.5,120,1.5,40,120,280,0.6,0,0,0,15],"Medu vada":[4,1,40,2.5,50,250,450,1,5,0,0,60],"Pesarattu":[4,1,30,2,45,280,250,0.9,10,2,0,90],"White rice (cooked)":[0.4,0.1,10,0.2,12,35,1,0.5,0,0,0,3],"Brown rice (cooked)":[1.8,0.4,10,0.4,43,43,5,0.6,0,0,0,4],"Curd rice":[0.4,2,70,0.2,12,80,250,0.5,15,0.5,0.15,5],"Lemon rice":[0.8,0.3,15,0.5,15,60,300,0.5,5,4,0,6],"Sambar":[2.5,2,30,1.2,20,200,350,0.4,60,6,0,35],"Rasam":[0.8,1.5,15,0.6,10,150,400,0.2,30,8,0,10],"Dal / paruppu (cooked)":[2.5,0.5,20,1.5,30,200,250,0.8,5,1,0,60],"Vegetable poriyal":[3,3,40,1,20,250,250,0.4,150,15,0,30],"Kootu":[3,2,40,1.2,25,220,250,0.6,80,8,0,40],"Aviyal":[2.5,2.5,30,0.8,20,230,230,0.4,100,10,0.05,25],"Chana masala":[5,2,45,2,35,280,350,1.2,20,4,0,80],"Rajma curry":[5,1.5,40,2,40,320,320,1,10,3,0,90],"Paneer curry":[1,3,250,0.5,15,150,350,1.5,150,4,0.4,15],"Paneer (raw)":[0,1.2,480,0.2,20,100,20,2.5,200,0,0.8,10],"Chicken curry":[0.8,1.5,15,0.9,20,200,350,1.2,30,2,0.3,8],"Chicken breast (grilled)":[0,0,15,1,29,256,74,1,9,0,0.3,4],"Chicken 65":[0.5,1,15,1,22,220,500,1.2,20,1,0.3,6],"Chicken biryani":[1,1,20,1,20,150,400,0.9,20,1,0.2,10],"Veg biryani":[1.5,1.5,20,0.8,20,120,380,0.5,40,3,0,10],"Mutton curry":[0.5,1,15,2,20,250,350,3.5,10,2,1.5,6],"Fish curry":[0.5,1,40,1,25,300,350,0.5,30,3,1.5,10],"Fish fry":[0.5,0.5,30,1,30,350,450,0.6,30,0,2,10],"Prawn curry":[0.5,1,60,1.5,30,200,450,1.3,40,3,1,15],"Boiled egg":[0,1.1,50,1.2,10,126,124,1.1,149,0,1.1,44],"Egg white (boiled)":[0,0.7,7,0.1,11,163,166,0,0,0,0.1,4],"Omelette (1 egg)":[0,1,55,1.3,12,140,300,1.1,160,0,1,40],"Boiled chickpeas / sundal":[7,2,50,2.5,45,280,250,1.5,1,1,0,170],"Moong sprouts":[1.8,4,13,0.9,21,149,6,0.4,1,13,0,61],"Soya chunks (dry)":[13,7,350,20,280,2000,10,4.5,0,0,0,300],"Whey protein":[0,5,450,1,120,500,200,3,0,0,1.5,0],"Curd / yogurt":[0,4.7,121,0.1,12,155,46,0.6,30,0.5,0.4,7],"Greek yogurt (plain)":[0,3.6,110,0.1,11,141,36,0.5,1,0,0.75,7],"Milk (toned)":[0,4.8,120,0.1,11,150,45,0.4,45,0.5,0.4,5],"Buttermilk":[0,2.5,60,0.05,6,80,150,0.2,10,0.3,0.2,3],"Tea with milk & sugar":[0,6.5,40,0.1,5,60,15,0.1,10,0,0.1,2],"Filter coffee (milk & sugar)":[0,7.5,50,0.1,10,90,15,0.1,12,0,0.15,2],"Black coffee / green tea":[0,0,2,0.02,3,49,2,0,0,0,0,2],"Tender coconut water":[1.1,2.6,24,0.3,25,250,105,0.1,0,2.4,0,3],"Banana":[2.6,12,5,0.3,27,358,1,0.15,3,8.7,0,20],"Apple":[2.4,10,6,0.1,5,107,1,0,3,4.6,0,3],"Orange / mosambi":[2.4,9,40,0.1,10,181,0,0.07,11,53,0,30],"Papaya":[1.7,8,20,0.25,21,182,8,0.08,47,61,0,37],"Guava":[5.4,9,18,0.26,22,417,2,0.23,31,228,0,49],"Watermelon":[0.4,6,7,0.24,10,112,1,0.1,28,8,0,3],"Pomegranate":[4,14,10,0.3,12,236,3,0.35,0,10,0,38],"Grapes":[0.9,16,10,0.36,7,191,2,0.07,3,3.2,0,2],"Pineapple":[1.4,10,13,0.3,12,109,1,0.1,3,48,0,18],"Mango":[1.6,14,11,0.16,10,168,1,0.09,54,36,0,43],"Sapota / chikoo":[5.3,14,21,0.8,12,193,12,0.1,3,15,0,14],"Dates":[8,63,39,1,43,656,2,0.3,0,0.4,0,19],"Mixed fruit bowl":[2,11,12,0.25,12,180,2,0.1,20,25,0,15],"Cucumber / salad":[0.8,2,18,0.3,13,160,4,0.2,25,5,0,15],"Carrot":[2.8,4.7,33,0.3,12,320,69,0.24,835,6,0,19],"Sweet corn (boiled)":[2.4,4.5,3,0.5,26,218,1,0.6,9,5,0,23],"Oats (dry)":[10,1,54,4.7,177,429,2,4,0,0,0,56],"Oats porridge with milk":[1.5,4,90,0.8,30,170,40,0.7,30,0.4,0.3,10],"Bread (brown)":[6,6,160,2.5,75,250,450,1.8,0,0,0,40],"Bread (white)":[2.7,5,150,3.6,23,120,490,0.7,0,0,0,110],"Peanut butter":[6,9,50,1.9,170,650,430,2.9,0,0,0,90],"Peanuts (roasted)":[8.5,4,55,2.3,175,660,6,3.3,0,0,0,145],"Almonds":[12.5,4.4,270,3.7,270,733,1,3.1,0,0,0,44],"Cashews":[3.3,6,37,6.7,292,660,12,5.8,0,0.5,0,25],"Walnuts":[6.7,2.6,98,2.9,158,441,2,3.1,1,1.3,0,98],"Makhana (roasted)":[14.5,0,60,1.4,67,500,1,1.4,0,0,0,14],"Roasted chana":[17,10,58,5,140,850,20,3,1,0,0,150],"Marie biscuit":[2,20,30,2,20,130,350,0.6,0,0,0,10],"Murukku":[3,1,30,2.5,40,180,600,1,0,0,0,20],"Samosa":[3,2,25,1.5,20,200,420,0.5,10,3,0,20],"Bajji / bonda":[2.5,2,30,1.8,25,200,420,0.6,15,3,0,30],"Veg puff":[1.5,3,20,1.5,15,120,450,0.4,30,2,0,15],"Gulab jamun":[0.5,40,80,0.8,10,100,60,0.3,30,0,0.1,5],"Kesari":[0.5,30,15,0.6,10,60,50,0.3,40,0,0,5],"Chocolate":[7,48,73,8,146,559,24,2.3,2,0,0.3,12],"Ice cream":[0.7,21,128,0.1,14,199,80,0.7,118,0.6,0.4,5],"Fried rice":[1,1,15,0.6,15,90,450,0.5,30,2,0.05,10],"Veg noodles":[1.5,2,15,1,15,100,500,0.4,30,3,0,15],"Pizza":[2.3,3.6,190,2.5,24,170,600,1.3,70,1,0.5,40],"Burger":[1.5,5,70,2,22,220,500,2,10,1,0.8,30],"Fresh juice (no sugar)":[0.2,9,10,0.2,10,180,2,0.05,10,40,0,25],"Sugar":[0,100,1,0,0,2,1,0,0,0,0,0],"Ghee":[0,0,4,0,0,5,2,0,840,0,0,0],"Cooking oil":[0,0,0,0,0,0,0,0,0,0,0,0]};
+function findFood(name) {
+  const n = String(name || '').toLowerCase().trim(); if (!n) return null;
+  return FOOD.find(f => f.n.toLowerCase() === n)
+    || FOOD.find(f => n.includes(f.n.toLowerCase().split(' (')[0]))
+    || FOOD.find(f => f.n.toLowerCase().split(' (')[0].split(' / ').some(part => part.length > 3 && n.includes(part)));
+}
+function microOfMeal(m) {
+  if (m.micro) return m.micro;
+  const f = findFood(m.name); if (!f || !MICRO[f.n]) return null;
+  const q = (Number(m.grams) || 0) / 100, o = {};
+  MICRO_KEYS.forEach((k, i) => { o[k] = MICRO[f.n][i] * q; });
+  return o;
+}
+function dayNutrition(date) {
+  const meals = (S.data.days[date] || {}).meals || [];
+  const tot = { kcal: 0, protein: 0, carbs: 0, fat: 0 }; MICRO_KEYS.forEach(k => tot[k] = 0);
+  let unknown = 0;
+  meals.forEach(m => {
+    ['kcal', 'protein', 'carbs', 'fat'].forEach(k => tot[k] += Number(m[k]) || 0);
+    const mi = microOfMeal(m);
+    if (mi) MICRO_KEYS.forEach(k => tot[k] += Number(mi[k]) || 0); else unknown++;
+  });
+  return { tot, unknown, count: meals.length };
+}
+function microRDA(p) { // ICMR-NIN 2020 adult RDA (approx.)
+  const m = p.sex !== 'female';
+  return { calcium: 1000, iron: m ? 19 : 29, magnesium: m ? 440 : 370, potassium: 3500, zinc: m ? 17 : 13, sodium: 2000,
+    vitA: m ? 1000 : 840, vitC: m ? 80 : 65, vitB12: 2.5, folate: m ? 300 : 220 };
+}
+const STRENGTH_GROUPS = new Set(['Strength machines', 'Free weights & bodyweight']);
+function nutritionNeeds(date) {
+  const p = P(), st = dayStats(date), tg = dailyTarget(), f = healthFlags(p), w = st.w;
+  const ws = st.d.workouts || [];
+  const isStr = x => { const m = WK[x.type]; return m && STRENGTH_GROUPS.has(m.g) && !['hiit', 'battlerope'].includes(x.type); };
+  const strMin = ws.filter(isStr).reduce((a, x) => a + (x.minutes || 0), 0);
+  const cardioMin = ws.filter(x => !isStr(x)).reduce((a, x) => a + (x.minutes || 0), 0);
+  const gpk = strMin > 0 ? 1.6 : cardioMin >= 20 ? 1.4 : 1.2;
+  const kind = strMin && cardioMin ? 'strength + cardio' : strMin ? 'strength training' : cardioMin ? 'cardio' : ws.length ? 'light exercise' : 'no workout yet';
+  const minEat = p.sex === 'male' ? 1500 : 1200;
+  const kcal = Math.max(minEat, Math.round((tg.eat + (st.exShow > 0 ? (st.exShow - tg.burn) * 0.85 : 0)) / 10) * 10);
+  const protein = Math.round(gpk * w);
+  const fat = Math.round(kcal * 0.25 / 9);
+  const carbs = Math.max(100, Math.round((kcal - protein * 4 - fat * 9) / 4));
+  const sugar = Math.round(kcal * (f.diabetes ? 0.05 : 0.10) / 4);
+  const exMin = strMin + cardioMin;
+  const water = Math.round((w * 35 + exMin / 30 * 500) / 100) / 10;
+  return { kcal, protein, carbs, fat, sugar, fiber: 30, water, gpk, kind, strMin, cardioMin, exMin, diabetes: f.diabetes };
+}
+function pctBar(val, need, isLimit) {
+  const pct = need > 0 ? val / need * 100 : 0;
+  const col = isLimit ? (pct > 100 ? 'var(--bad)' : 'var(--accent)') : (pct >= 80 ? 'var(--accent)' : pct >= 40 ? 'var(--warn)' : 'var(--bad)');
+  return `<div style="font-size:12px;font-weight:650;color:${col}">${r0(pct)}%</div><div class="bar" style="height:5px;margin-top:3px"><i style="width:${Math.min(100, pct)}%;background:${col}"></i></div>`;
+}
+function nutritionCard(date) {
+  const p = P(), nd = nutritionNeeds(date), dn = dayNutrition(date), t = dn.tot, rda = microRDA(p);
+  if (!dn.count) return `<div class="card"><h3>Today's nutrition</h3><p class="muted" style="margin:0;font-size:14px">Add your food and I'll show the protein, carbs, vitamins and minerals you've eaten.</p></div>`;
+  const fmt = (v, u) => (v >= 100 ? r0(v) : v >= 10 ? r0(v) : r1(v)) + ' ' + u;
+  const row = (label, v, need, u, lim) => `<tr><td>${label}</td><td>${fmt(v, u)}</td><td>${lim ? '≤ ' : ''}${fmt(need, u)}</td><td>${pctBar(v, need, lim)}</td></tr>`;
+  const head = (x) => `<tr><td colspan="4" style="text-align:left;padding-top:12px;color:var(--muted);font-size:12px;text-transform:uppercase;letter-spacing:.05em;font-weight:700">${x}</td></tr>`;
+  return `<div class="card" style="padding:12px">
+    <h3 style="padding:4px 4px 0">Today's nutrition</h3>
+    <table class="fit">
+      <thead><tr><th>Nutrient</th><th>Eaten</th><th>Need</th><th>%</th></tr></thead>
+      <tbody>
+        ${head('Energy & macros')}
+        ${row('Calories', t.kcal, nd.kcal, 'kcal')}
+        ${row('Protein', t.protein, nd.protein, 'g')}
+        ${row('Carbs', t.carbs, nd.carbs, 'g')}
+        ${row('Sugar', t.sugar, nd.sugar, 'g', true)}
+        ${row('Fat', t.fat, nd.fat, 'g')}
+        ${row('Fibre', t.fiber, nd.fiber, 'g')}
+        ${head('Vitamins')}
+        ${row('Vitamin A', t.vitA, rda.vitA, 'µg')}
+        ${row('Vitamin C', t.vitC, rda.vitC, 'mg')}
+        ${row('Vitamin B12', t.vitB12, rda.vitB12, 'µg')}
+        ${row('Folate (B9)', t.folate, rda.folate, 'µg')}
+        ${head('Minerals')}
+        ${row('Calcium', t.calcium, rda.calcium, 'mg')}
+        ${row('Iron', t.iron, rda.iron, 'mg')}
+        ${row('Magnesium', t.magnesium, rda.magnesium, 'mg')}
+        ${row('Potassium', t.potassium, rda.potassium, 'mg')}
+        ${row('Zinc', t.zinc, rda.zinc, 'mg')}
+        ${row('Sodium (salt)', t.sodium, rda.sodium, 'mg', true)}
+      </tbody>
+    </table>
+    <p class="explain">Approximate values from standard Indian food tables. "Need" uses your target, today's exercise and Indian RDA for your age and sex. Sugar and sodium are upper limits.${dn.unknown ? ` ${dn.unknown} item${dn.unknown > 1 ? 's' : ''} without vitamin/mineral data — counted for calories and macros only.` : ''}</p>
+  </div>`;
+}
+function needsCard(date) {
+  const nd = nutritionNeeds(date), dn = dayNutrition(date), t = dn.tot;
+  const row = (label, need, eaten, u, lim) => {
+    const left = need - eaten;
+    return `<tr><td>${label}</td><td><b>${lim ? '≤ ' : ''}${r0(need)} ${u}</b></td><td>${r0(eaten)} ${u}</td><td class="${lim ? (left < 0 ? 'bad' : 'good') : (left <= 0 ? 'good' : '')}">${lim ? (left < 0 ? `${r0(-left)} over` : `${r0(left)} left`) : (left <= 0 ? 'Done ✓' : `${r0(left)} ${u}`)}</td></tr>`;
+  };
+  const tips = [];
+  if (nd.strMin) tips.push(`Strength day: eat 25–30 g protein within 1–2 hours after your workout (eggs, whey, paneer, chicken, sundal).`);
+  if (nd.cardioMin >= 45) tips.push(`Long cardio (${nd.cardioMin} min): have some carbs after — fruit, idli or rice — so you don't feel weak.`);
+  if (nd.exMin) tips.push(`Drink about ${r1(nd.exMin / 30 * 0.5)} L extra water for your ${nd.exMin} minutes of exercise.`);
+  if (nd.diabetes) tips.push('Sugar limit is lower (5% of calories) because of the sugar/diabetes note in your profile.');
+  if (!tips.length) tips.push('Add your workout above and these numbers will update for it.');
+  return `<div class="section-label">What your body needs today</div>
+  <div class="card" style="padding:12px">
+    <p class="explain" style="margin:2px 4px 8px">For <b>${r1(nutritionNeeds(date).kcal ? dayStats(date).w : 0)} kg</b> body weight and <b>${esc(nd.kind)}</b> today → protein <b>${nd.gpk} g per kg</b>.</p>
+    <table class="fit">
+      <thead><tr><th></th><th>Need</th><th>Eaten</th><th>Left</th></tr></thead>
+      <tbody>
+        ${row('Calories', nd.kcal, t.kcal, 'kcal')}
+        ${row('Protein', nd.protein, t.protein, 'g')}
+        ${row('Carbs', nd.carbs, t.carbs, 'g')}
+        ${row('Sugar', nd.sugar, t.sugar, 'g', true)}
+        ${row('Fat', nd.fat, t.fat, 'g')}
+        ${row('Fibre', nd.fiber, t.fiber, 'g')}
+        <tr><td>Water</td><td><b>${nd.water} L</b></td><td colspan="2" class="muted" style="font-size:12px">35 ml per kg + 0.5 L per 30 min exercise</td></tr>
+      </tbody>
+    </table>
+    ${tips.map(x => `<p style="margin:8px 4px 0;font-size:14px">• ${esc(x)}</p>`).join('')}
+  </div>`;
+}
+
 // Workouts. calc: tread = ACSM treadmill equation, bike = ACSM cycle equation, met = MET table, custom = you enter kcal
 const INTENSITY = ['Light', 'Moderate', 'Hard'];
 const STR = [3.5, 5.0, 6.0]; // MET for resistance training: light / moderate / hard
@@ -454,15 +576,16 @@ function wkSuggest(w, kg) {
   return w.kcal || 0;
 }
 
+function stepKcal(kg) { return 0.0005 * kg; } // ≈ kcal per step
 function dayStats(date) {
   const p = P(), d = S.data.days[date] || {}, w = weightOn(date);
   const meals = d.meals || [];
   const sum = k => meals.reduce((a, m) => a + (Number(m[k]) || 0), 0);
   const intake = sum('kcal');
-  const base = bmr(p, w) * 1.2;                    // resting + normal daily life
+  const base = bmr(p, w) * 1.1;                    // resting + light daily life (steps counted separately)
   let exGross = 0, exNet = 0;
   (d.workouts || []).forEach(x => { exGross += x.kcal || 0; exNet += Math.max(0, (x.kcal || 0) - w * (x.minutes || 0) / 60); });
-  const stepsK = Math.max(0, (d.steps || 0) - 3000) * 0.0005 * w; // steps beyond normal daily movement
+  const stepsK = d.stepsKcal != null ? Number(d.stepsKcal) : (d.steps || 0) * stepKcal(w);
   const burn = base + exNet + stepsK;
   const logged = meals.length > 0;
   const exShow = exGross + stepsK;
@@ -735,7 +858,7 @@ function viewAuth() {
   return `<div class="auth">
     <img class="logo" src="icons/logo.png" alt="">
     <h1>Minimal Health Tracker</h1>
-    <p class="sub">Your weight-loss tracker · v7</p>
+    <p class="sub">Your weight-loss tracker · v8</p>
     <div class="seg">
       <button data-act="authMode" data-v="login" class="${login ? 'on' : ''}">Log in</button>
       <button data-act="authMode" data-v="create" class="${!login ? 'on' : ''}">Create account</button>
@@ -952,6 +1075,25 @@ function dailyCharts(p, last) {
     <div class="legend"><span><i style="background:var(--accent)"></i>lost</span><span><i style="background:var(--bad)"></i>gained</span><span>last ${n} day${n > 1 ? 's' : ''} · date of month below</span></div>`;
 }
 
+function todayTable(date) {
+  const st = dayStats(date), nd = nutritionNeeds(date), dn = dayNutrition(date).tot;
+  const sg = (v, u) => (v > 0 ? '+' : v < 0 ? '−' : '') + r0(Math.abs(v)) + (u ? ' ' + u : '');
+  const def = st.burn - dn.kcal;
+  const pDiff = dn.protein - nd.protein, cDiff = dn.carbs - nd.carbs, fDiff = dn.fat - nd.fat;
+  return `<div class="card" style="padding:12px">
+    <table class="fit">
+      <thead><tr><th></th><th>Body burned / needs</th><th>You ate</th><th>Difference</th></tr></thead>
+      <tbody>
+        <tr><td>Calories</td><td>${r0(st.burn)} kcal</td><td>${r0(dn.kcal)} kcal</td><td class="${def >= 0 ? 'good' : 'bad'}"><b>${r0(Math.abs(def))}</b><br><small>${def >= 0 ? 'deficit' : 'surplus'}</small></td></tr>
+        <tr><td>Protein</td><td>${r0(nd.protein)} g</td><td>${r0(dn.protein)} g</td><td class="${pDiff >= 0 ? 'good' : 'bad'}"><b>${pDiff > 0 ? '+' : ''}${r0(Math.abs(pDiff))} g</b><br><small>${pDiff >= 0 ? 'met ✓' : 'short'}</small></td></tr>
+        <tr><td>Carbs</td><td>${r0(nd.carbs)} g</td><td>${r0(dn.carbs)} g</td><td class="${cDiff > 15 ? 'warnc' : ''}"><b>${cDiff > 0 ? '+' : ''}${r0(Math.abs(cDiff))} g</b><br><small>${cDiff > 0 ? 'over' : 'left'}</small></td></tr>
+        <tr><td>Fat</td><td>${r0(nd.fat)} g</td><td>${r0(dn.fat)} g</td><td class="${fDiff > 8 ? 'warnc' : ''}"><b>${fDiff > 0 ? '+' : ''}${r0(Math.abs(fDiff))} g</b><br><small>${fDiff > 0 ? 'over' : 'left'}</small></td></tr>
+      </tbody>
+    </table>
+    <p class="explain">Body burned = what your body used today (${r0(st.base)} kcal) + exercise and steps (${r0(st.exNet + st.stepsK)} kcal). ${st.deficit != null ? `Today's deficit ≈ <b>${r0(Math.max(0, def) / 7.7)} g</b> of fat.` : ''}</p>
+  </div>`;
+}
+
 function viewHome() {
   const p = P(), pl = plan(), t = todayStr(), tg = dailyTarget();
   const notStarted = pl.sinceStart < 0, finished = pl.sinceStart >= pl.N;
@@ -1022,6 +1164,9 @@ function viewHome() {
     <div class="section-label">Your daily target</div>
     <div class="card">${targetHtml}</div>
 
+    <div class="section-label">Today · ${niceDate(t, { day: 'numeric', month: 'short' })}</div>
+    ${todayTable(t)}
+
     <div class="section-label">Every day</div>
     <div class="card">${dailyCharts(p, last)}</div>
 
@@ -1042,7 +1187,7 @@ function summaryCard(st) {
       <div class="explain">
         <div><span>Your body uses just to live (rest + daily life)</span><span>${r0(st.base)}</span></div>
         <div><span>+ Workouts (above resting)</span><span>${r0(st.exNet)}</span></div>
-        <div><span>+ Extra steps (above 3,000)</span><span>${r0(st.stepsK)}</span></div>
+        <div><span>+ Steps</span><span>${r0(st.stepsK)}</span></div>
         <div><span>− Eaten</span><span>${r0(st.intake)}</span></div>
         <p style="margin:6px 0 0">1 kg of body fat ≈ 7,700 kcal. These are estimates — your weigh-ins are the real check.</p>
       </div>
@@ -1053,14 +1198,14 @@ function summaryCard(st) {
 /* ================= SUGGESTIONS ================= */
 function dailyTarget() {
   const p = P(), pl = plan(), t = todayStr();
-  const base = bmr(p, pl.curW) * 1.2, minEat = p.sex === 'male' ? 1500 : 1200;
+  const base = bmr(p, pl.curW) * 1.1, minEat = p.sex === 'male' ? 1500 : 1200;
   const daysLeft = Math.max(0, diffDays(t < p.startDate ? p.startDate : t, pl.end) + (t < p.startDate ? 1 : 0));
   const toLose = pl.curW - pl.targetW;
   if (toLose <= 0 || daysLeft <= 0) return { eat: Math.round(base / 10) * 10, burn: 250, need: 0, base, done: toLose <= 0 };
   const need = toLose * KCAL_PER_KG / daysLeft;
   let ex7 = 0, exN = 0;
   for (let i = 1; i <= 7; i++) { const ds = addDays(t, -i); if (ds < p.startDate) break; const st = dayStats(ds); if (st.logged || st.exShow) { ex7 += st.exShow; exN++; } }
-  let burn = Math.max(300, exN ? ex7 / exN : 0), eat = base + burn * 0.85 - need;
+  let burn = Math.max(400, exN ? ex7 / exN : 0), eat = base + burn * 0.85 - need;
   if (eat < minEat) { burn = (minEat - base + need) / 0.85; eat = minEat; }
   return { eat: Math.round(eat / 10) * 10, burn: Math.round(burn / 10) * 10, need, base };
 }
@@ -1175,7 +1320,8 @@ function viewSuggest() {
   const proteinTarget = Math.round(1.4 * st.w);
 
   const leftBurn = Math.max(0, tg.burn - st.exShow);
-  const wk = suggestWorkout(leftBurn, st.w, f, t);
+  const stepsPlanK = d.steps ? 0 : 7000 * stepKcal(st.w);
+  const wk = suggestWorkout(Math.max(0, leftBurn - stepsPlanK), st.w, f, t);
   S.suggest.workout = wk;
   const wkTot = wk.items.reduce((a, x) => a + x.kcal, 0);
 
@@ -1221,7 +1367,7 @@ function viewSuggest() {
       ${leftBurn <= 0 ? `<div class="note good" style="margin-top:0">You've already hit today's burn target. 👏 A 20-minute walk is a nice extra.</div>` : ''}
       ${wk.items.map(x => `<div class="li"><span>${(WK[x.type] || WK.other).icon} ${esc(x.name)} <small>${x.minutes} min · ${esc(x.detail)}</small></span><span class="r">${r0(x.kcal)} kcal</span></div>`).join('')}
       <div class="kv" style="margin-top:8px"><span>Total</span><span>≈ ${r0(wkTot)} kcal</span></div>
-      <div class="kv"><span>Steps</span><span>aim 8,000+</span></div>
+      <div class="kv"><span>Steps</span><span>${d.steps ? `${d.steps.toLocaleString('en-IN')} done ✓` : `aim 7,000+ (≈ ${r0(stepsPlanK)} kcal)`}</span></div>
       <button class="btn primary block" style="margin-top:10px" data-act="useWorkout">Log this workout</button>
     </div>
 
@@ -1255,14 +1401,7 @@ function viewFood() {
         </div>`;
       }).join('')}
     </div>
-    <div class="card"><h3>Water <small class="muted">goal ${r1(waterTarget / 1000)} L</small></h3>
-      <div class="water">
-        <button class="round" data-act="water" data-v="-1" aria-label="Less water">−</button>
-        <div class="big"><b>${r1((d.water || 0) / 1000)} L</b><br><small class="muted">${Math.round((d.water || 0) / 250)} glasses · ${WATER_STEP} ml each</small></div>
-        <button class="round" data-act="water" data-v="1" aria-label="More water">+</button>
-      </div>
-      <div class="bar blue"><i style="width:${Math.min(100, (d.water || 0) / waterTarget * 100)}%"></i></div>
-    </div>
+    ${nutritionCard(date)}
   </main>`;
 }
 
@@ -1277,16 +1416,23 @@ function viewBurn() {
         return `<button class="li" data-act="editWorkout" data-id="${w.id}"><span>${m.icon} ${esc(w.name)} <small>${r0(w.minutes)} min${w.speed ? ` · ${w.speed} km/h` : ''}${w.incline ? ` · ${w.incline}%` : ''}${w.intensity != null && m.calc !== 'tread' && m.calc !== 'custom' ? ' · ' + INTENSITY[w.intensity] : ''}</small></span><span class="r">${r0(w.kcal)} kcal</span></button>`;
       }).join('') : '<p class="muted" style="margin:0;font-size:14px">No workout yet. Tap + Add and pick the gym equipment you used.</p>'}
     </div>
-    <div class="card"><h3>Steps &amp; weight</h3>
+    <div class="card"><h3>Steps walked</h3>
+      ${d.steps ? `<div class="kv" style="margin-bottom:8px"><span>Saved for this day</span><span class="good">${Number(d.steps).toLocaleString('en-IN')} steps · ${r0(st.stepsK)} kcal</span></div>` : ''}
+      <div class="grid2 field">
+        <label>Steps<input id="stepsIn" type="number" inputmode="numeric" value="${d.steps ?? ''}" placeholder="e.g. 7000"></label>
+        <label>Calories burned<input id="stepsKcal" type="number" inputmode="decimal" value="${d.steps ? r0(st.stepsK) : ''}" placeholder="auto"></label>
+      </div>
+      <p class="explain" id="stepsHint" style="margin-top:-4px">≈ ${r1(stepKcal(st.w) * 1000)} kcal per 1,000 steps at ${r1(st.w)} kg. Check the calories, change them if your watch says different, then confirm.</p>
+      <button class="btn primary block" data-act="saveSteps">Confirm &amp; save steps</button>
+    </div>
+    <div class="card"><h3>Weight</h3>
       <form id="bodyForm" onsubmit="return false">
-        <div class="grid2 field">
-          <label>Steps<input name="steps" type="number" inputmode="numeric" value="${d.steps ?? ''}"></label>
-          <label>Weight (kg)<input name="weight" type="number" step="any" inputmode="decimal" value="${d.weight ?? ''}" placeholder="${r1(weightOn(date))}"></label>
-        </div>
+        <div class="field"><label>Body weight today (kg)<input name="weight" type="number" step="any" inputmode="decimal" value="${d.weight ?? ''}" placeholder="${r1(weightOn(date))}"></label></div>
         <div class="field"><label>Remark about the day<textarea name="remark" placeholder="How did you feel? Cheat meal? Tired?">${esc(d.remark || '')}</textarea></label></div>
-        <button class="btn primary block" data-act="saveBody">Save</button>
+        <button class="btn primary block" data-act="saveBody">Save weight</button>
       </form>
     </div>
+    ${needsCard(date)}
   </main>`;
 }
 
@@ -1323,7 +1469,7 @@ function viewProfile() {
   return header('Profile') + `<main>
     ${profileForm(p, true)}
     <button class="btn danger block" data-act="logout" style="margin-top:6px">Log out</button>
-    <p class="explain" style="text-align:center;margin-top:14px">Minimal Health Tracker v7 · estimates only, not medical advice</p>
+    <p class="explain" style="text-align:center;margin-top:14px">Minimal Health Tracker v8 · estimates only, not medical advice</p>
   </main>`;
 }
 
@@ -1334,8 +1480,11 @@ function mkItem(o) {
   const g = Math.max(0, Number(o.grams) || 0) || 100;
   const it = { name: o.name || '', grams: g, kcal: Number(o.kcal) || 0, protein: Number(o.protein) || 0, carbs: Number(o.carbs) || 0, fat: Number(o.fat) || 0, source: o.source || 'manual' };
   it.per = { kcal: it.kcal / g, protein: it.protein / g, carbs: it.carbs / g, fat: it.fat / g };
+  const src = o.micro || o;
+  if (MICRO_KEYS.some(k => src[k] != null && src[k] !== '')) { it.microPer = {}; MICRO_KEYS.forEach(k => { it.microPer[k] = (Number(src[k]) || 0) / g; }); }
   return it;
 }
+function microFor(it) { if (!it.microPer) return undefined; const o = {}; MICRO_KEYS.forEach(k => { o[k] = r1(it.microPer[k] * it.grams); }); return o; }
 function slotLabel(id) { return (SLOTS.find(s => s.id === id) || {}).label || id; }
 
 function sheetFood() {
@@ -1429,7 +1578,8 @@ async function analyzeFood(dataUrl) {
   const prompt = `You are a nutrition assistant. Identify every separate food item on this plate or in this photo. The person lives in Chennai, India, so South Indian and Indian dishes (idli, dosa, sambar, chutney, rice, curries, chapati, poriyal etc.) are common, but identify whatever is actually there.
 For each item estimate the weight in grams as served (use the plate, bowl, cutlery, hand or packaging as size references) and its nutrition for that weight.
 Reply with ONLY a JSON object, no other text, exactly in this shape:
-{"items":[{"name":"Idli","grams":120,"kcal":175,"protein":5.4,"carbs":36,"fat":0.5}],"note":"One short sentence on anything you were unsure about."}
+{"items":[{"name":"Idli","grams":120,"kcal":175,"protein":5.4,"carbs":36,"fat":0.5,"fiber":1.8,"sugar":0.6,"calcium":24,"iron":1,"magnesium":24,"potassium":96,"sodium":310,"zinc":0.6,"vitA":0,"vitC":0,"vitB12":0,"folate":18}],"note":"One short sentence on anything you were unsure about."}
+Units for the item's full weight: grams for fiber and sugar; mg for calcium, iron, magnesium, potassium, sodium, zinc, vitC; micrograms for vitA (RAE), vitB12 and folate.
 If no food is visible, return {"items":[],"note":"No food found"}.`;
   const b64 = dataUrl.split(',')[1];
   let text = '';
@@ -1627,11 +1777,11 @@ const ACT = {
     if (items.some(it => !(it.grams > 0))) throw fail('Enter grams for every item.');
     if (sh.mode === 'edit') {
       const slot = ($('#editSlot') || {}).value || sh.slot, it = items[0];
-      mutateDay(S.date, d => { const m = d.meals.find(x => x.id === sh.editId); if (m) Object.assign(m, { slot, name: it.name.trim(), grams: r1(it.grams), kcal: r0(it.kcal), protein: r1(it.protein), carbs: r1(it.carbs), fat: r1(it.fat) }); });
+      mutateDay(S.date, d => { const m = d.meals.find(x => x.id === sh.editId); if (m) Object.assign(m, { slot, name: it.name.trim(), grams: r1(it.grams), kcal: r0(it.kcal), protein: r1(it.protein), carbs: r1(it.carbs), fat: r1(it.fat), micro: microFor(it) }); });
       toast('Updated', 'good');
     } else {
       mutateDay(S.date, d => {
-        items.forEach(it => d.meals.push({ id: uid(), slot: sh.slot, name: it.name.trim(), grams: r1(it.grams), kcal: r0(it.kcal), protein: r1(it.protein), carbs: r1(it.carbs), fat: r1(it.fat), source: it.source, at: new Date().toISOString() }));
+        items.forEach(it => d.meals.push({ id: uid(), slot: sh.slot, name: it.name.trim(), grams: r1(it.grams), kcal: r0(it.kcal), protein: r1(it.protein), carbs: r1(it.carbs), fat: r1(it.fat), micro: microFor(it), source: it.source, at: new Date().toISOString() }));
       });
       toast(`Saved to ${slotLabel(sh.slot)}`, 'good');
     }
@@ -1654,15 +1804,22 @@ const ACT = {
   },
   saveBody() {
     const fd = new FormData($('#bodyForm'));
-    const w = num(fd.get('weight')), steps = num(fd.get('steps')), sleep = num(fd.get('sleep'));
+    const w = num(fd.get('weight'));
     if (w != null && (w < 30 || w > 300)) throw fail('Check the weight (kg).');
     mutateDay(S.date, d => {
-      d.weight = w == null ? undefined : r1(w); d.steps = steps == null ? undefined : Math.round(steps);
+      d.weight = w == null ? undefined : r1(w);
       d.remark = String(fd.get('remark') || '').trim();
     });
     toast('Saved', 'good'); render();
   },
 
+  saveSteps() {
+    const steps = num(($('#stepsIn') || {}).value), kc = num(($('#stepsKcal') || {}).value);
+    if (steps == null || steps < 0 || steps > 100000) throw fail('Enter the number of steps.');
+    const kcal = kc == null ? steps * stepKcal(weightOn(S.date)) : kc;
+    mutateDay(S.date, d => { d.steps = Math.round(steps); d.stepsKcal = r0(kcal); });
+    toast(`Saved ${Math.round(steps).toLocaleString('en-IN')} steps = ${r0(kcal)} kcal`, 'good'); render();
+  },
   addWorkout() {
     const last = Object.keys(S.data.days).sort().reverse().map(k => (S.data.days[k].workouts || [])[0]).find(Boolean);
     const type = last ? last.type : 'treadmill';
@@ -1764,6 +1921,8 @@ document.addEventListener('click', async (e) => {
 document.addEventListener('input', (e) => {
   const t = e.target;
   if (t.closest && t.closest('#pf')) return updateProfilePreview();
+  if (t.id === 'stepsIn') { const k = $('#stepsKcal'); const v = num(t.value); if (k && !k.dataset.manual) k.value = v == null ? '' : r0(v * stepKcal(weightOn(S.date))); return; }
+  if (t.id === 'stepsKcal') { t.dataset.manual = '1'; return; }
   if (t.dataset.it != null) return onItemInput(t);
   if (t.dataset.wf) return onWorkoutInput(t);
   if (t.id === 'foodQuery') { S.sheet.query = t.value; const r = $('#searchResults'); if (r) r.innerHTML = searchResults(t.value); }
@@ -1806,7 +1965,7 @@ async function boot() {
 boot();
 
 // expose for testing
-window.__fittrack = { viewSuggest, viewHome, viewFood, viewBurn, sheetWorkout, bmiOf, bmiCat, fatPct, bmr, treadKcal, bikeKcal, wkSuggest, S, plan, dayStats };
+window.__fittrack = { FOOD, nutritionCard, needsCard, todayTable, viewSuggest, viewHome, viewFood, viewBurn, sheetWorkout, bmiOf, bmiCat, fatPct, bmr, treadKcal, bikeKcal, wkSuggest, S, plan, dayStats };
 })();
 </script>
 </body>
