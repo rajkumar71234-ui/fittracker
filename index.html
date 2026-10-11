@@ -888,7 +888,7 @@ function viewAuth() {
   return `<div class="auth">
     <img class="logo" src="icons/logo.png" alt="">
     <h1>Minimal Health Tracker</h1>
-    <p class="sub">Your weight-loss tracker · v20</p>
+    <p class="sub">Your weight-loss tracker · v21</p>
     <div class="seg">
       <button data-act="authMode" data-v="login" class="${login ? 'on' : ''}">Log in</button>
       <button data-act="authMode" data-v="create" class="${!login ? 'on' : ''}">Create account</button>
@@ -1012,14 +1012,12 @@ function updateProfilePreview() {
   const notes = [];
   if (pctWeek > 1) notes.push(`<div class="note bad">That's ${r1(perWeek)} kg/week — faster than the ~1% of body weight per week usually considered safe. Consider more days.</div>`);
   else if (req > 1000) notes.push(`<div class="note warn">This needs a large daily deficit (${r0(req)} kcal). It's easier to sustain with more days.</div>`);
-  if ((p.health || []).some(h => h !== 'None')) notes.push(`<div class="note info">You've listed a health condition — check your diet and workout plan with your doctor before starting.</div>`);
   el.innerHTML = `<div class="grid2">
       <div class="stat"><small>BMI</small><b>${r1(b)}</b><span class="tag ${cls}">${cat}</span></div>
       <div class="stat"><small>Body fat (est.)</small><b>${r1(fp.pct)}%</b><span>${r1(p.startWeight * fp.pct / 100)} kg fat</span></div>
       <div class="stat"><small>Target weight</small><b>${r1(p.startWeight - p.targetLoss)} kg</b><span>${r1(perWeek)} kg / week</span></div>
       <div class="stat"><small>Daily deficit needed</small><b>${r0(req)}</b><span>kcal per day</span></div>
     </div>
-    <p class="explain" style="margin-top:10px">Your body burns about <b>${r0(maint)} kcal/day</b> without workouts. Eating ~${r0(maint - req)} kcal/day (or eating more and burning the difference in the gym) reaches the goal. Fat % uses the ${fp.method}. BMI categories use Asian-Indian cut-offs.</p>
     ${notes.join('')}`;
 }
 
@@ -1751,7 +1749,7 @@ function viewProfile() {
       <button class="btn blue block" data-act="exportXlsx">⬇️ Export to Excel</button>
     </div>
     <button class="btn danger block" data-act="logout" style="margin-top:6px">Log out</button>
-    <p class="explain" style="text-align:center;margin-top:14px">Minimal Health Tracker v20 · estimates only, not medical advice</p>
+    <p class="explain" style="text-align:center;margin-top:14px">Minimal Health Tracker v21 · estimates only, not medical advice</p>
   </main>`;
 }
 
