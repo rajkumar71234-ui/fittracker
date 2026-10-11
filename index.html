@@ -162,6 +162,14 @@ table.fit .tag{font-size:10px;padding:1px 6px;margin-top:3px}
 .photo-btns{display:grid;grid-template-columns:1fr 1fr;gap:10px}
 .photo-btns label{color:var(--text);font-size:15px}
 .photo-btns label{position:relative;overflow:hidden}
+.slots{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px}
+.slot-tile{position:relative;border:2px dashed var(--line);border-radius:16px;height:160px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;background:var(--card);padding:8px;text-align:center}
+.slot-tile.filled{border:0;padding:0;overflow:hidden}
+.slot-tile.filled img{width:100%;height:100%;object-fit:cover;display:block}
+.slot-tile b{font-size:13px}.slot-tile small{font-size:11px;color:var(--muted)}
+.fileb{position:relative;overflow:hidden;display:block;width:100%;padding:8px 6px;border-radius:10px;background:var(--input);font-weight:650;font-size:13px;color:var(--text)}
+.fileb.primary{background:var(--accent);color:#fff}
+.fileb input,.slot-tile label input{position:absolute;inset:0;width:100%;height:100%;opacity:0;cursor:pointer;margin:0;padding:0;font-size:0}
 .photo-btns input{position:absolute;inset:0;width:100%;height:100%;opacity:0;cursor:pointer;margin:0;padding:0;font-size:0}
 .spinner{width:28px;height:28px;border:3px solid var(--line);border-top-color:var(--accent);border-radius:50%;animation:spin .8s linear infinite;margin:0 auto}
 @keyframes spin{to{transform:rotate(360deg)}}
@@ -878,7 +886,7 @@ function viewAuth() {
   return `<div class="auth">
     <img class="logo" src="icons/logo.png" alt="">
     <h1>Minimal Health Tracker</h1>
-    <p class="sub">Your weight-loss tracker · v16</p>
+    <p class="sub">Your weight-loss tracker · v17</p>
     <div class="seg">
       <button data-act="authMode" data-v="login" class="${login ? 'on' : ''}">Log in</button>
       <button data-act="authMode" data-v="create" class="${!login ? 'on' : ''}">Create account</button>
@@ -1195,10 +1203,10 @@ function viewHome() {
     </div>
 
     <div class="card"><h3>🔍 Check a food</h3>
-      <p class="explain" style="margin:0 0 10px">Snap any food to see its calories, protein, carbs, sugar and fat. Just checking — add it to today's meals only if you want.</p>
+      <p class="explain" style="margin:0 0 10px">Add 1 or 2 photos of any food (top view + close-up or label), then tap Find. You'll see calories, protein, carbs, sugar and fat — add it to today's meals only if you want.</p>
       <div class="photo-btns">
         <label class="btn primary">📸 Take photo<input type="file" accept="image/*" capture="environment" class="food-check-input" aria-label="Take photo to check food"></label>
-        <label class="btn">🖼️ From gallery<input type="file" accept="image/*" class="food-check-input" aria-label="Choose photo to check food"></label>
+        <label class="btn">🖼️ From gallery<input type="file" accept="image/*" multiple class="food-check-input" aria-label="Choose 1 or 2 photos to check food"></label>
       </div>
     </div>
 
@@ -1596,9 +1604,9 @@ function viewBurn() {
     <div class="card"><h3>Workouts <button class="add" data-act="addWorkout">+ Add</button></h3>
       <div class="photo-btns" style="margin-bottom:10px">
         <label class="btn primary">📸 Take photo<input type="file" accept="image/*" capture="environment" class="wk-photo-input" aria-label="Take photo of machine"></label>
-        <label class="btn">🖼️ Upload photo<input type="file" accept="image/*" class="wk-photo-input" aria-label="Upload photo of machine"></label>
+        <label class="btn">🖼️ Upload photo<input type="file" accept="image/*" multiple class="wk-photo-input" aria-label="Upload 1 or 2 photos of machine"></label>
       </div>
-      <p class="explain" style="margin:-4px 0 8px">Snap the machine or its screen — I'll detect it and read the time, speed and calories.</p>
+      <p class="explain" style="margin:-4px 0 8px">Add 1 or 2 photos (the machine + its screen), then tap Detect — I'll find the machine and read the time, speed and calories.</p>
       ${(d.workouts || []).length ? d.workouts.map(w => {
         const m = WK[w.type] || WK.other;
         return `<button class="li" data-act="editWorkout" data-id="${w.id}"><span>${m.icon} ${esc(w.name)} <small>${r0(w.minutes)} min${w.speed ? ` · ${w.speed} km/h` : ''}${w.incline ? ` · ${w.incline}%` : ''}${w.intensity != null && m.calc !== 'tread' && m.calc !== 'custom' ? ' · ' + INTENSITY[w.intensity] : ''}</small></span><span class="r">${r0(w.kcal)} kcal</span></button>`;
@@ -1661,7 +1669,7 @@ function viewProfile() {
       <button class="btn blue block" data-act="exportXlsx">⬇️ Export to Excel</button>
     </div>
     <button class="btn danger block" data-act="logout" style="margin-top:6px">Log out</button>
-    <p class="explain" style="text-align:center;margin-top:14px">Minimal Health Tracker v16 · estimates only, not medical advice</p>
+    <p class="explain" style="text-align:center;margin-top:14px">Minimal Health Tracker v17 · estimates only, not medical advice</p>
   </main>`;
 }
 
@@ -1686,8 +1694,8 @@ function sheetFood() {
   let body = '';
   if (sh.mode === 'photo') {
     const ph = sh.photos || [];
-    body = `${photoStrip(ph, sh.busy ? '' : 'foodPhotoDel')}
-      ${sh.busy ? `<div class="center" style="min-height:80px"><div class="spinner"></div><p class="muted">Finding foods &amp; estimating weight${ph.length > 1 ? ' from both photos' : ''}…</p></div>` : photoButtons('photo-input', ph.length, true)}
+    body = `${sh.busy ? `${photoStrip(ph, '')}<div class="center" style="min-height:80px"><div class="spinner"></div><p class="muted">Finding foods &amp; estimating weight${ph.length > 1 ? ' from both photos' : ''}…</p></div>`
+        : photoSlots('photo-input', ph, 'foodPhotoDel', 'analyseFood', 'Find food & calories', sh.items.length > 0)}
       ${!sh.busy && !sh.items.length ? `
       ${(!S.session.geminiKey && !S.session.apiKey) || sh.changeKey ? `<div class="card" style="margin-top:10px"><b style="font-size:15px">Turn on photo recognition (free)</b>
           <p class="explain" style="margin:4px 0 8px">Open <b>aistudio.google.com/apikey</b>, sign in with Google, tap <b>Create API key</b>, copy it and paste here. One time only.</p>
@@ -1873,16 +1881,32 @@ function photoStrip(photos, delAct) {
     <span class="pill" style="position:absolute;left:6px;top:6px;background:rgba(0,0,0,.55);color:#fff">${i + 1}</span>
     ${delAct ? `<button class="x" style="position:absolute;top:6px;right:6px;width:28px;height:28px;font-size:12px;background:rgba(255,255,255,.9)" data-act="${delAct}" data-i="${i}" aria-label="Remove photo">✕</button>` : ''}</div>`).join('')}</div>`;
 }
-function photoButtons(cls, count, primaryFirst) {
-  if (count >= 2) return '';
-  if (!count) return `<div class="photo-btns">
-      <label class="btn ${primaryFirst ? 'primary' : ''}">📸 Take photo<input type="file" accept="image/*" capture="environment" class="${cls}" aria-label="Take photo"></label>
-      <label class="btn">🖼️ ${cls === 'wk-photo-input' ? 'Upload photo' : 'From gallery'}<input type="file" accept="image/*" class="${cls}" aria-label="Choose from gallery"></label></div>`;
-  return `<p class="explain" style="margin:0 0 6px">➕ Add a 2nd photo for better accuracy (optional) — e.g. a ${cls === 'wk-photo-input' ? 'close-up of the screen' : 'side view, label or close-up'}:</p>
-    <div class="photo-btns" style="margin-bottom:10px">
-      <label class="btn small">📸 Take 2nd<input type="file" accept="image/*" capture="environment" class="${cls}" data-append="1" aria-label="Take second photo"></label>
-      <label class="btn small">🖼️ Gallery 2nd<input type="file" accept="image/*" class="${cls}" data-append="1" aria-label="Choose second photo"></label></div>`;
+function photoSlots(cls, photos, delAct, analyseAct, label, done) {
+  const tile = i => photos[i]
+    ? `<div class="slot-tile filled"><img src="${photos[i]}" alt="Photo ${i + 1}"><span class="pill" style="position:absolute;left:6px;top:6px;background:rgba(0,0,0,.55);color:#fff">${i + 1}</span>
+        <button class="x" style="position:absolute;top:6px;right:6px;width:28px;height:28px;font-size:12px;background:rgba(255,255,255,.92)" data-act="${delAct}" data-i="${i}" aria-label="Remove photo">✕</button></div>`
+    : `<div class="slot-tile"><b>Photo ${i + 1}</b><small>${i ? 'optional · close-up, label or screen' : 'top / full view'}</small>
+        <label class="fileb ${i ? '' : 'primary'}">📸 Camera<input type="file" accept="image/*" capture="environment" class="${cls}" data-slot="${i}" aria-label="Take photo ${i + 1}"></label>
+        <label class="fileb">🖼️ Gallery<input type="file" accept="image/*" ${i ? '' : 'multiple'} class="${cls}" data-slot="${i}" aria-label="Choose photo ${i + 1} from gallery"></label></div>`;
+  const n = photos.filter(Boolean).length;
+  return `<div class="slots">${tile(0)}${tile(1)}</div>
+    <button class="btn primary block" style="margin-bottom:12px" data-act="${analyseAct}" ${n ? '' : 'disabled'}>🔍 ${done ? 'Analyse again' : label} ${n ? `· ${n} photo${n > 1 ? 's' : ''}` : ''}</button>
+    ${!n ? `<p class="explain" style="margin:-6px 0 10px;text-align:center">Add 1 or 2 photos, then tap ${label}. You can pick 2 photos at once from Gallery.</p>` : ''}`;
 }
+async function addPhotosToSheet(files, slot) {
+  const sh = S.sheet; if (!sh) return;
+  const ph = (sh.photos || []).slice(0, 2);
+  let i = slot;
+  for (const f of files) {
+    if (i > 1) break;
+    try { ph[i] = await resizeImage(f, 1024); } catch (e) { toast(e.message, 'bad'); }
+    i++;
+  }
+  sh.photos = ph.filter(Boolean).slice(0, 2);
+  if (sh.kind === 'food') { sh.items = []; sh.note = ''; sh.error = ''; } else { sh.detectNote = ''; sh.detectErr = ''; }
+  renderSheet();
+}
+
 
 /* ================================================================
    SHEETS — WORKOUT
@@ -1902,12 +1926,13 @@ Reply with ONLY a JSON object, no other text:
 Use null for any number you cannot clearly see. If there is no gym equipment, use "type":"other" and explain in "note".
 You may get 2 photos of the same workout (e.g. the machine and a close-up of its screen) — use both.`;
 }
-async function startWorkoutPhoto(file, append) {
-  let photo;
-  try { photo = await resizeImage(file, 1024); } catch (e) { return toast(e.message, 'bad'); }
-  if (append && S.sheet && S.sheet.kind === 'workout') { S.sheet.photos = [...(S.sheet.photos || []), photo].slice(-2); }
-  else S.sheet = { kind: 'workout', editId: null, photos: [photo], busy: false, detectNote: '', detectErr: '',
+function openWorkoutSheet() {
+  S.sheet = { kind: 'workout', editId: null, photos: [], busy: false, detectNote: '', detectErr: '',
     w: { type: 'treadmill', minutes: null, speed: null, incline: null, intensity: 1, watts: null, kcal: null, manual: false } };
+}
+async function startWorkoutPhoto(file, append) {   // kept for tests: adds a photo, then detects
+  if (!(append && S.sheet && S.sheet.kind === 'workout')) openWorkoutSheet();
+  await addPhotosToSheet([file], (S.sheet.photos || []).length);
   return runWorkoutDetect();
 }
 async function runWorkoutDetect() {
@@ -1963,12 +1988,12 @@ function sheetWorkout() {
     fields = `<div class="field"><label>Activity name<input data-wf="name" value="${esc(w.name || '')}"></label></div><div class="field">${fields}</div>`;
   }
   const ph = sh.photos || [];
-  const photoTop = `${photoStrip(ph, sh.busy ? '' : 'wkPhotoDel')}
-    ${sh.busy ? `<div class="center" style="min-height:80px"><div class="spinner"></div><p class="muted">Finding the machine &amp; reading the screen…</p></div>` : ''}
+  const photoTop = `${sh.busy ? `${photoStrip(ph, '')}<div class="center" style="min-height:80px"><div class="spinner"></div><p class="muted">Finding the machine &amp; reading the screen…</p></div>`
+      : (!sh.editId ? photoSlots('wk-photo-input', ph, 'wkPhotoDel', 'analyseWorkout', 'Detect machine & numbers', !!sh.detectNote) : '')}
     ${sh.changeKey ? keyBox() : ''}
     ${sh.detectNote && !sh.busy ? `<div class="note info" style="margin:0 0 12px">${sh.detectNote}</div>` : ''}
     ${sh.detectErr && !sh.busy ? `<div class="note bad" style="margin:0 0 12px">${esc(sh.detectErr)}</div>` : ''}
-    ${!sh.editId && !sh.busy ? `<div style="margin-bottom:12px">${photoButtons('wk-photo-input', ph.length, false)}</div>` : ''}`;
+`;
   if (sh.busy) return `<div class="sheet-h"><h2>Scanning machine</h2><button class="x" data-act="closeSheet">✕</button></div>${photoTop}`;
   return `<div class="sheet-h"><h2>${sh.editId ? 'Edit workout' : 'Add workout'}</h2><button class="x" data-act="closeSheet">✕</button></div>
     ${photoTop}
@@ -2078,8 +2103,10 @@ const ACT = {
   itemAdd() { S.sheet.items.push(mkItem({ name: '', grams: 100, kcal: 0 })); refreshItems(); },
   itemDel(el) { S.sheet.items.splice(+el.dataset.i, 1); if (!S.sheet.items.length && S.sheet.mode === 'photo') { S.sheet.photos = []; S.sheet.note = ''; renderSheet(); } else refreshItems(); },
   retryPhoto() { runAnalysis(); },
-  foodPhotoDel(el) { const sh = S.sheet; sh.photos.splice(+el.dataset.i, 1); sh.items = []; sh.note = ''; sh.error = ''; if (sh.photos.length) runAnalysis(); else renderSheet(); },
-  wkPhotoDel(el) { const sh = S.sheet; sh.photos.splice(+el.dataset.i, 1); sh.detectNote = ''; sh.detectErr = ''; if (sh.photos.length) runWorkoutDetect(); else renderSheet(); },
+  foodPhotoDel(el) { const sh = S.sheet; sh.photos.splice(+el.dataset.i, 1); sh.items = []; sh.note = ''; sh.error = ''; renderSheet(); },
+  analyseFood() { const sh = S.sheet; if (!(sh.photos || []).length) return; if (!S.session.geminiKey && !S.session.apiKey) { sh.changeKey = true; return renderSheet(); } runAnalysis(); },
+  analyseWorkout() { runWorkoutDetect(); },
+  wkPhotoDel(el) { const sh = S.sheet; sh.photos.splice(+el.dataset.i, 1); sh.detectNote = ''; sh.detectErr = ''; renderSheet(); },
   saveFood() {
     const sh = S.sheet;
     const items = sh.items.filter(it => it.name.trim());
@@ -2221,7 +2248,7 @@ const ACT = {
       SS.set('ft_session', s); LS.set('ft_session', s);
       S.sheet.changeKey = false; LS.del('ft_gem_way');
       toast('Photo recognition is on', 'good');
-      if (S.sheet.kind === 'workout' && (S.sheet.photos || []).length) runWorkoutDetect(); else if (S.sheet.kind === 'food' && (S.sheet.photos || []).length) runAnalysis(); else renderSheet();
+      renderSheet();
     } finally { unbusy(el); }
   },
   useMeal(el) {
@@ -2332,12 +2359,10 @@ document.addEventListener('input', (e) => {
 document.addEventListener('change', async (e) => {
   const t = e.target;
   if (t.classList.contains('food-check-input') && t.files && t.files[0]) {
-    const f = t.files[0]; t.value = '';
+    const files = [...t.files].slice(0, 2); t.value = '';
     const hr = new Date().getHours(), slot = hr < 11 ? 'breakfast' : hr < 16 ? 'lunch' : hr < 19 ? 'snacks' : 'dinner';
     S.sheet = { kind: 'food', check: true, slot, mode: 'photo', items: [], photos: [], busy: false, note: '', error: '' };
-    try { S.sheet.photos = [await resizeImage(f, 1024)]; } catch (err) { S.sheet = null; return toast(err.message, 'bad'); }
-    if (!S.session.geminiKey && !S.session.apiKey) { renderSheet(); return; }
-    await runAnalysis(); return;
+    await addPhotosToSheet(files, 0); return;
   }
   if (t.classList.contains('med-photo-input') && t.files && t.files[0]) {
     const f = t.files[0]; t.value = ''; const date = S.date, s = S.session;
@@ -2352,10 +2377,14 @@ document.addEventListener('change', async (e) => {
     } catch (err) { toast(err.message || 'Could not upload photo', 'bad'); }
     return;
   }
-  if (t.classList.contains('wk-photo-input') && t.files && t.files[0]) { const f = t.files[0], ap = !!t.dataset.append; t.value = ''; startWorkoutPhoto(f, ap); return; }
+  if (t.classList.contains('wk-photo-input') && t.files && t.files[0]) {
+    const files = [...t.files].slice(0, 2), slot = Number(t.dataset.slot || 0); t.value = '';
+    if (!(S.sheet && S.sheet.kind === 'workout')) openWorkoutSheet();
+    await addPhotosToSheet(files, t.dataset.slot != null ? slot : (S.sheet.photos || []).length); return;
+  }
   if (t.classList.contains('photo-input') && t.files && t.files[0]) {
-    try { const url = await resizeImage(t.files[0], 1024); const sh = S.sheet; sh.photos = t.dataset.append ? [...(sh.photos || []), url].slice(-2) : [url]; sh.items = []; sh.note = ''; sh.error = ''; t.value = ''; await runAnalysis(); }
-    catch (err) { toast(err.message, 'bad'); }
+    const files = [...t.files].slice(0, 2), slot = Number(t.dataset.slot || 0); t.value = '';
+    await addPhotosToSheet(files, slot);
     return;
   }
   if (t.id === 'wkTypeSel') { ACT.wkType({ dataset: { v: t.value } }); return; }
@@ -2389,7 +2418,7 @@ async function boot() {
 boot();
 
 // expose for testing
-window.__fittrack = { runAnalysis, sheetFood, viewHome, viewFood, viewToday, viewMeds, wheyCard, ACT, profileForm, startWorkoutPhoto, sheetWorkout, FOOD, nutritionCard, needsCard, todayTable, viewSuggest, viewHome, viewFood, viewBurn, sheetWorkout, bmiOf, bmiCat, fatPct, bmr, treadKcal, bikeKcal, wkSuggest, S, plan, dayStats };
+window.__fittrack = { addPhotosToSheet, openWorkoutSheet, sheetWorkout, runAnalysis, sheetFood, viewHome, viewFood, viewToday, viewMeds, wheyCard, ACT, profileForm, startWorkoutPhoto, sheetWorkout, FOOD, nutritionCard, needsCard, todayTable, viewSuggest, viewHome, viewFood, viewBurn, sheetWorkout, bmiOf, bmiCat, fatPct, bmr, treadKcal, bikeKcal, wkSuggest, S, plan, dayStats };
 })();
 </script>
 </body>
