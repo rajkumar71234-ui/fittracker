@@ -888,7 +888,7 @@ function viewAuth() {
   return `<div class="auth">
     <img class="logo" src="icons/logo.png" alt="">
     <h1>Minimal Health Tracker</h1>
-    <p class="sub">Your weight-loss tracker · v21</p>
+    <p class="sub">Your weight-loss tracker · v22</p>
     <div class="seg">
       <button data-act="authMode" data-v="login" class="${login ? 'on' : ''}">Log in</button>
       <button data-act="authMode" data-v="create" class="${!login ? 'on' : ''}">Create account</button>
@@ -1735,21 +1735,12 @@ function viewProfile() {
   const dataUrl = `https://github.com/${encodeURIComponent(s.owner)}/${encodeURIComponent(s.dataRepo)}/blob/HEAD/${s.dataPath}`;
   return header('Profile') + `<main>
     ${profileForm(p, true)}
-    <div class="card"><h3>⚖️ Auto weight from Apple Health</h3>
-      <p class="explain" style="margin:0 0 8px">If your Dr Trust app saves weight to Apple Health, an iPhone Shortcut can send it here in one tap. Make a Shortcut with these 3 actions:</p>
-      <ol class="help" style="margin:0 0 8px;padding-left:20px;font-size:14px">
-        <li><b>Find Health Samples</b> → Type: <b>Weight</b>, Sort by: <b>Start Date</b>, Order: <b>Latest First</b>, Limit: <b>1</b>, Unit: <b>kg</b></li>
-        <li><b>Get Details of Health Samples</b> → <b>Value</b></li>
-        <li><b>Open URLs</b> → <code style="word-break:break-all">${esc(location.origin + location.pathname)}#weight=</code><i>Value</i></li>
-      </ol>
-      <p class="explain" style="margin:0">Run it after you weigh in (or add it to Automation → "When I open Dr Trust"). The app opens, shows the weight and asks you to confirm.</p>
-    </div>
     <div class="card"><h3>Download your data</h3>
       <p class="explain" style="margin:0 0 10px">Excel file with every day: summary, each meal, nutrients, workouts, steps and weight.</p>
       <button class="btn blue block" data-act="exportXlsx">⬇️ Export to Excel</button>
     </div>
     <button class="btn danger block" data-act="logout" style="margin-top:6px">Log out</button>
-    <p class="explain" style="text-align:center;margin-top:14px">Minimal Health Tracker v21 · estimates only, not medical advice</p>
+    <p class="explain" style="text-align:center;margin-top:14px">Minimal Health Tracker v22 · estimates only, not medical advice</p>
   </main>`;
 }
 
