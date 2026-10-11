@@ -735,6 +735,7 @@ async function syncNow() {
     if (S.pendingSave) { S.pendingSave = false; syncNow(); }
   }
 }
+window.addEventListener('hashchange', () => { if (S.screen === 'main') maybeHashWeight(); });
 window.addEventListener('online', () => { if (S.dirtyDays.size || S.profileDirty) syncNow(); });
 
 async function refreshFromGitHub(quiet) {
@@ -862,6 +863,7 @@ async function loadData() {
     S.screen = S.data.profile ? 'main' : 'onboard';
     S.tab = 'home'; S.date = todayStr();
     render();
+    if (S.data.profile) maybeHashWeight();
     if (hadOutbox) syncNow(); else setSync('ok');
   } catch (e) {
     S.screen = 'error'; S.errorMsg = e.message; render();
@@ -886,7 +888,7 @@ function viewAuth() {
   return `<div class="auth">
     <img class="logo" src="icons/logo.png" alt="">
     <h1>Minimal Health Tracker</h1>
-    <p class="sub">Your weight-loss tracker · v17</p>
+    <p class="sub">Your weight-loss tracker · v18</p>
     <div class="seg">
       <button data-act="authMode" data-v="login" class="${login ? 'on' : ''}">Log in</button>
       <button data-act="authMode" data-v="create" class="${!login ? 'on' : ''}">Create account</button>
@@ -1576,6 +1578,53 @@ function viewMeds() {
   </main>`;
 }
 
+const BODY_KEYS = [['fat', 'Body fat', '%'], ['muscle', 'Muscle', '%'], ['water', 'Water', '%'], ['bone', 'Bone', 'kg'], ['visceral', 'Visceral fat', ''], ['bmi', 'BMI', ''], ['bmr', 'BMR', 'kcal'], ['protein', 'Protein', '%'], ['metAge', 'Body age', 'yrs']];
+function bodyChips(b) { return BODY_KEYS.filter(([k]) => b[k] != null).map(([k, l, u]) => `<span class="chip" style="cursor:default">${l} ${b[k]}${u ? ' ' + u : ''}</span>`).join(''); }
+function scalePrompt() {
+  return `This is a photo of a bathroom weighing scale display, OR a screenshot of a smart-scale phone app (e.g. Dr Trust). Read the body WEIGHT and, if shown, the body composition numbers.
+Convert pounds to kg (lb × 0.4536) and stones if needed. Reply with ONLY JSON:
+{"weight":83.6,"fat":24.1,"muscle":null,"water":null,"bone":null,"visceral":null,"bmi":null,"bmr":null,"protein":null,"metAge":null,"date":"YYYY-MM-DD or null if not shown","note":"one short sentence"}
+fat, muscle, water, protein are percentages; bone in kg; bmr in kcal; metAge = metabolic/body age in years. Use null for anything you cannot clearly read. If no weight is visible, set "weight":null.`;
+}
+async function scanScale(file) {
+  const date = S.date;
+  if (!S.session.geminiKey && !S.session.apiKey) { S.scaleNote = { date, err: true, html: 'Add your free Gemini key first (Intake → + Add → Photo), then try again.' }; return render(); }
+  S.scaleNote = { date, html: '<span class="spinner" style="display:inline-block;width:16px;height:16px;border-width:2px;vertical-align:-3px;margin:0 6px 0 0"></span>Reading the scale…' }; render();
+  try {
+    const url = await resizeImage(file, 1024);
+    const text = await askVision([url.split(',')[1]], scalePrompt());
+    const m = text.match(/\{[\s\S]*\}/); if (!m) throw fail('Could not read the weight — type it in.');
+    const r = JSON.parse(m[0]); const n = x => (x == null || x === '' || isNaN(Number(x))) ? null : Math.round(Number(x) * 10) / 10;
+    const w = n(r.weight);
+    if (w == null || w < 25 || w > 300) throw fail('No weight found in the photo — type it in.');
+    const body = {}; BODY_KEYS.forEach(([k]) => { const v = n(r[k]); if (v != null) body[k] = v; });
+    S.scaleRead = { date, weight: w, body };
+    S.scaleNote = { date, html: `Read: <b>${w} kg</b>${Object.keys(body).length ? ' · ' + BODY_KEYS.filter(([k]) => body[k] != null).map(([k, l, u]) => `${l} ${body[k]}${u ? ' ' + u : ''}`).join(' · ') : ''}.${r.date && r.date !== date ? ` <small>(screen shows ${esc(r.date)})</small>` : ''} Check the number below and tap <b>Save weight</b>.` };
+    render();
+    const inp = document.querySelector('#bodyForm input[name=weight]'); if (inp) inp.value = w;
+  } catch (e) { S.scaleNote = { date, err: true, html: esc(e.message) }; render(); }
+}
+function maybeHashWeight() {
+  const q = new URLSearchParams((location.hash || '').replace(/^#/, '') || location.search.replace(/^\?/, ''));
+  const w = num(q.get('weight') || q.get('w'));
+  if (w == null) return;
+  try { history.replaceState(null, '', location.pathname); } catch (e) {}
+  if (w < 25 || w > 300) return toast('Weight from Shortcut looks wrong: ' + w, 'bad');
+  const date = /^\d{4}-\d{2}-\d{2}$/.test(q.get('date') || '') ? q.get('date') : todayStr();
+  const body = {}; BODY_KEYS.forEach(([k]) => { const v = num(q.get(k)); if (v != null) body[k] = r1(v); });
+  S.sheet = { kind: 'confirm', date, weight: r1(w), body };
+  renderSheet();
+}
+function sheetConfirm() {
+  const sh = S.sheet, old = (S.data.days[sh.date] || {}).weight;
+  return `<div class="sheet-h"><h2>⚖️ Weight from your scale</h2><button class="x" data-act="closeSheet">✕</button></div>
+    <div class="card" style="text-align:center"><div class="big2">${sh.weight} kg</div><small class="muted">${niceDate(sh.date, { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' })}</small>
+      ${Object.keys(sh.body).length ? `<div class="chips" style="justify-content:center;margin-top:10px">${bodyChips(sh.body)}</div>` : ''}
+      ${old ? `<p class="explain">Already saved for this day: ${old} kg — this will replace it.</p>` : ''}</div>
+    <button class="btn primary block" data-act="confirmWeight">Save ${sh.weight} kg</button>
+    <button class="btn block" style="margin-top:8px" data-act="closeSheet">Cancel</button>`;
+}
+
 function viewFood() {
   const date = S.date, d = dayOf(date), st = dayStats(date);
   const waterTarget = Math.round(st.w * 35 / 250) * 250;
@@ -1622,6 +1671,13 @@ function viewBurn() {
       <button class="btn primary block" data-act="saveSteps">Confirm &amp; save steps</button>
     </div>
     <div class="card"><h3>Weight</h3>
+      <div class="photo-btns" style="margin-bottom:8px">
+        <label class="btn primary">📸 Scan scale<input type="file" accept="image/*" capture="environment" class="scale-photo-input" aria-label="Photo of the scale display"></label>
+        <label class="btn">🖼️ Dr Trust screenshot<input type="file" accept="image/*" class="scale-photo-input" aria-label="Screenshot of the scale app"></label>
+      </div>
+      <p class="explain" style="margin:0 0 10px">Photo of the scale display, or a screenshot of your Dr Trust app — I'll read the weight (and body fat, muscle etc. if shown). Check it, then tap Save.</p>
+      ${S.scaleNote && S.scaleNote.date === date ? `<div class="note ${S.scaleNote.err ? 'bad' : 'info'}" style="margin:0 0 10px">${S.scaleNote.html}</div>` : ''}
+      ${d.body ? `<div class="chips" style="margin-bottom:10px">${bodyChips(d.body)}</div>` : ''}
       <form id="bodyForm" onsubmit="return false">
         <div class="field"><label>Body weight today (kg)<input name="weight" type="number" step="any" inputmode="decimal" value="${d.weight ?? ''}" placeholder="${r1(weightOn(date))}"></label></div>
         <div class="field"><label>Remark about the day<textarea name="remark" placeholder="How did you feel? Cheat meal? Tired?">${esc(d.remark || '')}</textarea></label></div>
@@ -1664,12 +1720,21 @@ function viewProfile() {
   const dataUrl = `https://github.com/${encodeURIComponent(s.owner)}/${encodeURIComponent(s.dataRepo)}/blob/HEAD/${s.dataPath}`;
   return header('Profile') + `<main>
     ${profileForm(p, true)}
+    <div class="card"><h3>⚖️ Auto weight from Apple Health</h3>
+      <p class="explain" style="margin:0 0 8px">If your Dr Trust app saves weight to Apple Health, an iPhone Shortcut can send it here in one tap. Make a Shortcut with these 3 actions:</p>
+      <ol class="help" style="margin:0 0 8px;padding-left:20px;font-size:14px">
+        <li><b>Find Health Samples</b> → Type: <b>Weight</b>, Sort by: <b>Start Date</b>, Order: <b>Latest First</b>, Limit: <b>1</b>, Unit: <b>kg</b></li>
+        <li><b>Get Details of Health Samples</b> → <b>Value</b></li>
+        <li><b>Open URLs</b> → <code style="word-break:break-all">${esc(location.origin + location.pathname)}#weight=</code><i>Value</i></li>
+      </ol>
+      <p class="explain" style="margin:0">Run it after you weigh in (or add it to Automation → "When I open Dr Trust"). The app opens, shows the weight and asks you to confirm.</p>
+    </div>
     <div class="card"><h3>Download your data</h3>
       <p class="explain" style="margin:0 0 10px">Excel file with every day: summary, each meal, nutrients, workouts, steps and weight.</p>
       <button class="btn blue block" data-act="exportXlsx">⬇️ Export to Excel</button>
     </div>
     <button class="btn danger block" data-act="logout" style="margin-top:6px">Log out</button>
-    <p class="explain" style="text-align:center;margin-top:14px">Minimal Health Tracker v17 · estimates only, not medical advice</p>
+    <p class="explain" style="text-align:center;margin-top:14px">Minimal Health Tracker v18 · estimates only, not medical advice</p>
   </main>`;
 }
 
@@ -2022,7 +2087,7 @@ function onWorkoutInput(t) {
 function renderSheet() {
   const root = $('#sheet-root');
   if (!S.sheet) { root.innerHTML = ''; document.body.classList.remove('lock'); return; }
-  const inner = S.sheet.kind === 'food' ? sheetFood() : sheetWorkout();
+  const inner = S.sheet.kind === 'food' ? sheetFood() : S.sheet.kind === 'confirm' ? sheetConfirm() : sheetWorkout();
   const existing = $('.sheet', root);
   if (existing) { const st = existing.scrollTop; existing.innerHTML = '<div class="grab"></div>' + inner; existing.scrollTop = st; }
   else root.innerHTML = `<div class="sheet-backdrop" data-act="closeSheet" data-backdrop="1"><div class="sheet"><div class="grab"></div>${inner}</div></div>`;
@@ -2145,10 +2210,13 @@ const ACT = {
     const fd = new FormData($('#bodyForm'));
     const w = num(fd.get('weight'));
     if (w != null && (w < 30 || w > 300)) throw fail('Check the weight (kg).');
+    const sr = S.scaleRead && S.scaleRead.date === S.date && w != null && Math.abs(S.scaleRead.weight - w) < 0.05 ? S.scaleRead : null;
     mutateDay(S.date, d => {
       d.weight = w == null ? undefined : r1(w);
+      if (sr && Object.keys(sr.body).length) d.body = sr.body;
       d.remark = String(fd.get('remark') || '').trim();
     });
+    S.scaleRead = null; S.scaleNote = null;
     toast('Saved', 'good'); render();
   },
 
@@ -2197,6 +2265,11 @@ const ACT = {
   medPhotoDel(el) {
     if (!confirm('Remove this photo from the day?')) return;
     mutateDay(S.date, d => { d.meds.photos.splice(+el.dataset.i, 1); }); render();
+  },
+  confirmWeight() {
+    const sh = S.sheet;
+    mutateDay(sh.date, d => { d.weight = sh.weight; if (Object.keys(sh.body).length) d.body = sh.body; });
+    S.sheet = null; toast(`Saved ${sh.weight} kg`, 'good'); render();
   },
   addWorkout() {
     const last = Object.keys(S.data.days).sort().reverse().map(k => (S.data.days[k].workouts || [])[0]).find(Boolean);
@@ -2297,7 +2370,7 @@ const ACT = {
         summary.push({ Date: ds, 'Plan day': dayNo >= 1 ? dayNo : '', 'Weight (kg)': d.weight ?? '', 'Eaten (kcal)': R(t.kcal), 'Protein (g)': R(t.protein), 'Carbs (g)': R(t.carbs), 'Sugar (g)': R(t.sugar), 'Fat (g)': R(t.fat), 'Fibre (g)': R(t.fiber),
           'Workouts (kcal)': R(st.exGross), 'Workout minutes': (d.workouts || []).reduce((a, x) => a + (x.minutes || 0), 0), Steps: d.steps ?? '', 'Steps (kcal)': R(st.stepsK),
           'Body uses (kcal)': R(st.base), 'Total burned (kcal)': R(st.burn), 'Deficit (kcal)': st.deficit == null ? '' : R(st.deficit), 'Fat lost (g)': st.deficit == null ? '' : R(st.deficit / 7.7),
-          'Meals logged': (d.meals || []).length, Remark: d.remark || '' });
+          'Meals logged': (d.meals || []).length, 'Body fat % (scale)': (d.body || {}).fat ?? '', 'Muscle % (scale)': (d.body || {}).muscle ?? '', 'Water % (scale)': (d.body || {}).water ?? '', 'Visceral fat': (d.body || {}).visceral ?? '', Remark: d.remark || '' });
         micro.push({ Date: ds, 'Vitamin A (µg)': R(t.vitA), 'Vitamin C (mg)': R(t.vitC), 'Vitamin B12 (µg)': R(t.vitB12), 'Folate (µg)': R(t.folate), 'Calcium (mg)': R(t.calcium), 'Iron (mg)': R(t.iron), 'Magnesium (mg)': R(t.magnesium), 'Potassium (mg)': R(t.potassium), 'Zinc (mg)': R(t.zinc), 'Sodium (mg)': R(t.sodium) });
         (d.meals || []).forEach(m => {
           const mi = microOfMeal(m) || {};
@@ -2358,6 +2431,7 @@ document.addEventListener('input', (e) => {
 });
 document.addEventListener('change', async (e) => {
   const t = e.target;
+  if (t.classList.contains('scale-photo-input') && t.files && t.files[0]) { const f = t.files[0]; t.value = ''; scanScale(f); return; }
   if (t.classList.contains('food-check-input') && t.files && t.files[0]) {
     const files = [...t.files].slice(0, 2); t.value = '';
     const hr = new Date().getHours(), slot = hr < 11 ? 'breakfast' : hr < 16 ? 'lunch' : hr < 19 ? 'snacks' : 'dinner';
@@ -2418,7 +2492,7 @@ async function boot() {
 boot();
 
 // expose for testing
-window.__fittrack = { addPhotosToSheet, openWorkoutSheet, sheetWorkout, runAnalysis, sheetFood, viewHome, viewFood, viewToday, viewMeds, wheyCard, ACT, profileForm, startWorkoutPhoto, sheetWorkout, FOOD, nutritionCard, needsCard, todayTable, viewSuggest, viewHome, viewFood, viewBurn, sheetWorkout, bmiOf, bmiCat, fatPct, bmr, treadKcal, bikeKcal, wkSuggest, S, plan, dayStats };
+window.__fittrack = { scanScale, maybeHashWeight, sheetConfirm, viewBurn, addPhotosToSheet, openWorkoutSheet, sheetWorkout, runAnalysis, sheetFood, viewHome, viewFood, viewToday, viewMeds, wheyCard, ACT, profileForm, startWorkoutPhoto, sheetWorkout, FOOD, nutritionCard, needsCard, todayTable, viewSuggest, viewHome, viewFood, viewBurn, sheetWorkout, bmiOf, bmiCat, fatPct, bmr, treadKcal, bikeKcal, wkSuggest, S, plan, dayStats };
 })();
 </script>
 </body>
