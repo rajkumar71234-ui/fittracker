@@ -60,6 +60,12 @@ input,select,textarea{display:block;width:100%;margin-top:4px;font:inherit;font-
 select{background-image:linear-gradient(45deg,transparent 50%,var(--muted) 50%),linear-gradient(135deg,var(--muted) 50%,transparent 50%);background-position:calc(100% - 18px) 50%,calc(100% - 13px) 50%;background-size:5px 5px;background-repeat:no-repeat;padding-right:30px}
 input:focus,select:focus,textarea:focus{border-color:var(--blue)}
 textarea{min-height:70px;resize:vertical}
+input:not([type=checkbox]),select{height:48px;line-height:24px}
+input[type=date]{text-align:left;-webkit-appearance:none;appearance:none;min-width:0;display:block;padding-left:9px;padding-right:6px;font-size:15px}
+input[type=date]::-webkit-date-and-time-value{text-align:left;margin:0}
+input[type=date]::-webkit-calendar-picker-indicator{opacity:.5}
+.grid2>label,.grid3>label{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
+.grid2,.grid3{align-items:end}
 .field{margin-bottom:12px}
 .btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;padding:12px 16px;border-radius:13px;font-weight:650;background:var(--input);color:var(--text);text-align:center}
 .btn.primary{background:var(--accent);color:#fff}
@@ -859,7 +865,7 @@ function viewAuth() {
   return `<div class="auth">
     <img class="logo" src="icons/logo.png" alt="">
     <h1>Minimal Health Tracker</h1>
-    <p class="sub">Your weight-loss tracker · v11</p>
+    <p class="sub">Your weight-loss tracker · v12</p>
     <div class="seg">
       <button data-act="authMode" data-v="login" class="${login ? 'on' : ''}">Log in</button>
       <button data-act="authMode" data-v="create" class="${!login ? 'on' : ''}">Create account</button>
@@ -930,9 +936,9 @@ function profileForm(p, isEdit) {
       </div>
       <details ${p.waistCm ? 'open' : ''}><summary>Tape measurements (optional — better body-fat estimate)</summary>
         <div class="grid3" style="margin-top:8px">
-          <label>Waist at navel (cm)<input name="waistCm" type="number" step="any" inputmode="decimal" value="${v('waistCm')}"></label>
+          <label>Waist (cm)<input name="waistCm" type="number" step="any" inputmode="decimal" value="${v('waistCm')}"></label>
           <label>Neck (cm)<input name="neckCm" type="number" step="any" inputmode="decimal" value="${v('neckCm')}"></label>
-          <label>Hip (cm, women)<input name="hipCm" type="number" step="any" inputmode="decimal" value="${v('hipCm')}"></label>
+          <label>Hip (cm)<input name="hipCm" type="number" step="any" inputmode="decimal" value="${v('hipCm')}"></label>
         </div>
       </details>
     </div>
@@ -946,7 +952,7 @@ function profileForm(p, isEdit) {
       <h3>Your goal</h3>
       <div class="grid3 field">
         <label>Lose (kg)<input name="targetLoss" placeholder="e.g. 6" type="number" step="any" inputmode="decimal" value="${v('targetLoss')}"></label>
-        <label>In how many days<input name="targetDays" placeholder="e.g. 90" type="number" inputmode="numeric" value="${v('targetDays')}"></label>
+        <label>Days<input name="targetDays" placeholder="e.g. 90" type="number" inputmode="numeric" value="${v('targetDays')}"></label>
         <label>Start date<input name="startDate" type="date" value="${v('startDate')}"></label>
       </div>
       <div id="pfPreview"></div>
@@ -1475,7 +1481,7 @@ function viewProfile() {
   return header('Profile') + `<main>
     ${profileForm(p, true)}
     <button class="btn danger block" data-act="logout" style="margin-top:6px">Log out</button>
-    <p class="explain" style="text-align:center;margin-top:14px">Minimal Health Tracker v11 · estimates only, not medical advice</p>
+    <p class="explain" style="text-align:center;margin-top:14px">Minimal Health Tracker v12 · estimates only, not medical advice</p>
   </main>`;
 }
 
@@ -2049,7 +2055,7 @@ async function boot() {
 boot();
 
 // expose for testing
-window.__fittrack = { startWorkoutPhoto, sheetWorkout, FOOD, nutritionCard, needsCard, todayTable, viewSuggest, viewHome, viewFood, viewBurn, sheetWorkout, bmiOf, bmiCat, fatPct, bmr, treadKcal, bikeKcal, wkSuggest, S, plan, dayStats };
+window.__fittrack = { profileForm, startWorkoutPhoto, sheetWorkout, FOOD, nutritionCard, needsCard, todayTable, viewSuggest, viewHome, viewFood, viewBurn, sheetWorkout, bmiOf, bmiCat, fatPct, bmr, treadKcal, bikeKcal, wkSuggest, S, plan, dayStats };
 })();
 </script>
 </body>
