@@ -81,7 +81,7 @@ input[type=date]::-webkit-calendar-picker-indicator{opacity:.5}
 .seg button.on{background:var(--card);color:var(--text);box-shadow:0 1px 3px rgba(0,0,0,.12)}
 .tabbar{position:fixed;left:0;right:0;bottom:0;z-index:30;display:flex;justify-content:center;background:color-mix(in srgb,var(--card) 92%,transparent);-webkit-backdrop-filter:blur(16px);backdrop-filter:blur(16px);border-top:1px solid var(--line);padding-bottom:env(safe-area-inset-bottom)}
 .tabbar-in{display:flex;width:100%;max-width:640px}
-.tabbar button{flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;padding:8px 0 6px;font-size:11px;font-weight:600;color:var(--muted)}
+.tabbar button{flex:1;min-width:0;display:flex;flex-direction:column;align-items:center;gap:2px;padding:8px 0 6px;font-size:10.5px;font-weight:600;color:var(--muted);letter-spacing:-.01em}
 .tabbar button.on{color:var(--accent)}
 .tabbar svg{width:25px;height:25px}
 .datebar{display:flex;align-items:center;justify-content:space-between;margin:2px 0 12px}
@@ -516,6 +516,19 @@ const GH = {
     if (!res.ok) throw await this.error(res);
     return (await res.json()).content.sha;
   },
+  async putB64(owner, repo, p, b64, message, token) {
+    const res = await this.call(`/repos/${owner}/${repo}/contents/${this.path(p)}`, { method: 'PUT', token, body: { message, content: b64 } });
+    if (!res.ok) throw await this.error(res);
+    return (await res.json()).content.sha;
+  },
+  async getB64(owner, repo, p, token) {
+    const res = await this.call(`/repos/${owner}/${repo}/contents/${this.path(p)}`, { token });
+    if (!res.ok) throw await this.error(res);
+    const j = await res.json();
+    if (j.content) return String(j.content).replace(/\s/g, '');
+    if (j.download_url) { const r = await fetch(j.download_url, { headers: { Authorization: 'Bearer ' + token } }); const b = new Uint8Array(await r.arrayBuffer()); return bytesToB64(b); }
+    return '';
+  },
   async repo(owner, repo, token) {
     const res = await this.call(`/repos/${owner}/${repo}`, { token });
     if (!res.ok) throw await this.error(res);
@@ -865,7 +878,7 @@ function viewAuth() {
   return `<div class="auth">
     <img class="logo" src="icons/logo.png" alt="">
     <h1>Minimal Health Tracker</h1>
-    <p class="sub">Your weight-loss tracker · v13</p>
+    <p class="sub">Your weight-loss tracker · v14</p>
     <div class="seg">
       <button data-act="authMode" data-v="login" class="${login ? 'on' : ''}">Log in</button>
       <button data-act="authMode" data-v="create" class="${!login ? 'on' : ''}">Create account</button>
@@ -1017,11 +1030,13 @@ const ICONS = {
   home: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10.5 12 3l9 7.5V20a1 1 0 0 1-1 1h-5v-6h-6v6H4a1 1 0 0 1-1-1z"/></svg>',
   food: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 2v20M4 2v6a3 3 0 0 0 6 0V2M17 2c-2 1.5-3 4-3 7s1 4 3 4v9"/></svg>',
   burn: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22c4.4 0 7-3 7-7 0-4-3-6.5-4-10-1.5 2-2 3.5-2 5-1.5-1-2.5-3-2.5-5C7 7.5 5 11 5 15c0 4 2.6 7 7 7z"/></svg>',
+  today: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="17" rx="3"/><path d="M8 2v4M16 2v4M3 10h18M8.5 15l2.5 2.5 4.5-4.5"/></svg>',
+  meds: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.5 20.5a5 5 0 0 1-7-7l6-6a5 5 0 0 1 7 7z"/><path d="M8.5 8.5l7 7"/></svg>',
   suggest: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18h6M10 22h4M12 2a7 7 0 0 0-4 12.7c.6.5 1 1.2 1 2V17h6v-.3c0-.8.4-1.5 1-2A7 7 0 0 0 12 2z"/></svg>',
   profile: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21c1.5-4 4.5-6 8-6s6.5 2 8 6"/></svg>',
 };
 function tabbar() {
-  const t = [['home', 'Home'], ['food', 'Intake'], ['burn', 'Burn'], ['suggest', 'Suggest'], ['profile', 'Profile']];
+  const t = [['home', 'Home'], ['today', 'Today'], ['food', 'Intake'], ['burn', 'Burn'], ['meds', 'Meds'], ['suggest', 'Suggest'], ['profile', 'Profile']];
   return `<nav class="tabbar"><div class="tabbar-in">${t.map(([id, l]) => `<button class="${S.tab === id ? 'on' : ''}" data-act="tab" data-v="${id}">${ICONS[id]}${l}</button>`).join('')}</div></nav>`;
 }
 function header(title) { return `<header class="top"><div class="top-in"><h1>${title}</h1>${syncPill()}</div></header>`; }
@@ -1170,9 +1185,6 @@ function viewHome() {
 
     <div class="section-label">Your daily target</div>
     <div class="card">${targetHtml}</div>
-
-    <div class="section-label">Today · ${niceDate(t, { day: 'numeric', month: 'short' })}</div>
-    ${todayTable(t)}
 
     <div class="section-label">Every day</div>
     <div class="card">${dailyCharts(p, last)}</div>
@@ -1394,12 +1406,136 @@ function dateBar() {
     </div>`;
 }
 
+function wheyDefaults() { const w = (P() || {}).whey || {}; return { p: w.p ?? 24, k: w.k ?? 120, g: w.g ?? 30 }; }
+function wheyCard(date) {
+  const d = dayOf(date), wd = wheyDefaults();
+  const m = (d.meals || []).find(x => x.source === 'whey');
+  const scoops = m ? m.scoops : 0;
+  return `<div class="card"><h3>💪 Whey protein ${m ? `<small class="good">${r0(m.protein)} g protein · ${r0(m.kcal)} kcal saved</small>` : ''}</h3>
+    <div class="water" style="margin-bottom:10px">
+      <button class="round" data-act="wheyStep" data-v="-0.5" aria-label="Less">−</button>
+      <div class="big"><b id="wheyN">${scoops || 0}</b> <span class="muted">scoop${scoops == 1 ? '' : 's'}</span><br><small class="muted" id="wheyCalc">= ${r0((scoops || 0) * wd.p)} g protein · ${r0((scoops || 0) * wd.k)} kcal</small></div>
+      <button class="round" data-act="wheyStep" data-v="0.5" aria-label="More">+</button>
+    </div>
+    <details><summary>Per scoop: ${wd.p} g protein · ${wd.k} kcal · ${wd.g} g (change)</summary>
+      <div class="grid3" style="margin-top:8px">
+        <label>Protein (g)<input id="wheyP" type="number" step="any" inputmode="decimal" value="${wd.p}"></label>
+        <label>kcal<input id="wheyK" type="number" step="any" inputmode="decimal" value="${wd.k}"></label>
+        <label>Scoop (g)<input id="wheyG" type="number" step="any" inputmode="decimal" value="${wd.g}"></label>
+      </div>
+      <p class="explain">Check the back of your whey tub for these numbers.</p>
+    </details>
+    <button class="btn primary block" style="margin-top:8px" data-act="saveWhey">Save whey</button>
+  </div>`;
+}
+
+function viewToday() {
+  const date = S.date, d = dayOf(date), st = dayStats(date), nd = nutritionNeeds(date), dn = dayNutrition(date).tot;
+  const meds = d.meds || {};
+  const def = st.burn - dn.kcal, grams = def / 7.7;
+  const mealList = SLOTS.map(s => {
+    const items = (d.meals || []).filter(m => m.slot === s.id); if (!items.length) return '';
+    return `<div class="slot"><div class="slot-h"><span class="name">${s.icon} ${s.label}</span><span class="kc">${r0(items.reduce((a, m) => a + (m.kcal || 0), 0))} kcal · ${r0(items.reduce((a, m) => a + (m.protein || 0), 0))} g P</span></div>
+      ${items.map(m => `<div class="li"><span>${esc(m.name)} <small>${r0(m.grams)} g</small></span><span class="r">${r0(m.kcal)}</span></div>`).join('')}</div>`;
+  }).join('');
+  const wk = (d.workouts || []).map(w => `<div class="li"><span>${(WK[w.type] || WK.other).icon} ${esc(w.name)} <small>${r0(w.minutes)} min</small></span><span class="r">${r0(w.kcal)} kcal</span></div>`).join('');
+  return header('Today') + `<main>
+    ${dateBar()}
+    <div class="card">
+      <div class="sum-grid">
+        <div><small class="muted">Eaten</small><b>${r0(dn.kcal)}</b><span>kcal</span></div>
+        <div><small class="muted">Burned</small><b>${r0(st.burn)}</b><span>kcal total</span></div>
+        <div><small class="muted">${def >= 0 ? 'Deficit' : 'Surplus'}</small><b class="${def >= 0 ? 'good' : 'bad'}">${r0(Math.abs(def))}</b><span>kcal</span></div>
+      </div>
+      <div class="sum-foot ${def >= 0 ? 'good' : 'bad'}" style="font-size:16px">${def >= 0 ? `≈ ${r0(grams)} g weight loss today` : `≈ ${r0(-grams)} g gained today`}</div>
+      <p class="explain" style="text-align:center;margin-top:4px">Burned = body ${r0(st.base)} + exercise &amp; steps ${r0(st.exNet + st.stepsK)} kcal</p>
+    </div>
+
+    <div class="section-label">Need vs eaten</div>
+    ${todayTable(date)}
+
+    <div class="grid2" style="margin-bottom:12px">
+      <div class="stat" style="background:var(--card)"><small>Weight</small><b>${d.weight ? r1(d.weight) + ' kg' : '—'}</b><span>${d.weight ? 'logged' : 'not logged · Burn tab'}</span></div>
+      <div class="stat" style="background:var(--card)"><small>Medication</small><b class="${meds.taken === 'yes' ? 'good' : meds.taken === 'no' ? 'warnc' : ''}">${meds.taken === 'yes' ? 'Taken ✓' : meds.taken === 'no' ? 'Not taken' : '—'}</b><span>${(meds.list || []).length ? esc(meds.list.map(x => x.name).join(', ')) : 'Meds tab'}</span></div>
+    </div>
+
+    <div class="section-label">What you ate</div>
+    <div class="card">${mealList || '<p class="muted" style="margin:0;font-size:14px">Nothing logged yet. Add food in Intake.</p>'}
+      ${mealList ? `<div class="kv" style="margin-top:8px"><span>Total</span><span>${r0(dn.kcal)} kcal · ${r0(dn.protein)} g protein</span></div>` : ''}</div>
+
+    <div class="section-label">Workout done</div>
+    <div class="card">${wk || '<p class="muted" style="margin:0;font-size:14px">No workout logged. Add it in Burn.</p>'}
+      <div class="kv" style="margin-top:8px"><span>Steps</span><span>${d.steps ? `${Number(d.steps).toLocaleString('en-IN')} · ${r0(st.stepsK)} kcal` : '—'}</span></div>
+      <div class="kv"><span>Total exercise burn</span><span>${r0(st.exShow)} kcal</span></div>
+    </div>
+    ${meds.remark || d.remark ? `<div class="section-label">Notes</div><div class="card">${meds.remark ? `<p style="margin:0 0 6px;font-size:14px">💊 ${esc(meds.remark)}</p>` : ''}${d.remark ? `<p style="margin:0;font-size:14px">📝 ${esc(d.remark)}</p>` : ''}</div>` : ''}
+  </main>`;
+}
+
+const PHOTO_CACHE = {};
+function medPhotoThumbs(paths) {
+  if (!paths || !paths.length) return '';
+  return `<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:10px 0">${paths.map((p, i) => `<div style="position:relative">
+    <img data-gh-photo="${esc(p)}" src="${PHOTO_CACHE[p] || ''}" alt="Medicine photo" style="width:100%;aspect-ratio:1;object-fit:cover;border-radius:12px;background:var(--input);display:block">
+    <button class="x" style="position:absolute;top:4px;right:4px;width:26px;height:26px;font-size:12px" data-act="medPhotoDel" data-i="${i}" aria-label="Remove photo">✕</button></div>`).join('')}</div>`;
+}
+async function loadGhPhotos() {
+  const s = S.session; if (!s) return;
+  for (const img of document.querySelectorAll('img[data-gh-photo]')) {
+    const p = img.dataset.ghPhoto;
+    if (PHOTO_CACHE[p]) { img.src = PHOTO_CACHE[p]; continue; }
+    try { const b = await GH.getB64(s.owner, s.dataRepo, p, s.token); if (b) { PHOTO_CACHE[p] = 'data:image/jpeg;base64,' + b; img.src = PHOTO_CACHE[p]; } } catch (e) { }
+  }
+}
+function viewMeds() {
+  const date = S.date, d = dayOf(date), meds = d.meds || {};
+  let prev = null;
+  for (let i = 1; i <= 30 && !prev; i++) { const pd = S.data.days[addDays(date, -i)]; if (pd && pd.meds && (pd.meds.list || []).length) prev = pd.meds.list; }
+  const list = meds.list || [];
+  return header('Medication') + `<main>
+    ${dateBar()}
+    <div class="card"><h3>Did you take your medicine today?</h3>
+      <div class="seg" style="margin:0">
+        <button data-act="medTaken" data-v="yes" class="${meds.taken === 'yes' ? 'on' : ''}">✅ Yes, taken</button>
+        <button data-act="medTaken" data-v="no" class="${meds.taken === 'no' ? 'on' : ''}">❌ Not taken</button>
+        <button data-act="medTaken" data-v="none" class="${meds.taken === 'none' ? 'on' : ''}">No medicine</button>
+      </div>
+    </div>
+
+    <div class="card"><h3>Medicines</h3>
+      ${list.map(x => `<div class="li"><span>💊 ${esc(x.name)} <small>${esc([x.dose, x.time].filter(Boolean).join(' · '))}</small></span><button class="x" style="width:28px;height:28px;font-size:12px" data-act="medDel" data-id="${x.id}" aria-label="Remove">✕</button></div>`).join('') || '<p class="muted" style="margin:0 0 6px;font-size:14px">None added for this day.</p>'}
+      ${!list.length && prev ? `<button class="btn block small" style="margin:8px 0" data-act="medCopy">Same as last time: ${esc(prev.map(x => x.name).join(', '))}</button>` : ''}
+      <div class="grid3" style="margin-top:10px">
+        <label>Name<input id="medName" placeholder="Inhaler"></label>
+        <label>Dose<input id="medDose" placeholder="1 puff"></label>
+        <label>Time<input id="medTime" placeholder="Morning"></label>
+      </div>
+      <button class="btn block" style="margin-top:4px" data-act="medAdd">+ Add medicine</button>
+    </div>
+
+    <div class="card"><h3>Photos</h3>
+      <p class="explain" style="margin:0 0 8px">Prescription, tablet strip or anything you want to keep. Saved privately in your GitHub.</p>
+      ${medPhotoThumbs(meds.photos)}
+      <div class="photo-btns">
+        <label class="btn primary">📸 Take photo<input type="file" accept="image/*" capture="environment" class="med-photo-input" aria-label="Take photo"></label>
+        <label class="btn">🖼️ Gallery<input type="file" accept="image/*" class="med-photo-input" aria-label="Choose from gallery"></label>
+      </div>
+    </div>
+
+    <div class="card"><h3>Remark</h3>
+      <textarea id="medRemark" placeholder="Side effects, doctor advice, how you felt…">${esc(meds.remark || '')}</textarea>
+      <button class="btn primary block" style="margin-top:10px" data-act="medSaveRemark">Save remark</button>
+    </div>
+  </main>`;
+}
+
 function viewFood() {
   const date = S.date, d = dayOf(date), st = dayStats(date);
   const waterTarget = Math.round(st.w * 35 / 250) * 250;
   return header('Intake') + `<main>
     ${dateBar()}
     ${summaryCard(st)}
+    ${wheyCard(date)}
     <div class="card"><h3>Meals <small class="muted">${r0(st.protein)} g protein · ${r0(st.carbs)} g carbs · ${r0(st.fat)} g fat</small></h3>
       ${SLOTS.map(s => {
         const items = (d.meals || []).filter(m => m.slot === s.id);
@@ -1486,7 +1622,7 @@ function viewProfile() {
       <button class="btn blue block" data-act="exportXlsx">⬇️ Export to Excel</button>
     </div>
     <button class="btn danger block" data-act="logout" style="margin-top:6px">Log out</button>
-    <p class="explain" style="text-align:center;margin-top:14px">Minimal Health Tracker v13 · estimates only, not medical advice</p>
+    <p class="explain" style="text-align:center;margin-top:14px">Minimal Health Tracker v14 · estimates only, not medical advice</p>
   </main>`;
 }
 
@@ -1799,8 +1935,9 @@ function render() {
   else if (S.screen === 'error') app.innerHTML = viewError();
   else if (S.screen === 'onboard') { app.innerHTML = viewOnboard(); updateProfilePreview(); }
   else {
-    const v = { home: viewHome, food: viewFood, burn: viewBurn, suggest: viewSuggest, profile: viewProfile }[S.tab] || viewHome;
+    const v = { home: viewHome, today: viewToday, food: viewFood, burn: viewBurn, meds: viewMeds, suggest: viewSuggest, profile: viewProfile }[S.tab] || viewHome;
     app.innerHTML = v() + tabbar();
+    if (S.tab === 'meds') setTimeout(loadGhPhotos, 0);
     if (S.tab === 'profile') updateProfilePreview();
   }
   renderSheet();
@@ -1911,6 +2048,45 @@ const ACT = {
     mutateDay(S.date, d => { d.steps = Math.round(steps); d.stepsKcal = r0(kcal); });
     toast(`Saved ${Math.round(steps).toLocaleString('en-IN')} steps = ${r0(kcal)} kcal`, 'good'); render();
   },
+  wheyStep(el) {
+    const n = $('#wheyN'), c = $('#wheyCalc'); if (!n) return;
+    const v = Math.max(0, Math.min(10, (parseFloat(n.textContent) || 0) + Number(el.dataset.v)));
+    n.textContent = v; const wd = { p: num(($('#wheyP') || {}).value) ?? wheyDefaults().p, k: num(($('#wheyK') || {}).value) ?? wheyDefaults().k };
+    if (c) c.textContent = `= ${r0(v * wd.p)} g protein · ${r0(v * wd.k)} kcal`;
+  },
+  saveWhey() {
+    const scoops = parseFloat(($('#wheyN') || {}).textContent) || 0;
+    const p = num(($('#wheyP') || {}).value) ?? 24, k = num(($('#wheyK') || {}).value) ?? 120, g = num(($('#wheyG') || {}).value) ?? 30;
+    const old = wheyDefaults();
+    if (p !== old.p || k !== old.k || g !== old.g) { S.data.profile.whey = { p, k, g }; S.profileDirty = true; }
+    mutateDay(S.date, d => {
+      d.meals = d.meals.filter(x => x.source !== 'whey');
+      if (scoops > 0) d.meals.push({ id: uid(), slot: 'protein', name: `Whey protein (${scoops} scoop${scoops == 1 ? '' : 's'})`, grams: r1(scoops * g), scoops,
+        kcal: r0(scoops * k), protein: r1(scoops * p), carbs: r1(scoops * g * 0.08), fat: r1(scoops * g * 0.05), source: 'whey', at: new Date().toISOString() });
+    });
+    toast(scoops > 0 ? `Saved ${scoops} scoop${scoops == 1 ? '' : 's'} = ${r0(scoops * p)} g protein` : 'Whey removed', 'good'); render();
+  },
+  medTaken(el) { mutateDay(S.date, d => { d.meds = d.meds || {}; d.meds.taken = el.dataset.v; }); render(); },
+  medAdd() {
+    const name = (($('#medName') || {}).value || '').trim();
+    if (!name) throw fail('Type the medicine name.');
+    const dose = (($('#medDose') || {}).value || '').trim(), time = (($('#medTime') || {}).value || '').trim();
+    mutateDay(S.date, d => { d.meds = d.meds || {}; d.meds.list = d.meds.list || []; d.meds.list.push({ id: uid(), name, dose, time }); if (!d.meds.taken) d.meds.taken = 'yes'; });
+    toast('Medicine added', 'good'); render();
+  },
+  medCopy() {
+    const date = S.date; let prev = null;
+    for (let i = 1; i <= 30 && !prev; i++) { const pd = S.data.days[addDays(date, -i)]; if (pd && pd.meds && (pd.meds.list || []).length) prev = pd.meds.list; }
+    if (!prev) return;
+    mutateDay(date, d => { d.meds = d.meds || {}; d.meds.list = prev.map(x => ({ ...x, id: uid() })); if (!d.meds.taken) d.meds.taken = 'yes'; });
+    render();
+  },
+  medDel(el) { mutateDay(S.date, d => { d.meds.list = (d.meds.list || []).filter(x => x.id !== el.dataset.id); }); render(); },
+  medSaveRemark() { const r = (($('#medRemark') || {}).value || '').trim(); mutateDay(S.date, d => { d.meds = d.meds || {}; d.meds.remark = r; }); toast('Saved', 'good'); render(); },
+  medPhotoDel(el) {
+    if (!confirm('Remove this photo from the day?')) return;
+    mutateDay(S.date, d => { d.meds.photos.splice(+el.dataset.i, 1); }); render();
+  },
   addWorkout() {
     const last = Object.keys(S.data.days).sort().reverse().map(k => (S.data.days[k].workouts || [])[0]).find(Boolean);
     const type = last ? last.type : 'treadmill';
@@ -2003,7 +2179,7 @@ const ACT = {
       });
       const p = P(), days = Object.keys(S.data.days).sort();
       const R = v => v == null || v === '' ? '' : Math.round(v * 10) / 10;
-      const summary = [], meals = [], works = [], micro = [];
+      const summary = [], meals = [], works = [], micro = [], medsRows = [];
       days.forEach(ds => {
         const st = dayStats(ds), d = S.data.days[ds] || {}, dn = dayNutrition(ds), t = dn.tot;
         const dayNo = diffDays(p.startDate, ds) + 1;
@@ -2017,6 +2193,7 @@ const ACT = {
           meals.push({ Date: ds, Meal: slotLabel(m.slot), Food: m.name, 'Grams': R(m.grams), kcal: R(m.kcal), 'Protein (g)': R(m.protein), 'Carbs (g)': R(m.carbs), 'Fat (g)': R(m.fat), 'Fibre (g)': R(mi.fiber), 'Sugar (g)': R(mi.sugar),
             'Calcium (mg)': R(mi.calcium), 'Iron (mg)': R(mi.iron), 'Vit C (mg)': R(mi.vitC), 'Sodium (mg)': R(mi.sodium), Source: { ai: 'Photo AI', list: 'Food list', suggest: 'Suggestion', manual: 'Manual' }[m.source] || (m.source || 'Manual') });
         });
+        if (d.meds) medsRows.push({ Date: ds, 'Taken?': { yes: 'Yes', no: 'No', none: 'No medicine' }[d.meds.taken] || '', Medicines: (d.meds.list || []).map(x => [x.name, x.dose, x.time].filter(Boolean).join(' ')).join('; '), Photos: (d.meds.photos || []).length, Remark: d.meds.remark || '' });
         (d.workouts || []).forEach(w => works.push({ Date: ds, Equipment: w.name, Minutes: R(w.minutes), 'Speed (km/h)': w.speed ?? '', 'Incline (%)': w.incline ?? '', Effort: w.intensity != null ? INTENSITY[w.intensity] : '', kcal: R(w.kcal) }));
       });
       const pl = plan();
@@ -2033,6 +2210,7 @@ const ACT = {
       add(meals, 'Meals', [11, 10, 28, 8, 7, 10, 9, 8, 9, 9, 11, 9, 9, 11, 11]);
       add(micro, 'Vitamins & minerals', [11, 13, 13, 15, 11, 12, 10, 14, 14, 10, 12]);
       add(works, 'Workouts', [11, 30, 9, 12, 11, 10, 8]);
+      add(medsRows, 'Medication', [11, 12, 50, 8, 40]);
       add([['Field', 'Value'], ...prof], 'Profile', [22, 40]);
       XLSX.writeFile(wb, `Minimal-Health-${S.session.username}-${todayStr()}.xlsx`);
       toast('Excel downloaded', 'good');
@@ -2069,6 +2247,19 @@ document.addEventListener('input', (e) => {
 });
 document.addEventListener('change', async (e) => {
   const t = e.target;
+  if (t.classList.contains('med-photo-input') && t.files && t.files[0]) {
+    const f = t.files[0]; t.value = ''; const date = S.date, s = S.session;
+    try {
+      toast('Uploading photo…');
+      const url = await resizeImage(f, 1000), b64 = url.split(',')[1];
+      const path = `photos/${s.username}/${date}-${uid()}.jpg`;
+      await GH.putB64(s.owner, s.dataRepo, path, b64, `Medicine photo ${date}`, s.token);
+      PHOTO_CACHE[path] = url;
+      mutateDay(date, d => { d.meds = d.meds || {}; d.meds.photos = d.meds.photos || []; d.meds.photos.push(path); });
+      toast('Photo saved', 'good'); render();
+    } catch (err) { toast(err.message || 'Could not upload photo', 'bad'); }
+    return;
+  }
   if (t.classList.contains('wk-photo-input') && t.files && t.files[0]) { const f = t.files[0]; t.value = ''; startWorkoutPhoto(f); return; }
   if (t.classList.contains('photo-input') && t.files && t.files[0]) {
     try { S.sheet.photo = await resizeImage(t.files[0], 1024); S.sheet.items = []; S.sheet.note = ''; t.value = ''; await runAnalysis(); }
@@ -2106,7 +2297,7 @@ async function boot() {
 boot();
 
 // expose for testing
-window.__fittrack = { ACT, profileForm, startWorkoutPhoto, sheetWorkout, FOOD, nutritionCard, needsCard, todayTable, viewSuggest, viewHome, viewFood, viewBurn, sheetWorkout, bmiOf, bmiCat, fatPct, bmr, treadKcal, bikeKcal, wkSuggest, S, plan, dayStats };
+window.__fittrack = { viewToday, viewMeds, wheyCard, ACT, profileForm, startWorkoutPhoto, sheetWorkout, FOOD, nutritionCard, needsCard, todayTable, viewSuggest, viewHome, viewFood, viewBurn, sheetWorkout, bmiOf, bmiCat, fatPct, bmr, treadKcal, bikeKcal, wkSuggest, S, plan, dayStats };
 })();
 </script>
 </body>
