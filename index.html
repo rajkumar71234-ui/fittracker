@@ -155,7 +155,8 @@ table.fit .tag{font-size:10px;padding:1px 6px;margin-top:3px}
 .photo-prev{width:100%;max-height:240px;object-fit:cover;border-radius:14px;display:block;margin-bottom:10px}
 .photo-btns{display:grid;grid-template-columns:1fr 1fr;gap:10px}
 .photo-btns label{color:var(--text);font-size:15px}
-.photo-btns input{display:none}
+.photo-btns label{position:relative;overflow:hidden}
+.photo-btns input{position:absolute;inset:0;width:100%;height:100%;opacity:0;cursor:pointer;margin:0;padding:0;font-size:0}
 .spinner{width:28px;height:28px;border:3px solid var(--line);border-top-color:var(--accent);border-radius:50%;animation:spin .8s linear infinite;margin:0 auto}
 @keyframes spin{to{transform:rotate(360deg)}}
 .center{min-height:70vh;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:24px;gap:12px}
@@ -858,7 +859,7 @@ function viewAuth() {
   return `<div class="auth">
     <img class="logo" src="icons/logo.png" alt="">
     <h1>Minimal Health Tracker</h1>
-    <p class="sub">Your weight-loss tracker · v9</p>
+    <p class="sub">Your weight-loss tracker · v10</p>
     <div class="seg">
       <button data-act="authMode" data-v="login" class="${login ? 'on' : ''}">Log in</button>
       <button data-act="authMode" data-v="create" class="${!login ? 'on' : ''}">Create account</button>
@@ -1469,7 +1470,7 @@ function viewProfile() {
   return header('Profile') + `<main>
     ${profileForm(p, true)}
     <button class="btn danger block" data-act="logout" style="margin-top:6px">Log out</button>
-    <p class="explain" style="text-align:center;margin-top:14px">Minimal Health Tracker v9 · estimates only, not medical advice</p>
+    <p class="explain" style="text-align:center;margin-top:14px">Minimal Health Tracker v10 · estimates only, not medical advice</p>
   </main>`;
 }
 
@@ -1496,8 +1497,8 @@ function sheetFood() {
     body = `${sh.photo ? `<img class="photo-prev" src="${sh.photo}" alt="Your plate">` : ''}
       ${sh.busy ? `<div class="center" style="min-height:80px"><div class="spinner"></div><p class="muted">Finding foods &amp; estimating weight…</p></div>` : ''}
       ${!sh.busy && !sh.items.length ? `<div class="photo-btns">
-          <label class="btn"><input type="file" accept="image/*" capture="environment" class="photo-input">📸 Take photo</label>
-          <label class="btn"><input type="file" accept="image/*" class="photo-input">🖼️ From gallery</label>
+          <label class="btn primary">📸 Take photo<input type="file" accept="image/*" capture="environment" class="photo-input" aria-label="Take photo"></label>
+          <label class="btn">🖼️ From gallery<input type="file" accept="image/*" class="photo-input" aria-label="Choose from gallery"></label>
         </div>
         ${(!S.session.geminiKey && !S.session.apiKey) || sh.changeKey ? `<div class="card" style="margin-top:10px"><b style="font-size:15px">Turn on photo recognition (free)</b>
           <p class="explain" style="margin:4px 0 8px">Open <b>aistudio.google.com/apikey</b>, sign in with Google, tap <b>Create API key</b>, copy it and paste here. One time only.</p>
@@ -1940,7 +1941,7 @@ document.addEventListener('input', (e) => {
 document.addEventListener('change', async (e) => {
   const t = e.target;
   if (t.classList.contains('photo-input') && t.files && t.files[0]) {
-    try { S.sheet.photo = await resizeImage(t.files[0], 1024); S.sheet.items = []; S.sheet.note = ''; await runAnalysis(); }
+    try { S.sheet.photo = await resizeImage(t.files[0], 1024); S.sheet.items = []; S.sheet.note = ''; t.value = ''; await runAnalysis(); }
     catch (err) { toast(err.message, 'bad'); }
     return;
   }
