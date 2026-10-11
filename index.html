@@ -878,7 +878,7 @@ function viewAuth() {
   return `<div class="auth">
     <img class="logo" src="icons/logo.png" alt="">
     <h1>Minimal Health Tracker</h1>
-    <p class="sub">Your weight-loss tracker · v15</p>
+    <p class="sub">Your weight-loss tracker · v16</p>
     <div class="seg">
       <button data-act="authMode" data-v="login" class="${login ? 'on' : ''}">Log in</button>
       <button data-act="authMode" data-v="create" class="${!login ? 'on' : ''}">Create account</button>
@@ -1192,6 +1192,14 @@ function viewHome() {
       <div class="row" style="justify-content:space-between;margin-top:8px;font-size:14px"><span>Now <b>${r1(pl.curW)} kg</b></span><span class="${lost >= 0 ? 'good' : 'bad'}"><b>${lost >= 0 ? '−' : '+'}${r1(Math.abs(lost))} kg</b> of ${r1(p.targetLoss)} kg</span></div>
       <div class="bar blue" style="height:4px;margin-top:8px"><i style="width:${dayPct}%"></i></div>
       <small class="muted">${pl.daysLeft} days left</small>
+    </div>
+
+    <div class="card"><h3>🔍 Check a food</h3>
+      <p class="explain" style="margin:0 0 10px">Snap any food to see its calories, protein, carbs, sugar and fat. Just checking — add it to today's meals only if you want.</p>
+      <div class="photo-btns">
+        <label class="btn primary">📸 Take photo<input type="file" accept="image/*" capture="environment" class="food-check-input" aria-label="Take photo to check food"></label>
+        <label class="btn">🖼️ From gallery<input type="file" accept="image/*" class="food-check-input" aria-label="Choose photo to check food"></label>
+      </div>
     </div>
 
     <div class="section-label">Your body · now vs goal</div>
@@ -1566,7 +1574,6 @@ function viewFood() {
   return header('Intake') + `<main>
     ${dateBar()}
     ${summaryCard(st)}
-    ${wheyCard(date)}
     <div class="card"><h3>Meals <small class="muted">${r0(st.protein)} g protein · ${r0(st.carbs)} g carbs · ${r0(st.fat)} g fat</small></h3>
       ${SLOTS.map(s => {
         const items = (d.meals || []).filter(m => m.slot === s.id);
@@ -1576,6 +1583,7 @@ function viewFood() {
         </div>`;
       }).join('')}
     </div>
+    ${wheyCard(date)}
     ${nutritionCard(date)}
   </main>`;
 }
@@ -1653,7 +1661,7 @@ function viewProfile() {
       <button class="btn blue block" data-act="exportXlsx">⬇️ Export to Excel</button>
     </div>
     <button class="btn danger block" data-act="logout" style="margin-top:6px">Log out</button>
-    <p class="explain" style="text-align:center;margin-top:14px">Minimal Health Tracker v15 · estimates only, not medical advice</p>
+    <p class="explain" style="text-align:center;margin-top:14px">Minimal Health Tracker v16 · estimates only, not medical advice</p>
   </main>`;
 }
 
@@ -1677,17 +1685,15 @@ function sheetFood() {
   const modes = [['photo', '📷 Photo'], ['search', '🔎 Food list'], ['manual', '✏️ Manual']];
   let body = '';
   if (sh.mode === 'photo') {
-    body = `${sh.photo ? `<img class="photo-prev" src="${sh.photo}" alt="Your plate">` : ''}
-      ${sh.busy ? `<div class="center" style="min-height:80px"><div class="spinner"></div><p class="muted">Finding foods &amp; estimating weight…</p></div>` : ''}
-      ${!sh.busy && !sh.items.length ? `<div class="photo-btns">
-          <label class="btn primary">📸 Take photo<input type="file" accept="image/*" capture="environment" class="photo-input" aria-label="Take photo"></label>
-          <label class="btn">🖼️ From gallery<input type="file" accept="image/*" class="photo-input" aria-label="Choose from gallery"></label>
-        </div>
-        ${(!S.session.geminiKey && !S.session.apiKey) || sh.changeKey ? `<div class="card" style="margin-top:10px"><b style="font-size:15px">Turn on photo recognition (free)</b>
+    const ph = sh.photos || [];
+    body = `${photoStrip(ph, sh.busy ? '' : 'foodPhotoDel')}
+      ${sh.busy ? `<div class="center" style="min-height:80px"><div class="spinner"></div><p class="muted">Finding foods &amp; estimating weight${ph.length > 1 ? ' from both photos' : ''}…</p></div>` : photoButtons('photo-input', ph.length, true)}
+      ${!sh.busy && !sh.items.length ? `
+      ${(!S.session.geminiKey && !S.session.apiKey) || sh.changeKey ? `<div class="card" style="margin-top:10px"><b style="font-size:15px">Turn on photo recognition (free)</b>
           <p class="explain" style="margin:4px 0 8px">Open <b>aistudio.google.com/apikey</b>, sign in with Google, tap <b>Create API key</b>, copy it and paste here. One time only.</p>
           <div class="row"><input id="gemKeyIn" class="grow" style="margin:0" type="password" placeholder="Paste key (AQ… or AIza…)" autocapitalize="none" autocorrect="off" spellcheck="false"><button class="btn primary small" data-act="saveGemini">Save</button></div></div>` : ''}
         ${S.session.geminiKey && !sh.changeKey ? `<p style="margin:10px 0 0;text-align:center"><button class="muted" style="font-size:13px;text-decoration:underline" data-act="changeKey">Change photo key</button></p>` : ''}
-        ${sh.error ? `<div class="note bad">${esc(sh.error)}</div>${sh.photo ? '<button class="btn block" style="margin-top:8px" data-act="retryPhoto">Try again</button>' : ''}` : ''}` : ''}
+        ${sh.error ? `<div class="note bad">${esc(sh.error)}</div>${(sh.photos || []).length ? '<button class="btn block" style="margin-top:8px" data-act="retryPhoto">Try again</button>' : ''}` : ''}` : ''}
       ${sh.note && sh.items.length ? `<div class="note info" style="margin-bottom:10px">${esc(sh.note)}</div>` : ''}`;
   } else if (sh.mode === 'search') {
     body = `<div class="field"><input id="foodQuery" placeholder="Search: idli, chicken, banana…" value="${esc(sh.query || '')}" autocomplete="off"></div>
@@ -1695,6 +1701,7 @@ function sheetFood() {
   } else if (sh.mode === 'manual') {
     body = !sh.items.length ? '' : '';
   }
+  if (sh.check) return `<div class="sheet-h"><h2>🔍 Check food</h2><button class="x" data-act="closeSheet">✕</button></div>${body}<div id="itemsWrap">${itemsBlock()}</div>`;
   return `<div class="sheet-h"><h2>${edit ? 'Edit food' : 'Add to ' + slotLabel(sh.slot)}</h2><button class="x" data-act="closeSheet">✕</button></div>
     ${edit ? `<div class="field"><label>Meal<select id="editSlot">${SLOTS.map(s => `<option value="${s.id}" ${s.id === sh.slot ? 'selected' : ''}>${s.label}</option>`).join('')}</select></label></div>` :
       `<div class="seg">${modes.map(([m, l]) => `<button data-act="foodMode" data-v="${m}" class="${sh.mode === m ? 'on' : ''}">${l}</button>`).join('')}</div>`}
@@ -1716,9 +1723,25 @@ function itemsBlock() {
         <label>Carbs<input type="number" step="any" inputmode="decimal" data-it="${i}" data-k="carbs" id="it${i}carbs" value="${r1(it.carbs)}"></label>
         <label>Fat<input type="number" step="any" inputmode="decimal" data-it="${i}" data-k="fat" id="it${i}fat" value="${r1(it.fat)}"></label>
       </div></div>`).join('')}
-    ${edit ? '' : `<button class="btn block small" style="margin-bottom:10px" data-act="itemAdd">+ Add another item</button>`}
+    ${sh.check ? checkTotals(items) : ''}
+    ${edit || sh.check ? '' : `<button class="btn block small" style="margin-bottom:10px" data-act="itemAdd">+ Add another item</button>`}
+    ${sh.check ? `<div class="field" style="margin-top:12px"><label>Add to today's<select id="checkSlot">${SLOTS.map(s => `<option value="${s.id}" ${s.id === sh.slot ? 'selected' : ''}>${s.icon} ${s.label}</option>`).join('')}</select></label></div>
+    <button class="btn primary block" data-act="saveFood">➕ Add to today's meals</button>
+    <button class="btn block" style="margin-top:8px" data-act="closeSheet">Just checking — close</button>` : `
     <button class="btn primary block" id="saveFoodBtn" data-act="saveFood">${edit ? 'Save changes' : `Confirm &amp; save ${items.length} item${items.length > 1 ? 's' : ''} · <span id="itemsTotal">${r0(tot)}</span> kcal`}</button>
-    ${edit ? `<button class="btn danger block" style="margin-top:8px" data-act="deleteMeal">Delete</button>` : `<button class="btn block" style="margin-top:8px" data-act="closeSheet">Cancel</button>`}`;
+    ${edit ? `<button class="btn danger block" style="margin-top:8px" data-act="deleteMeal">Delete</button>` : `<button class="btn block" style="margin-top:8px" data-act="closeSheet">Cancel</button>`}`}`;
+}
+function itemSugar(it) {
+  if (it.microPer && it.microPer.sugar != null) return it.microPer.sugar * it.grams;
+  const f = findFood(it.name); return f && MICRO[f.n] ? MICRO[f.n][1] * it.grams / 100 : null;
+}
+function checkTotals(items) {
+  const t = { kcal: 0, protein: 0, carbs: 0, fat: 0, sugar: 0 }; let sugarKnown = false;
+  items.forEach(it => { ['kcal', 'protein', 'carbs', 'fat'].forEach(k => t[k] += Number(it[k]) || 0); const s = itemSugar(it); if (s != null) { t.sugar += s; sugarKnown = true; } });
+  const box = (l, v, u, c) => `<div class="stat"><small>${l}</small><b class="${c || ''}">${v}</b><span>${u}</span></div>`;
+  return `<div class="card" style="margin:6px 0 0;padding:12px"><b style="font-size:15px">Total for this food</b>
+    <div class="grid3" style="margin-top:8px">${box('Calories', r0(t.kcal), 'kcal')}${box('Protein', r0(t.protein), 'g', 'good')}${box('Carbs', r0(t.carbs), 'g')}</div>
+    <div class="grid2" style="margin-top:10px">${box('Sugar', sugarKnown ? r0(t.sugar) : '—', 'g', t.sugar > 15 ? 'bad' : '')}${box('Fat', r0(t.fat), 'g')}</div></div>`;
 }
 function refreshItems() { const w = $('#itemsWrap'); if (w) w.innerHTML = itemsBlock(); }
 function searchResults(q) {
@@ -1742,6 +1765,7 @@ function onItemInput(t) {
     if (it.grams > 0) it.per[k] = it[k] / it.grams;
   }
   const tot = $('#itemsTotal'); if (tot) tot.textContent = r0(S.sheet.items.reduce((a, x) => a + (x.kcal || 0), 0));
+  if (S.sheet.check && k !== 'name') { clearTimeout(S.chkT); S.chkT = setTimeout(() => { const ae = document.activeElement && document.activeElement.id; refreshItems(); if (ae) { const e2 = document.getElementById(ae); if (e2) { e2.focus(); try { e2.setSelectionRange(e2.value.length, e2.value.length); } catch (x) {} } } }, 700); }
 }
 
 function resizeImage(file, max) {
@@ -1764,7 +1788,7 @@ async function askClaude(key, model, b64, prompt) {
       method: 'POST',
       headers: { 'content-type': 'application/json', 'x-api-key': key, 'anthropic-version': '2023-06-01', 'anthropic-dangerous-direct-browser-access': 'true' },
       body: JSON.stringify({ model: model || DEFAULT_MODEL, max_tokens: 1500, messages: [{ role: 'user', content: [
-        { type: 'image', source: { type: 'base64', media_type: 'image/jpeg', data: b64 } }, { type: 'text', text: prompt } ] }] }),
+        ...(Array.isArray(b64) ? b64 : [b64]).map(d => ({ type: 'image', source: { type: 'base64', media_type: 'image/jpeg', data: d } })), { type: 'text', text: prompt } ] }] }),
     });
   } catch (e) { throw fail('No internet connection — could not reach the AI.'); }
   if (!res.ok) {
@@ -1781,7 +1805,8 @@ async function askVision(b64, prompt) {
   if (s.apiKey) return askClaude(s.apiKey, s.model, b64, prompt);
   throw fail('Add your free Gemini key first.');
 }
-async function analyzeFood(dataUrl) {
+async function analyzeFood(dataUrls) {
+  dataUrls = Array.isArray(dataUrls) ? dataUrls : [dataUrls];
   const s = S.session;
   if (!s.geminiKey && !s.apiKey) throw fail('Add your free Gemini key on the Photo screen to analyse photos.');
   const prompt = `You are a nutrition assistant. Identify every separate food item on this plate or in this photo. The person lives in Chennai, India, so South Indian and Indian dishes (idli, dosa, sambar, chutney, rice, curries, chapati, poriyal etc.) are common, but identify whatever is actually there.
@@ -1790,7 +1815,7 @@ Reply with ONLY a JSON object, no other text, exactly in this shape:
 {"items":[{"name":"Idli","grams":120,"kcal":175,"protein":5.4,"carbs":36,"fat":0.5,"fiber":1.8,"sugar":0.6,"calcium":24,"iron":1,"magnesium":24,"potassium":96,"sodium":310,"zinc":0.6,"vitA":0,"vitC":0,"vitB12":0,"folate":18}],"note":"One short sentence on anything you were unsure about."}
 Units for the item's full weight: grams for fiber and sugar; mg for calcium, iron, magnesium, potassium, sodium, zinc, vitC; micrograms for vitA (RAE), vitB12 and folate.
 If no food is visible, return {"items":[],"note":"No food found"}.`;
-  const text = await askVision(dataUrl.split(',')[1], prompt);
+  const text = await askVision(dataUrls.map(u => u.split(',')[1]), dataUrls.length > 1 ? 'You get 2 photos of the SAME meal (e.g. a top view and a close-up or a label). Use both for accuracy and do not count the same food twice.\n' + prompt : prompt);
   const m = text.match(/\{[\s\S]*\}/);
   if (!m) throw fail('Could not read the AI answer — try again or add manually.');
   const out = JSON.parse(m[0]);
@@ -1798,7 +1823,8 @@ If no food is visible, return {"items":[],"note":"No food found"}.`;
 }
 const GEMINI_MODELS = ['gemini-3.8-flash', 'gemini-3.6-flash', 'gemini-3.5-flash-lite', 'gemini-3-flash-preview'];
 async function askGemini(key, b64, prompt) {
-  const body = JSON.stringify({ contents: [{ parts: [{ inline_data: { mime_type: 'image/jpeg', data: b64 } }, { text: prompt }] }],
+  const imgs = (Array.isArray(b64) ? b64 : [b64]).map(d => ({ inline_data: { mime_type: 'image/jpeg', data: d } }));
+  const body = JSON.stringify({ contents: [{ parts: [...imgs, { text: prompt }] }],
     generationConfig: { responseMimeType: 'application/json', temperature: 0.2 } });
   const authWays = [
     m => ({ url: `https://generativelanguage.googleapis.com/v1beta/models/${m}:generateContent`, headers: { 'content-type': 'application/json', 'x-goog-api-key': key } }),
@@ -1830,15 +1856,32 @@ async function askGemini(key, b64, prompt) {
 }
 
 async function runAnalysis() {
-  const sh = S.sheet; if (!sh || !sh.photo) return;
+  const sh = S.sheet; if (!sh || !(sh.photos || []).length) return;
   sh.busy = true; sh.error = ''; renderSheet();
   try {
-    const r = await analyzeFood(sh.photo);
+    const r = await analyzeFood(sh.photos);
     if (S.sheet !== sh) return;
     sh.items = r.items; sh.note = r.note;
     if (!r.items.length) sh.error = r.note || 'No food found in the photo.';
   } catch (e) { if (S.sheet === sh) sh.error = e.message; }
   if (S.sheet === sh) { sh.busy = false; renderSheet(); }
+}
+function photoStrip(photos, delAct) {
+  if (!photos || !photos.length) return '';
+  return `<div style="display:grid;grid-template-columns:repeat(${photos.length},1fr);gap:8px;margin-bottom:10px">${photos.map((p, i) => `<div style="position:relative">
+    <img src="${p}" alt="Photo ${i + 1}" style="width:100%;height:${photos.length > 1 ? 150 : 220}px;object-fit:cover;border-radius:14px;display:block">
+    <span class="pill" style="position:absolute;left:6px;top:6px;background:rgba(0,0,0,.55);color:#fff">${i + 1}</span>
+    ${delAct ? `<button class="x" style="position:absolute;top:6px;right:6px;width:28px;height:28px;font-size:12px;background:rgba(255,255,255,.9)" data-act="${delAct}" data-i="${i}" aria-label="Remove photo">✕</button>` : ''}</div>`).join('')}</div>`;
+}
+function photoButtons(cls, count, primaryFirst) {
+  if (count >= 2) return '';
+  if (!count) return `<div class="photo-btns">
+      <label class="btn ${primaryFirst ? 'primary' : ''}">📸 Take photo<input type="file" accept="image/*" capture="environment" class="${cls}" aria-label="Take photo"></label>
+      <label class="btn">🖼️ ${cls === 'wk-photo-input' ? 'Upload photo' : 'From gallery'}<input type="file" accept="image/*" class="${cls}" aria-label="Choose from gallery"></label></div>`;
+  return `<p class="explain" style="margin:0 0 6px">➕ Add a 2nd photo for better accuracy (optional) — e.g. a ${cls === 'wk-photo-input' ? 'close-up of the screen' : 'side view, label or close-up'}:</p>
+    <div class="photo-btns" style="margin-bottom:10px">
+      <label class="btn small">📸 Take 2nd<input type="file" accept="image/*" capture="environment" class="${cls}" data-append="1" aria-label="Take second photo"></label>
+      <label class="btn small">🖼️ Gallery 2nd<input type="file" accept="image/*" class="${cls}" data-append="1" aria-label="Choose second photo"></label></div>`;
 }
 
 /* ================================================================
@@ -1856,21 +1899,28 @@ If the machine has a display screen, read the numbers shown on it:
 Guess "intensity" as "light", "moderate" or "hard" from speed/level if possible, else "moderate".
 Reply with ONLY a JSON object, no other text:
 {"type":"treadmill","machine":"what you see, e.g. Life Fitness treadmill","minutes":null,"speed":null,"incline":null,"kcal":null,"watts":null,"intensity":"moderate","note":"one short sentence"}
-Use null for any number you cannot clearly see. If there is no gym equipment, use "type":"other" and explain in "note".`;
+Use null for any number you cannot clearly see. If there is no gym equipment, use "type":"other" and explain in "note".
+You may get 2 photos of the same workout (e.g. the machine and a close-up of its screen) — use both.`;
 }
-async function startWorkoutPhoto(file) {
+async function startWorkoutPhoto(file, append) {
   let photo;
   try { photo = await resizeImage(file, 1024); } catch (e) { return toast(e.message, 'bad'); }
-  S.sheet = { kind: 'workout', editId: null, photo, busy: true, detectNote: '', detectErr: '',
+  if (append && S.sheet && S.sheet.kind === 'workout') { S.sheet.photos = [...(S.sheet.photos || []), photo].slice(-2); }
+  else S.sheet = { kind: 'workout', editId: null, photos: [photo], busy: false, detectNote: '', detectErr: '',
     w: { type: 'treadmill', minutes: null, speed: null, incline: null, intensity: 1, watts: null, kcal: null, manual: false } };
+  return runWorkoutDetect();
+}
+async function runWorkoutDetect() {
+  const sh = S.sheet; if (!sh || !(sh.photos || []).length) return;
   const s = S.session;
-  if (!s.geminiKey && !s.apiKey) { S.sheet.busy = false; S.sheet.changeKey = true; renderSheet(); return; }
-  renderSheet();
+  if (!s.geminiKey && !s.apiKey) { sh.busy = false; sh.changeKey = true; renderSheet(); return; }
+  sh.busy = true; sh.detectNote = ''; sh.detectErr = ''; renderSheet();
+  const photos = sh.photos.slice();
   try {
-    const text = await askVision(photo.split(',')[1], workoutPrompt());
+    const text = await askVision(photos.map(p => p.split(',')[1]), workoutPrompt());
     const mt = text.match(/\{[\s\S]*\}/); if (!mt) throw fail('Could not read the AI answer — pick the machine yourself.');
     const d = JSON.parse(mt[0]);
-    const sh = S.sheet; if (!sh || sh.photo !== photo) return;
+    if (S.sheet !== sh) return;
     const n = x => (x == null || x === '' || isNaN(Number(x))) ? null : Number(x);
     const type = WK[d.type] ? d.type : 'other', w = sh.w, kg = weightOn(S.date);
     w.type = type; if (type === 'other') w.name = d.machine || 'Workout';
@@ -1889,8 +1939,8 @@ async function startWorkoutPhoto(file) {
     sh.detectNote = `Detected: <b>${esc(WK[type].name)}</b>${d.machine && type !== 'other' ? ` <small>(${esc(d.machine)})</small>` : ''}.<br>` +
       (read.length ? `Read from the screen: <b>${esc(read.join(', '))}</b>.` : 'No numbers found on a screen.') +
       (ask.length ? ` Please enter the <b>${ask.join(' and ')}</b> below.` : '') + ' Check everything, then tap <b>Save workout</b>.';
-  } catch (e) { if (S.sheet) S.sheet.detectErr = e.message + ' You can still pick the machine below.'; }
-  if (S.sheet && S.sheet.photo === photo) { S.sheet.busy = false; renderSheet(); }
+  } catch (e) { if (S.sheet === sh) sh.detectErr = e.message + ' You can still pick the machine below.'; }
+  if (S.sheet === sh) { sh.busy = false; renderSheet(); }
 }
 function keyBox() {
   return `<div class="card" style="margin:0 0 12px"><b style="font-size:15px">Turn on photo recognition (free)</b>
@@ -1912,14 +1962,13 @@ function sheetWorkout() {
   } else {
     fields = `<div class="field"><label>Activity name<input data-wf="name" value="${esc(w.name || '')}"></label></div><div class="field">${fields}</div>`;
   }
-  const photoTop = `${sh.photo ? `<img class="photo-prev" src="${sh.photo}" alt="Gym equipment">` : ''}
+  const ph = sh.photos || [];
+  const photoTop = `${photoStrip(ph, sh.busy ? '' : 'wkPhotoDel')}
     ${sh.busy ? `<div class="center" style="min-height:80px"><div class="spinner"></div><p class="muted">Finding the machine &amp; reading the screen…</p></div>` : ''}
     ${sh.changeKey ? keyBox() : ''}
     ${sh.detectNote && !sh.busy ? `<div class="note info" style="margin:0 0 12px">${sh.detectNote}</div>` : ''}
     ${sh.detectErr && !sh.busy ? `<div class="note bad" style="margin:0 0 12px">${esc(sh.detectErr)}</div>` : ''}
-    ${!sh.editId && !sh.busy ? `<div class="photo-btns" style="margin-bottom:12px">
-      <label class="btn">📸 ${sh.photo ? 'Retake' : 'Take photo'}<input type="file" accept="image/*" capture="environment" class="wk-photo-input" aria-label="Take photo of machine"></label>
-      <label class="btn">🖼️ Upload photo<input type="file" accept="image/*" class="wk-photo-input" aria-label="Upload photo of machine"></label></div>` : ''}`;
+    ${!sh.editId && !sh.busy ? `<div style="margin-bottom:12px">${photoButtons('wk-photo-input', ph.length, false)}</div>` : ''}`;
   if (sh.busy) return `<div class="sheet-h"><h2>Scanning machine</h2><button class="x" data-act="closeSheet">✕</button></div>${photoTop}`;
   return `<div class="sheet-h"><h2>${sh.editId ? 'Edit workout' : 'Add workout'}</h2><button class="x" data-act="closeSheet">✕</button></div>
     ${photoTop}
@@ -2010,7 +2059,7 @@ const ACT = {
   },
 
   addFood(el) {
-    S.sheet = { kind: 'food', slot: el.dataset.slot, mode: (S.session.geminiKey || S.session.apiKey) ? 'photo' : 'search', items: [], photo: null, busy: false, query: '', note: '', error: '' };
+    S.sheet = { kind: 'food', slot: el.dataset.slot, mode: (S.session.geminiKey || S.session.apiKey) ? 'photo' : 'search', items: [], photos: [], busy: false, query: '', note: '', error: '' };
     renderSheet();
   },
   foodMode(el) {
@@ -2027,8 +2076,10 @@ const ACT = {
     refreshItems(); toast(`${f.n} added — adjust grams below`);
   },
   itemAdd() { S.sheet.items.push(mkItem({ name: '', grams: 100, kcal: 0 })); refreshItems(); },
-  itemDel(el) { S.sheet.items.splice(+el.dataset.i, 1); if (!S.sheet.items.length && S.sheet.mode === 'photo') { S.sheet.photo = null; S.sheet.note = ''; renderSheet(); } else refreshItems(); },
+  itemDel(el) { S.sheet.items.splice(+el.dataset.i, 1); if (!S.sheet.items.length && S.sheet.mode === 'photo') { S.sheet.photos = []; S.sheet.note = ''; renderSheet(); } else refreshItems(); },
   retryPhoto() { runAnalysis(); },
+  foodPhotoDel(el) { const sh = S.sheet; sh.photos.splice(+el.dataset.i, 1); sh.items = []; sh.note = ''; sh.error = ''; if (sh.photos.length) runAnalysis(); else renderSheet(); },
+  wkPhotoDel(el) { const sh = S.sheet; sh.photos.splice(+el.dataset.i, 1); sh.detectNote = ''; sh.detectErr = ''; if (sh.photos.length) runWorkoutDetect(); else renderSheet(); },
   saveFood() {
     const sh = S.sheet;
     const items = sh.items.filter(it => it.name.trim());
@@ -2039,7 +2090,9 @@ const ACT = {
       mutateDay(S.date, d => { const m = d.meals.find(x => x.id === sh.editId); if (m) Object.assign(m, { slot, name: it.name.trim(), grams: r1(it.grams), kcal: r0(it.kcal), protein: r1(it.protein), carbs: r1(it.carbs), fat: r1(it.fat), micro: microFor(it) }); });
       toast('Updated', 'good');
     } else {
-      mutateDay(S.date, d => {
+      const day = sh.check ? todayStr() : S.date;
+      if (sh.check) sh.slot = ($('#checkSlot') || {}).value || sh.slot;
+      mutateDay(day, d => {
         items.forEach(it => d.meals.push({ id: uid(), slot: sh.slot, name: it.name.trim(), grams: r1(it.grams), kcal: r0(it.kcal), protein: r1(it.protein), carbs: r1(it.carbs), fat: r1(it.fat), micro: microFor(it), source: it.source, at: new Date().toISOString() }));
       });
       toast(`Saved to ${slotLabel(sh.slot)}`, 'good');
@@ -2168,7 +2221,7 @@ const ACT = {
       SS.set('ft_session', s); LS.set('ft_session', s);
       S.sheet.changeKey = false; LS.del('ft_gem_way');
       toast('Photo recognition is on', 'good');
-      if (S.sheet.kind === 'workout' && S.sheet.photo) { const blob = await (await fetch(S.sheet.photo)).blob(); startWorkoutPhoto(blob); } else renderSheet();
+      if (S.sheet.kind === 'workout' && (S.sheet.photos || []).length) runWorkoutDetect(); else if (S.sheet.kind === 'food' && (S.sheet.photos || []).length) runAnalysis(); else renderSheet();
     } finally { unbusy(el); }
   },
   useMeal(el) {
@@ -2278,6 +2331,14 @@ document.addEventListener('input', (e) => {
 });
 document.addEventListener('change', async (e) => {
   const t = e.target;
+  if (t.classList.contains('food-check-input') && t.files && t.files[0]) {
+    const f = t.files[0]; t.value = '';
+    const hr = new Date().getHours(), slot = hr < 11 ? 'breakfast' : hr < 16 ? 'lunch' : hr < 19 ? 'snacks' : 'dinner';
+    S.sheet = { kind: 'food', check: true, slot, mode: 'photo', items: [], photos: [], busy: false, note: '', error: '' };
+    try { S.sheet.photos = [await resizeImage(f, 1024)]; } catch (err) { S.sheet = null; return toast(err.message, 'bad'); }
+    if (!S.session.geminiKey && !S.session.apiKey) { renderSheet(); return; }
+    await runAnalysis(); return;
+  }
   if (t.classList.contains('med-photo-input') && t.files && t.files[0]) {
     const f = t.files[0]; t.value = ''; const date = S.date, s = S.session;
     try {
@@ -2291,9 +2352,9 @@ document.addEventListener('change', async (e) => {
     } catch (err) { toast(err.message || 'Could not upload photo', 'bad'); }
     return;
   }
-  if (t.classList.contains('wk-photo-input') && t.files && t.files[0]) { const f = t.files[0]; t.value = ''; startWorkoutPhoto(f); return; }
+  if (t.classList.contains('wk-photo-input') && t.files && t.files[0]) { const f = t.files[0], ap = !!t.dataset.append; t.value = ''; startWorkoutPhoto(f, ap); return; }
   if (t.classList.contains('photo-input') && t.files && t.files[0]) {
-    try { S.sheet.photo = await resizeImage(t.files[0], 1024); S.sheet.items = []; S.sheet.note = ''; t.value = ''; await runAnalysis(); }
+    try { const url = await resizeImage(t.files[0], 1024); const sh = S.sheet; sh.photos = t.dataset.append ? [...(sh.photos || []), url].slice(-2) : [url]; sh.items = []; sh.note = ''; sh.error = ''; t.value = ''; await runAnalysis(); }
     catch (err) { toast(err.message, 'bad'); }
     return;
   }
@@ -2328,7 +2389,7 @@ async function boot() {
 boot();
 
 // expose for testing
-window.__fittrack = { viewToday, viewMeds, wheyCard, ACT, profileForm, startWorkoutPhoto, sheetWorkout, FOOD, nutritionCard, needsCard, todayTable, viewSuggest, viewHome, viewFood, viewBurn, sheetWorkout, bmiOf, bmiCat, fatPct, bmr, treadKcal, bikeKcal, wkSuggest, S, plan, dayStats };
+window.__fittrack = { runAnalysis, sheetFood, viewHome, viewFood, viewToday, viewMeds, wheyCard, ACT, profileForm, startWorkoutPhoto, sheetWorkout, FOOD, nutritionCard, needsCard, todayTable, viewSuggest, viewHome, viewFood, viewBurn, sheetWorkout, bmiOf, bmiCat, fatPct, bmr, treadKcal, bikeKcal, wkSuggest, S, plan, dayStats };
 })();
 </script>
 </body>
