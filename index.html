@@ -70,6 +70,14 @@ input[type=date]::-webkit-calendar-picker-indicator{opacity:.5}
 .btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;padding:12px 16px;border-radius:13px;font-weight:650;background:var(--input);color:var(--text);text-align:center}
 .btn.primary{background:var(--accent);color:#fff}
 .btn.blue{background:var(--blue);color:#fff}
+.btn.orange{background:#f97316;color:#fff}
+.quick{padding:4px 16px}
+.q-sec{padding:14px 0}
+.q-sec + .q-sec{border-top:1px solid var(--line)}
+.q-h{display:flex;flex-direction:column;gap:1px;margin-bottom:10px}
+.q-h b{font-size:16px;white-space:nowrap}
+.q-h small{font-size:13px}
+.photo-btns label.btn.orange{color:#fff}
 .btn.danger{background:var(--bad-soft);color:var(--bad)}
 .btn.block{display:flex;width:100%}
 .btn:disabled{opacity:.5}
@@ -918,7 +926,7 @@ function viewAuth() {
   return `<div class="auth">
     <img class="logo" src="icons/logo.png" alt="">
     <h1>Minimal Health Tracker</h1>
-    <p class="sub">Your weight-loss tracker · v42</p>
+    <p class="sub">Your weight-loss tracker · v43</p>
     <div class="seg">
       <button data-act="authMode" data-v="login" class="${login ? 'on' : ''}">Log in</button>
       <button data-act="authMode" data-v="create" class="${!login ? 'on' : ''}">Create account</button>
@@ -1252,14 +1260,7 @@ function viewHome() {
       <small class="muted">${pl.daysLeft} days left</small>
     </div>
 
-    <div class="card"><h3>🔍 Check a food · ⚖️ Weight</h3>
-      <p class="explain" style="margin:0 0 10px">Add 1 or 2 photos of any food (top view + close-up or label), then tap Find. You'll see calories, protein, carbs, sugar and fat — add it to today's meals only if you want.</p>
-      <div class="photo-btns three">
-        <label class="btn primary">📸 Take photo<input type="file" accept="image/*" capture="environment" class="food-check-input" aria-label="Take photo to check food"></label>
-        <label class="btn">🖼️ Gallery<input type="file" accept="image/*" multiple class="food-check-input" aria-label="Choose 1 or 2 photos to check food"></label>
-        <button class="btn blue" data-act="openAddWeight">⚖️ Add weight</button>
-      </div>
-    </div>
+    ${quickCard(t)}
 
     <div class="section-label">Your body · now vs goal</div>
     <div class="card" style="padding:12px">
@@ -1562,7 +1563,7 @@ function viewToday() {
     ${dateBar()}
     ${calcCard(st, dn.kcal, logged, date)}
 
-    <div class="section-label">Need vs eaten</div>
+    <div class="section-label">Target vs eaten</div>
     ${todayTable(date)}
 
     <div class="grid2" style="margin-bottom:12px;align-items:stretch">
@@ -1686,6 +1687,56 @@ function maybeHashWeight() {
   const body = {}; BODY_KEYS.forEach(([k]) => { const v = num(q.get(k)); if (v != null) body[k] = r1(v); });
   S.sheet = { kind: 'confirm', date, weight: r1(w), body };
   renderSheet();
+}
+function quickCard(t) {
+  const d = S.data.days[t] || {}, st = dayStats(t), ws = d.workouts || [];
+  const wkK = ws.reduce((a, x) => a + (x.kcal || 0), 0), wkM = ws.reduce((a, x) => a + (x.minutes || 0), 0);
+  const fmtN = v => Math.round(v).toLocaleString('en-IN');
+  return `<div class="card quick">
+      <div class="q-sec">
+        <div class="q-h"><b>🔍 Check a food</b><small class="muted">see kcal before you eat</small></div>
+        <div class="photo-btns">
+          <label class="btn primary">📸 Take photo<input type="file" accept="image/*" capture="environment" class="food-check-input" aria-label="Take photo to check food"></label>
+          <label class="btn">🖼️ Gallery<input type="file" accept="image/*" multiple class="food-check-input" aria-label="Choose 1 or 2 photos to check food"></label>
+        </div>
+      </div>
+      <div class="q-sec">
+        <div class="q-h"><b>⚖️ Weight &amp; 👟 Steps</b><small class="muted">today: ${d.weight ? r1(d.weight) + ' kg' : 'no weight'} · ${d.steps ? fmtN(d.steps) + ' steps' : '0 steps'}</small></div>
+        <div class="photo-btns">
+          <button class="btn blue" data-act="openAddWeight">⚖️ Add weight</button>
+          <button class="btn blue" data-act="openSteps">👟 Add steps</button>
+        </div>
+      </div>
+      <div class="q-sec">
+        <div class="q-h"><b>🏋️ Add exercise</b><small class="muted">${ws.length ? `today: ${ws.length} workout${ws.length > 1 ? 's' : ''} · ${r0(wkM)} min · ${fmtN(wkK)} kcal` : 'machine photo or pick a workout'}</small></div>
+        <div class="photo-btns three">
+          <label class="btn orange">📸 Photo<input type="file" accept="image/*" capture="environment" class="wk-photo-input" data-home="1" aria-label="Take photo of machine"></label>
+          <label class="btn">🖼️ Gallery<input type="file" accept="image/*" multiple class="wk-photo-input" data-home="1" aria-label="Upload 1 or 2 photos of machine"></label>
+          <button class="btn" data-act="homeWorkout">🏃 Workout</button>
+        </div>
+      </div>
+    </div>`;
+}
+function stepLogOf(d) {
+  if (Array.isArray(d.stepLog)) return d.stepLog;
+  return d.steps ? [{ id: 'old', at: null, steps: Number(d.steps), kcal: d.stepsKcal != null ? Number(d.stepsKcal) : null }] : [];
+}
+function sheetSteps() {
+  const sh = S.sheet, now = sh.at, ds = fmtD(now), d = S.data.days[ds] || {}, log = stepLogOf(d), w = weightOn(ds);
+  const tot = log.reduce((a, x) => a + (x.steps || 0), 0), totK = log.reduce((a, x) => a + (x.kcal != null ? x.kcal : x.steps * stepKcal(w)), 0);
+  const fmtN = v => Math.round(v).toLocaleString('en-IN');
+  return `<div class="sheet-h"><h2>👟 Add steps</h2><button class="x" data-act="closeSheet">✕</button></div>
+    <div class="card" style="text-align:center">
+      <div style="font-size:17px;font-weight:700">${now.toLocaleDateString('en-IN', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}</div>
+      <div class="muted" style="font-size:15px;margin-top:2px">${now.toLocaleTimeString('en-IN', { hour: 'numeric', minute: '2-digit' })}</div>
+      <label style="margin-top:16px;text-align:left">Steps walked now
+        <input id="stepAddIn" type="number" inputmode="numeric" placeholder="e.g. 2000" style="font-size:30px;font-weight:800;height:66px;text-align:center"></label>
+      <p class="explain" id="stepAddK" style="margin:8px 0 0">≈ 0 kcal burned</p>
+    </div>
+    <button class="btn primary block" data-act="saveStepAdd">Save steps</button>
+    <div class="card" style="margin-top:12px"><h3>Today's walks <small class="muted">${fmtN(tot)} steps · ${r0(totK)} kcal</small></h3>
+      ${log.length ? log.map(x => `<div class="li"><span>${x.at ? new Date(x.at).toLocaleTimeString('en-IN', { hour: 'numeric', minute: '2-digit' }) : 'Earlier'} <small>${fmtN(x.steps)} steps</small></span><span class="r">${r0(x.kcal != null ? x.kcal : x.steps * stepKcal(w))} kcal <button class="x" style="margin-left:6px" data-act="delStepAdd" data-id="${x.id}" aria-label="Delete">✕</button></span></div>`).join('') : '<p class="muted" style="margin:0;font-size:14px">No steps added yet today.</p>'}
+    </div>`;
 }
 function sheetAddWeight() {
   const sh = S.sheet, now = sh.at, prev = weightOn(todayStr());
@@ -1820,7 +1871,7 @@ function viewProfile() {
       <button class="btn blue block" data-act="exportXlsx">⬇️ Export to Excel</button>
     </div>
     <button class="btn danger block" data-act="logout" style="margin-top:6px">Log out</button>
-    <p class="explain" style="text-align:center;margin-top:14px">Minimal Health Tracker v42 · estimates only, not medical advice</p>
+    <p class="explain" style="text-align:center;margin-top:14px">Minimal Health Tracker v43 · estimates only, not medical advice</p>
   </main>`;
 }
 
@@ -2173,7 +2224,7 @@ function onWorkoutInput(t) {
 function renderSheet() {
   const root = $('#sheet-root');
   if (!S.sheet) { root.innerHTML = ''; document.body.classList.remove('lock'); return; }
-  const inner = S.sheet.kind === 'food' ? sheetFood() : S.sheet.kind === 'confirm' ? sheetConfirm() : S.sheet.kind === 'scale' ? sheetScale() : S.sheet.kind === 'weight' ? sheetAddWeight() : sheetWorkout();
+  const inner = S.sheet.kind === 'food' ? sheetFood() : S.sheet.kind === 'confirm' ? sheetConfirm() : S.sheet.kind === 'scale' ? sheetScale() : S.sheet.kind === 'weight' ? sheetAddWeight() : S.sheet.kind === 'steps' ? sheetSteps() : sheetWorkout();
   const existing = $('.sheet', root);
   if (existing) { const st = existing.scrollTop; existing.innerHTML = '<div class="grab"></div>' + inner; existing.scrollTop = st; }
   else root.innerHTML = `<div class="sheet-backdrop" data-act="closeSheet" data-backdrop="1"><div class="sheet"><div class="grab"></div>${inner}</div></div>`;
@@ -2306,7 +2357,7 @@ const ACT = {
     const steps = num(($('#stepsIn') || {}).value), kc = num(($('#stepsKcal') || {}).value);
     if (steps == null || steps < 0 || steps > 100000) throw fail('Enter the number of steps.');
     const kcal = kc == null ? steps * stepKcal(weightOn(S.date)) : kc;
-    mutateDay(S.date, d => { d.steps = Math.round(steps); d.stepsKcal = r0(kcal); });
+    mutateDay(S.date, d => { d.steps = Math.round(steps); d.stepsKcal = r0(kcal); d.stepLog = [{ id: uid(), at: new Date().toISOString(), steps: Math.round(steps), kcal: r0(kcal) }]; });
     toast(`Saved ${Math.round(steps).toLocaleString('en-IN')} steps = ${r0(kcal)} kcal`, 'good'); render();
   },
   wheyStep(el) {
@@ -2357,6 +2408,31 @@ const ACT = {
     mutateDay(sh.date, d => { d.weight = r1(w); if (Object.keys(body).length) d.body = body; });
     S.sheet = null; toast(`Saved ${r1(w)} kg`, 'good'); render();
   },
+  openSteps() {
+    S.sheet = { kind: 'steps', at: new Date() }; renderSheet();
+    setTimeout(() => { const i = $('#stepAddIn'); if (i) i.focus(); }, 250);
+  },
+  saveStepAdd() {
+    const n = num(($('#stepAddIn') || {}).value);
+    if (n == null || n <= 0 || n > 100000) throw fail('Enter the steps you walked.');
+    const at = S.sheet.at, ds = fmtD(at), kc = r0(n * stepKcal(weightOn(ds)));
+    mutateDay(ds, d => {
+      const log = stepLogOf(d).slice(); log.push({ id: uid(), at: at.toISOString(), steps: Math.round(n), kcal: kc });
+      d.stepLog = log; d.steps = log.reduce((a, x) => a + x.steps, 0); d.stepsKcal = r0(log.reduce((a, x) => a + (x.kcal != null ? x.kcal : x.steps * stepKcal(weightOn(ds))), 0));
+    });
+    toast(`Saved ${Math.round(n).toLocaleString('en-IN')} steps = ${kc} kcal`, 'good');
+    S.sheet = { kind: 'steps', at: new Date() }; render();
+  },
+  delStepAdd(el) {
+    const ds = fmtD(S.sheet.at);
+    mutateDay(ds, d => {
+      const log = stepLogOf(d).filter(x => String(x.id) !== el.dataset.id);
+      d.stepLog = log; d.steps = log.reduce((a, x) => a + x.steps, 0) || undefined;
+      d.stepsKcal = log.length ? r0(log.reduce((a, x) => a + (x.kcal != null ? x.kcal : x.steps * stepKcal(weightOn(ds))), 0)) : undefined;
+    });
+    render();
+  },
+  homeWorkout() { S.date = todayStr(); ACT.addWorkout(); },
   openAddWeight() {
     S.sheet = { kind: 'weight', at: new Date() }; renderSheet();
     setTimeout(() => { const i = $('#addWeightIn'); if (i) i.focus(); }, 250);
@@ -2525,6 +2601,7 @@ document.addEventListener('click', async (e) => {
 document.addEventListener('input', (e) => {
   const t = e.target;
   if (t.closest && t.closest('#pf')) return updateProfilePreview();
+  if (t.id === 'stepAddIn') { const k = $('#stepAddK'); const v = num(t.value); if (k) k.textContent = `≈ ${r0((v || 0) * stepKcal(weightOn(fmtD(S.sheet.at))))} kcal burned`; return; }
   if (t.id === 'stepsIn') { const k = $('#stepsKcal'); const v = num(t.value); if (k && !k.dataset.manual) k.value = v == null ? '' : r0(v * stepKcal(weightOn(S.date))); return; }
   if (t.id === 'stepsKcal') { t.dataset.manual = '1'; return; }
   if (t.dataset.it != null) return onItemInput(t);
@@ -2559,6 +2636,7 @@ document.addEventListener('change', async (e) => {
   }
   if (t.classList.contains('wk-photo-input') && t.files && t.files[0]) {
     const files = [...t.files].slice(0, 2), slot = Number(t.dataset.slot || 0); t.value = '';
+    if (t.dataset.home) S.date = todayStr();
     if (!(S.sheet && S.sheet.kind === 'workout')) openWorkoutSheet();
     await addPhotosToSheet(files, t.dataset.slot != null ? slot : (S.sheet.photos || []).length); return;
   }
@@ -2572,6 +2650,7 @@ document.addEventListener('change', async (e) => {
   if (t.closest && t.closest('#pf')) updateProfilePreview();
 });
 document.addEventListener('keydown', (e) => {
+  if (e.key === 'Enter' && e.target.id === 'stepAddIn') { e.preventDefault(); const b = $('[data-act=saveStepAdd]'); if (b) b.click(); return; }
   if (e.key === 'Enter' && e.target.id === 'addWeightIn') { e.preventDefault(); const b = $('[data-act=saveAddWeight]'); if (b) b.click(); return; }
   if (e.key === 'Enter' && e.target.closest && (e.target.closest('#loginForm') || e.target.closest('#createForm') || e.target.closest('#setupForm'))) {
     e.preventDefault(); const b = $('#loginForm [data-act=login], #createForm [data-act=create], #setupForm [data-act=setup]'); if (b) b.click();
@@ -2599,7 +2678,7 @@ async function boot() {
 boot();
 
 // expose for testing
-window.__fittrack = { sheetAddWeight, calcCard, openScaleSheet, analyseScaleRun, sheetScale, maybeHashWeight, sheetConfirm, viewBurn, addPhotosToSheet, openWorkoutSheet, sheetWorkout, runAnalysis, sheetFood, viewHome, viewFood, viewToday, viewMeds, wheyCard, ACT, profileForm, startWorkoutPhoto, sheetWorkout, FOOD, nutritionCard, needsCard, todayTable, viewSuggest, viewHome, viewFood, viewBurn, sheetWorkout, bmiOf, bmiCat, fatPct, bmr, treadKcal, bikeKcal, wkSuggest, S, plan, dayStats };
+window.__fittrack = { sheetSteps, quickCard, sheetAddWeight, calcCard, openScaleSheet, analyseScaleRun, sheetScale, maybeHashWeight, sheetConfirm, viewBurn, addPhotosToSheet, openWorkoutSheet, sheetWorkout, runAnalysis, sheetFood, viewHome, viewFood, viewToday, viewMeds, wheyCard, ACT, profileForm, startWorkoutPhoto, sheetWorkout, FOOD, nutritionCard, needsCard, todayTable, viewSuggest, viewHome, viewFood, viewBurn, sheetWorkout, bmiOf, bmiCat, fatPct, bmr, treadKcal, bikeKcal, wkSuggest, S, plan, dayStats };
 })();
 </script>
 </body>
