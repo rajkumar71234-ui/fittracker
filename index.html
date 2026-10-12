@@ -67,7 +67,7 @@ input[type=date]::-webkit-calendar-picker-indicator{opacity:.5}
 .grid2>label,.grid3>label{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
 .grid2,.grid3{align-items:end}
 .field{margin-bottom:12px}
-.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;padding:12px 16px;border-radius:13px;font-weight:650;background:var(--blue-soft);color:var(--blue-dark);text-align:center}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;padding:12px 16px;border-radius:13px;font-weight:650;background:var(--blue);color:#fff;text-align:center;box-shadow:0 2px 8px rgba(37,99,235,.22)}
 .btn.primary{background:var(--blue);color:#fff;box-shadow:0 2px 8px rgba(37,99,235,.25)}
 .btn.blue{background:var(--blue);color:#fff;box-shadow:0 2px 8px rgba(37,99,235,.25)}
 .btn.orange{background:var(--blue);color:#fff;box-shadow:0 2px 8px rgba(37,99,235,.25)}
@@ -78,7 +78,7 @@ input[type=date]::-webkit-calendar-picker-indicator{opacity:.5}
 .q-h b{font-size:16px;white-space:nowrap}
 .q-h small{font-size:13px}
 .photo-btns label.btn.orange{color:#fff}
-.btn.danger{background:var(--bad-soft);color:var(--bad)}
+.btn.danger{background:var(--bad-soft);color:var(--bad);box-shadow:none}
 .btn.block{display:flex;width:100%}
 .btn:disabled{opacity:.5}
 .btn.small{padding:7px 12px;font-size:14px;border-radius:10px}
@@ -115,7 +115,7 @@ details summary::-webkit-details-marker{display:none}
 .slot-h{display:flex;align-items:center;gap:8px}
 .slot-h .name{font-weight:650;flex:1}
 .slot-h .kc{font-size:14px;color:var(--muted)}
-.add{color:var(--blue-dark);font-weight:700;font-size:14px;padding:6px 10px;border-radius:10px;background:var(--blue-soft)}
+.add{color:#fff;font-weight:700;font-size:14px;padding:6px 12px;border-radius:10px;background:var(--blue)}
 .li{display:flex;justify-content:space-between;align-items:center;gap:10px;width:100%;text-align:left;padding:9px 10px;margin-top:6px;border-radius:12px;background:var(--input);color:var(--text);font-size:15px}
 .li small{font-size:13px}
 .li .r{font-weight:650;white-space:nowrap}
@@ -181,7 +181,7 @@ table.today-t td:last-child,table.today-t th:last-child{width:19%}
 .item-edit .mini input{padding:8px 6px;font-size:15px;text-align:center}
 .photo-prev{width:100%;max-height:240px;object-fit:cover;border-radius:14px;display:block;margin-bottom:10px}
 .photo-btns{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-.photo-btns label{color:var(--blue-dark);font-size:15px}
+.photo-btns label{color:#fff;font-size:15px}
 .photo-btns label.btn.primary,.photo-btns label.btn.blue{color:#fff}
 .photo-btns label{position:relative;overflow:hidden}
 .photo-btns.three{grid-template-columns:1fr 1fr 1fr;gap:8px}
@@ -191,7 +191,7 @@ table.today-t td:last-child,table.today-t th:last-child{width:19%}
 .slot-tile.filled{border:0;padding:0;overflow:hidden}
 .slot-tile.filled img{width:100%;height:100%;object-fit:cover;display:block}
 .slot-tile b{font-size:13px}.slot-tile small{font-size:11px;color:var(--muted)}
-.fileb{position:relative;overflow:hidden;display:block;width:100%;padding:8px 6px;border-radius:10px;background:var(--input);font-weight:650;font-size:13px;color:var(--text)}
+.fileb{position:relative;overflow:hidden;display:block;width:100%;padding:8px 6px;border-radius:10px;background:var(--blue);font-weight:650;font-size:13px;color:#fff}
 .fileb.primary{background:var(--blue);color:#fff}
 .fileb input,.slot-tile label input{position:absolute;inset:0;width:100%;height:100%;opacity:0;cursor:pointer;margin:0;padding:0;font-size:0}
 .photo-btns input{position:absolute;inset:0;width:100%;height:100%;opacity:0;cursor:pointer;margin:0;padding:0;font-size:0}
@@ -932,7 +932,7 @@ function viewAuth() {
   return `<div class="auth">
     <img class="logo" src="icons/logo.png" alt="">
     <h1>Minimal Health Tracker</h1>
-    <p class="sub">Your weight-loss tracker · v48</p>
+    <p class="sub">Your weight-loss tracker · v49</p>
     <div class="seg">
       <button data-act="authMode" data-v="login" class="${login ? 'on' : ''}">Log in</button>
       <button data-act="authMode" data-v="create" class="${!login ? 'on' : ''}">Create account</button>
@@ -1879,7 +1879,7 @@ function viewProfile() {
       <button class="btn blue block" data-act="exportXlsx">⬇️ Export to Excel</button>
     </div>
     <button class="btn danger block" data-act="logout" style="margin-top:6px">Log out</button>
-    <p class="explain" style="text-align:center;margin-top:14px">Minimal Health Tracker v48 · estimates only, not medical advice</p>
+    <p class="explain" style="text-align:center;margin-top:14px">Minimal Health Tracker v49 · estimates only, not medical advice</p>
   </main>`;
 }
 
