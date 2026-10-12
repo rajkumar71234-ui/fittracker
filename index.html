@@ -109,7 +109,7 @@ details summary::-webkit-details-marker{display:none}
 .li small{font-size:13px}
 .li .r{font-weight:650;white-space:nowrap}
 .li-wrap{flex-wrap:wrap;row-gap:6px}
-.mcs{flex-basis:100%;display:grid;grid-template-columns:repeat(6,1fr);gap:4px}
+.mcs{flex-basis:100%;display:grid;grid-template-columns:repeat(5,1fr);gap:4px}
 .mc{display:flex;flex-direction:column;align-items:center;padding:3px 0;border-radius:8px;background:var(--card);color:var(--muted);white-space:nowrap;min-width:0}
 .mc small{font-size:10.5px!important;line-height:1.2}
 .mc b{font-size:13px;font-weight:700;color:var(--text);line-height:1.25}
@@ -301,7 +301,7 @@ function mealMacros(m) {
     b: Fb == null ? '' : Fb >= 3 || (kcal > 0 && Fb / kcal * 100 >= 2) ? 'good' : !small && Fb < 1 && cc > 0.5 ? 'bad' : ''
   };
   const chip = (k, label, v) => `<span class="mc ${cls[k]}"><small>${label}</small><b>${v == null ? '—' : r0(v) + ' g'}</b></span>`;
-  return `<span class="mcs"><span class="mc"><small>Kcal</small><b>${r0(kcal)}</b></span>${chip('p', 'Protein', P)}${chip('c', 'Carbs', C)}${chip('s', 'Sugar', S)}${chip('f', 'Fat', F)}${chip('b', 'Fibre', Fb)}</span>`;
+  return `<span class="mcs">${chip('p', 'Protein', P)}${chip('c', 'Carbs', C)}${chip('s', 'Sugar', S)}${chip('f', 'Fat', F)}${chip('b', 'Fibre', Fb)}</span>`;
 }
 function dayNutrition(date) {
   const meals = (S.data.days[date] || {}).meals || [];
@@ -916,7 +916,7 @@ function viewAuth() {
   return `<div class="auth">
     <img class="logo" src="icons/logo.png" alt="">
     <h1>Minimal Health Tracker</h1>
-    <p class="sub">Your weight-loss tracker · v38</p>
+    <p class="sub">Your weight-loss tracker · v39</p>
     <div class="seg">
       <button data-act="authMode" data-v="login" class="${login ? 'on' : ''}">Log in</button>
       <button data-act="authMode" data-v="create" class="${!login ? 'on' : ''}">Create account</button>
@@ -1731,7 +1731,7 @@ function viewFood() {
         const items = (d.meals || []).filter(m => m.slot === s.id && m.source !== 'whey');
         const kc = items.reduce((a, m) => a + (m.kcal || 0), 0);
         return `<div class="slot"><div class="slot-h"><span class="name">${s.icon} ${s.label}</span>${items.length ? `<span class="kc">${r0(kc)} kcal</span>` : ''}<button class="add" data-act="addFood" data-slot="${s.id}">+ Add</button></div>
-          ${items.map(m => `<button class="li li-wrap" data-act="editMeal" data-id="${m.id}"><span>${esc(m.name)} <small>${r0(m.grams)} g${m.source === 'ai' ? ' · 📷' : ''}</small></span>${mealMacros(m)}</button>`).join('')}
+          ${items.map(m => `<button class="li li-wrap" data-act="editMeal" data-id="${m.id}"><span>${esc(m.name)} <small>${r0(m.grams)} g${m.source === 'ai' ? ' · 📷' : ''}</small></span><span class="r">${r0(m.kcal)} kcal</span>${mealMacros(m)}</button>`).join('')}
         </div>`;
       }).join('')}
     </div>
@@ -1817,7 +1817,7 @@ function viewProfile() {
       <button class="btn blue block" data-act="exportXlsx">⬇️ Export to Excel</button>
     </div>
     <button class="btn danger block" data-act="logout" style="margin-top:6px">Log out</button>
-    <p class="explain" style="text-align:center;margin-top:14px">Minimal Health Tracker v38 · estimates only, not medical advice</p>
+    <p class="explain" style="text-align:center;margin-top:14px">Minimal Health Tracker v39 · estimates only, not medical advice</p>
   </main>`;
 }
 
