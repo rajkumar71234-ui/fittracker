@@ -237,6 +237,7 @@ const DEFAULT_MODEL = 'claude-sonnet-5-5';
 const WATER_STEP = 250;
 const SLOTS = [
   { id: 'breakfast', label: 'Breakfast', icon: '🍳' },
+  { id: 'egg',       label: 'Egg',       icon: '🥚' },
   { id: 'lunch',     label: 'Lunch',     icon: '🍛' },
   { id: 'dinner',    label: 'Dinner',    icon: '🍲' },
   { id: 'sprouts',   label: 'Sprouted',  icon: '🌱' },
@@ -931,7 +932,7 @@ function viewAuth() {
   return `<div class="auth">
     <img class="logo" src="icons/logo.png" alt="">
     <h1>Minimal Health Tracker</h1>
-    <p class="sub">Your weight-loss tracker · v47</p>
+    <p class="sub">Your weight-loss tracker · v48</p>
     <div class="seg">
       <button data-act="authMode" data-v="login" class="${login ? 'on' : ''}">Log in</button>
       <button data-act="authMode" data-v="create" class="${!login ? 'on' : ''}">Create account</button>
@@ -1338,12 +1339,13 @@ const MEAL_IDEAS = {
   lunch: [['Brown rice (cooked)', 'Sambar', 'Vegetable poriyal', 'Curd / yogurt'], ['White rice (cooked)', 'Dal / paruppu (cooked)', 'Kootu', 'Cucumber / salad'], ['Chapati / roti', 'Chana masala', 'Cucumber / salad'], ['Brown rice (cooked)', 'Fish curry', 'Vegetable poriyal'], ['Chapati / roti', 'Chicken curry', 'Cucumber / salad'], ['White rice (cooked)', 'Rasam', 'Chicken breast (grilled)', 'Aviyal'], ['Chapati / roti', 'Rajma curry', 'Curd / yogurt']],
   dinner: [['Chapati / roti', 'Dal / paruppu (cooked)', 'Vegetable poriyal'], ['Idli', 'Sambar'], ['Ragi dosa', 'Sambar'], ['Chapati / roti', 'Paneer curry', 'Cucumber / salad'], ['Chicken breast (grilled)', 'Vegetable poriyal', 'Chapati / roti'], ['Oats porridge with milk', 'Egg white (boiled)'], ['Idiyappam', 'Kootu']],
   protein: [['Boiled egg'], ['Egg white (boiled)'], ['Whey protein'], ['Boiled chickpeas / sundal'], ['Moong sprouts'], ['Greek yogurt (plain)'], ['Paneer (raw)'], ['Soya chunks (dry)']],
+  egg: [['Boiled egg'], ['Egg white (boiled)'], ['Omelette (1 egg)']],
   sprouts: [['Moong sprouts'], ['Boiled chickpeas / sundal'], ['Moong sprouts', 'Cucumber / salad']],
   whey: [['Whey protein']],
   fruits: [['Apple'], ['Guava'], ['Papaya'], ['Orange / mosambi'], ['Pomegranate'], ['Watermelon'], ['Banana']],
   snacks: [['Roasted chana'], ['Buttermilk', 'Makhana (roasted)'], ['Almonds'], ['Black coffee / green tea', 'Roasted chana'], ['Cucumber / salad', 'Peanuts (roasted)'], ['Buttermilk', 'Boiled chickpeas / sundal']],
 };
-const SLOT_SHARE = { breakfast: .22, lunch: .28, dinner: .22, protein: .07, sprouts: .07, fruits: .06, snacks: .08, whey: .07 };
+const SLOT_SHARE = { breakfast: .20, egg: .06, lunch: .26, dinner: .20, protein: .07, sprouts: .07, fruits: .06, snacks: .08, whey: .07 };
 const NONVEG = ['Chicken curry', 'Chicken breast (grilled)', 'Chicken 65', 'Chicken biryani', 'Mutton curry', 'Fish curry', 'Fish fry', 'Prawn curry'];
 const EGG = ['Boiled egg', 'Egg white (boiled)', 'Omelette (1 egg)'];
 function avoidList(p, f) {
@@ -1877,7 +1879,7 @@ function viewProfile() {
       <button class="btn blue block" data-act="exportXlsx">⬇️ Export to Excel</button>
     </div>
     <button class="btn danger block" data-act="logout" style="margin-top:6px">Log out</button>
-    <p class="explain" style="text-align:center;margin-top:14px">Minimal Health Tracker v47 · estimates only, not medical advice</p>
+    <p class="explain" style="text-align:center;margin-top:14px">Minimal Health Tracker v48 · estimates only, not medical advice</p>
   </main>`;
 }
 
