@@ -102,6 +102,9 @@ input[type=date]::-webkit-calendar-picker-indicator{opacity:.5}
 .sum-grid small{display:block;font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:.04em}
 .sum-grid b{display:block;font-size:26px;font-weight:800;letter-spacing:-.03em}
 .sum-grid span{font-size:12px;color:var(--muted)}
+.sum-grid.four{grid-template-columns:repeat(4,1fr);gap:4px}
+.sum-grid.four b{font-size:21px}
+.sum-grid.four small{font-size:11px;letter-spacing:.02em}
 .sum-foot{text-align:center;margin-top:10px;font-size:14px;font-weight:600}
 details summary{cursor:pointer;color:var(--blue);font-size:14px;font-weight:600;list-style:none;padding:4px 0}
 details summary::-webkit-details-marker{display:none}
@@ -928,7 +931,7 @@ function viewAuth() {
   return `<div class="auth">
     <img class="logo" src="icons/logo.png" alt="">
     <h1>Minimal Health Tracker</h1>
-    <p class="sub">Your weight-loss tracker · v46</p>
+    <p class="sub">Your weight-loss tracker · v47</p>
     <div class="seg">
       <button data-act="authMode" data-v="login" class="${login ? 'on' : ''}">Log in</button>
       <button data-act="authMode" data-v="create" class="${!login ? 'on' : ''}">Create account</button>
@@ -1763,16 +1766,17 @@ function sheetConfirm() {
 }
 
 function intakeSummary(date) {
-  const nd = nutritionNeeds(date), ate = dayNutrition(date).tot.kcal, st = dayStats(date), body = st.base, bal = ate - body;
+  const nd = nutritionNeeds(date), ate = dayNutrition(date).tot.kcal, st = dayStats(date), body = st.base, tgt = nd.kcal, bal = ate - tgt;
   const fmt = v => r0(v).toLocaleString('en-IN');
   return `<div class="card">
-    <div class="sum-grid">
+    <div class="sum-grid four">
       <div><small class="muted">Body needs</small><b>${fmt(body)}</b><span>kcal</span></div>
+      <div><small class="muted">Target</small><b style="color:var(--blue-dark)">${fmt(tgt)}</b><span>kcal</span></div>
       <div><small class="muted">Ate</small><b>${fmt(ate)}</b><span>kcal</span></div>
-      <div><small class="muted">${bal > 0 ? 'Extra eaten' : 'Still under'}</small><b class="${bal > 0 ? 'bad' : 'good'}">${bal > 0 ? '+' : bal < 0 ? '−' : ''}${fmt(Math.abs(bal))}</b><span>kcal</span></div>
+      <div><small class="muted">${bal > 0 ? 'Extra' : 'Left'}</small><b class="${bal > 0 ? 'bad' : 'good'}">${bal > 0 ? '+' : bal < 0 ? '−' : ''}${fmt(Math.abs(bal))}</b><span>kcal</span></div>
     </div>
-    <div class="sum-foot ${bal > 0 ? 'bad' : 'good'}">${bal > 0 ? `${fmt(bal)} kcal more than your body needs today` : `${fmt(-bal)} kcal less than your body needs today`}</div>
-    <p class="explain" style="text-align:center;margin:6px 0 0">To reach your goal, eat about ${fmt(nd.kcal)} kcal today</p>
+    <div class="sum-foot ${bal > 0 ? 'bad' : 'good'}">${bal > 0 ? `${fmt(bal)} kcal over today's target` : `${fmt(-bal)} kcal left to eat today`}</div>
+    <p class="explain" style="text-align:center;margin:6px 0 0">Ate − Target = ${bal > 0 ? 'Extra' : 'Left'} · Target = body needs + exercise − cut for your goal</p>
   </div>`;
 }
 
@@ -1873,7 +1877,7 @@ function viewProfile() {
       <button class="btn blue block" data-act="exportXlsx">⬇️ Export to Excel</button>
     </div>
     <button class="btn danger block" data-act="logout" style="margin-top:6px">Log out</button>
-    <p class="explain" style="text-align:center;margin-top:14px">Minimal Health Tracker v46 · estimates only, not medical advice</p>
+    <p class="explain" style="text-align:center;margin-top:14px">Minimal Health Tracker v47 · estimates only, not medical advice</p>
   </main>`;
 }
 
