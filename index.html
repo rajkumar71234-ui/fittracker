@@ -893,7 +893,7 @@ function viewAuth() {
   return `<div class="auth">
     <img class="logo" src="icons/logo.png" alt="">
     <h1>Minimal Health Tracker</h1>
-    <p class="sub">Your weight-loss tracker · v29</p>
+    <p class="sub">Your weight-loss tracker · v30</p>
     <div class="seg">
       <button data-act="authMode" data-v="login" class="${login ? 'on' : ''}">Log in</button>
       <button data-act="authMode" data-v="create" class="${!login ? 'on' : ''}">Create account</button>
@@ -1682,12 +1682,25 @@ function sheetConfirm() {
     <button class="btn block" style="margin-top:8px" data-act="closeSheet">Cancel</button>`;
 }
 
+function intakeSummary(date) {
+  const nd = nutritionNeeds(date), ate = dayNutrition(date).tot.kcal, bal = ate - nd.kcal;
+  const fmt = v => r0(v).toLocaleString('en-IN');
+  return `<div class="card">
+    <div class="sum-grid">
+      <div><small class="muted">Need</small><b>${fmt(nd.kcal)}</b><span>kcal</span></div>
+      <div><small class="muted">Ate</small><b>${fmt(ate)}</b><span>kcal</span></div>
+      <div><small class="muted">${bal > 0 ? 'Extra' : 'Left'}</small><b class="${bal > 0 ? 'bad' : 'good'}">${bal > 0 ? '+' : bal < 0 ? '−' : ''}${fmt(Math.abs(bal))}</b><span>kcal</span></div>
+    </div>
+    <div class="sum-foot ${bal > 0 ? 'bad' : 'good'}">${bal > 0 ? `${fmt(bal)} kcal more than you need today` : `${fmt(-bal)} kcal left to eat today`}</div>
+  </div>`;
+}
+
 function viewFood() {
   const date = S.date, d = dayOf(date), st = dayStats(date);
   const waterTarget = Math.round(st.w * 35 / 250) * 250;
   return header('Intake') + `<main>
     ${dateBar()}
-    ${summaryCard(st)}
+    ${intakeSummary(date)}
     <div class="card"><h3>Meals <small class="muted">${r0(st.protein)} g protein · ${r0(st.carbs)} g carbs · ${r0(st.fat)} g fat</small></h3>
       ${SLOTS.map(s => {
         const items = (d.meals || []).filter(m => m.slot === s.id);
@@ -1780,7 +1793,7 @@ function viewProfile() {
       <button class="btn blue block" data-act="exportXlsx">⬇️ Export to Excel</button>
     </div>
     <button class="btn danger block" data-act="logout" style="margin-top:6px">Log out</button>
-    <p class="explain" style="text-align:center;margin-top:14px">Minimal Health Tracker v29 · estimates only, not medical advice</p>
+    <p class="explain" style="text-align:center;margin-top:14px">Minimal Health Tracker v30 · estimates only, not medical advice</p>
   </main>`;
 }
 
