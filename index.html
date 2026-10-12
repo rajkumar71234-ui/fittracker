@@ -933,7 +933,7 @@ function viewAuth() {
   return `<div class="auth">
     <img class="logo" src="icons/logo.png" alt="">
     <h1>Minimal Health Tracker</h1>
-    <p class="sub">Your weight-loss tracker · v55</p>
+    <p class="sub">Your weight-loss tracker · v56</p>
     <div class="seg">
       <button data-act="authMode" data-v="login" class="${login ? 'on' : ''}">Log in</button>
       <button data-act="authMode" data-v="create" class="${!login ? 'on' : ''}">Create account</button>
@@ -1233,8 +1233,8 @@ function viewHome() {
 
   // target card
   const minEatH = p.sex === 'male' ? 1500 : 1200, burnT = 400; // fixed daily plan: 400 kcal exercise
-  const eatT = tg.done ? tg.eat : Math.max(minEatH, Math.round((tg.base + burnT * 0.85 - tg.need) / 10) * 10);
-  const diff = tg.base + burnT * 0.85 - eatT;
+  const eatT = tg.done ? tg.eat : Math.max(minEatH, Math.round((tg.base + burnT - tg.need) / 10) * 10);
+  const diff = tg.base + burnT - eatT; // body needs + exercise − eat
   const grams = diff / 7.7;
   let pace = '';
   if (pl.projByDeficit != null && !notStarted) {
@@ -1248,7 +1248,7 @@ function viewHome() {
     <div class="kv"><span>Difference (deficit)</span><span>${r0(diff).toLocaleString('en-IN')} kcal</span></div>
     <div class="grid2" style="margin-top:12px">
       <div class="stat"><small>Weight loss each day</small><div class="big2 good">${r0(grams)} g</div><span>${r1(grams * 7 / 1000)} kg a week</span></div>
-      <div class="stat"><small>Weight on ${niceDate(pl.end, { day: 'numeric', month: 'short' })}</small><div class="big2">${r1(pl.targetW)} kg</div><span>if you follow this daily</span></div>
+      <div class="stat"><small>Weight on ${niceDate(pl.end, { day: 'numeric', month: 'short' })}</small><div class="big2">${r1(pl.curW - diff * pl.daysLeft / 7700)} kg</div><span>if you follow this daily</span></div>
     </div>
     ${pace}
     ${tg.need > 1000 ? `<div class="note warn">This pace is aggressive. Consider a later end date in Profile.</div>` : ''}`;
@@ -1882,7 +1882,7 @@ function viewProfile() {
       <button class="btn blue block" data-act="exportXlsx">⬇️ Export to Excel</button>
     </div>
     <button class="btn danger block" data-act="logout" style="margin-top:6px">Log out</button>
-    <p class="explain" style="text-align:center;margin-top:14px">Minimal Health Tracker v55 · estimates only, not medical advice</p>
+    <p class="explain" style="text-align:center;margin-top:14px">Minimal Health Tracker v56 · estimates only, not medical advice</p>
   </main>`;
 }
 
