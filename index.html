@@ -927,7 +927,7 @@ function viewAuth() {
   return `<div class="auth">
     <img class="logo" src="icons/logo.png" alt="">
     <h1>Minimal Health Tracker</h1>
-    <p class="sub">Your weight-loss tracker · v44</p>
+    <p class="sub">Your weight-loss tracker · v45</p>
     <div class="seg">
       <button data-act="authMode" data-v="login" class="${login ? 'on' : ''}">Log in</button>
       <button data-act="authMode" data-v="create" class="${!login ? 'on' : ''}">Create account</button>
@@ -1122,16 +1122,16 @@ function dailyCharts(p, last) {
   // chart 2: grams lost per day
   const H2 = 140, T2 = 14, B2 = 20, vals = st.map(s => s.deficit == null ? null : s.deficit / 7.7);
   const mx = Math.max(50, ...vals.filter(v => v != null).map(Math.abs)) * 1.15;
-  const hasNeg = vals.some(v => v != null && v < 0);
+  const hasNeg = vals.some(v => v != null && v > 0); // loss bars go below the line
   const zero = hasNeg ? T2 + (H2 - T2 - B2) / 2 : H2 - B2;
   const sc = (hasNeg ? (H2 - T2 - B2) / 2 : (H2 - T2 - B2)) / mx;
   let g2 = `<line x1="${L}" x2="${W - R}" y1="${zero}" y2="${zero}" stroke="var(--muted)" stroke-width=".6"/>`;
   vals.forEach((v, i) => {
     const cx = L + slot * i + slot / 2, w = Math.min(18, slot * 0.6);
     if (v != null) {
-      const hgt = Math.abs(v) * sc, y = v >= 0 ? zero - hgt : zero;
-      g2 += `<rect x="${cx - w / 2}" y="${y}" width="${w}" height="${Math.max(1, hgt)}" rx="2" fill="${v >= 0 ? 'var(--accent)' : 'var(--bad)'}"/>`;
-      if (n <= 10) g2 += `<text x="${cx}" y="${v >= 0 ? y - 3 : y + hgt + 9}" text-anchor="middle" style="font-weight:600">${v >= 0 ? '' : '+'}${r0(Math.abs(v))}</text>`;
+      const hgt = Math.abs(v) * sc, up = v < 0, y = up ? zero - hgt : zero; // gain = up (red), loss = down (green)
+      g2 += `<rect x="${cx - w / 2}" y="${y}" width="${w}" height="${Math.max(1, hgt)}" rx="2" fill="${up ? 'var(--bad)' : 'var(--accent)'}"/>`;
+      if (n <= 10) g2 += `<text x="${cx}" y="${up ? y - 3 : y + hgt + 9}" text-anchor="middle" style="font-weight:600">${up ? '+' : v > 0 ? '−' : ''}${r0(Math.abs(v))}</text>`;
     }
     g2 += lbl(days[i], i).replace('TT', H2 - 6);
   });
@@ -1139,9 +1139,9 @@ function dailyCharts(p, last) {
   return `<p style="margin:0 0 4px;font-weight:650;font-size:14px">Eaten vs burned (kcal)</p>
     <svg class="chart" viewBox="0 0 ${W} ${H1}">${g1}</svg>
     <div class="legend"><span><i style="background:var(--blue)"></i>eaten</span><span><i style="background:var(--line)"></i>body uses</span><span><i style="background:#f97316"></i>exercise</span></div>
-    <p style="margin:16px 0 4px;font-weight:650;font-size:14px">Fat lost each day (grams)</p>
+    <p style="margin:16px 0 4px;font-weight:650;font-size:14px">Weight change each day (grams)</p>
     <svg class="chart" viewBox="0 0 ${W} ${H2}">${g2}</svg>
-    <div class="legend"><span><i style="background:var(--accent)"></i>lost</span><span><i style="background:var(--bad)"></i>gained</span><span>last ${n} day${n > 1 ? 's' : ''} · date of month below</span></div>`;
+    <div class="legend"><span><i style="background:var(--bad)"></i>gain ↑</span><span><i style="background:var(--accent)"></i>loss ↓</span><span>last ${n} day${n > 1 ? 's' : ''} · date of month below</span></div>`;
 }
 
 function todayTable(date) {
@@ -1872,7 +1872,7 @@ function viewProfile() {
       <button class="btn blue block" data-act="exportXlsx">⬇️ Export to Excel</button>
     </div>
     <button class="btn danger block" data-act="logout" style="margin-top:6px">Log out</button>
-    <p class="explain" style="text-align:center;margin-top:14px">Minimal Health Tracker v44 · estimates only, not medical advice</p>
+    <p class="explain" style="text-align:center;margin-top:14px">Minimal Health Tracker v45 · estimates only, not medical advice</p>
   </main>`;
 }
 
