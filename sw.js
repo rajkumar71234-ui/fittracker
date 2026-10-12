@@ -1,5 +1,5 @@
 // Caches only the app itself so it opens fast. Your data always goes to/from GitHub, never this cache.
-const CACHE = 'fittracker-v60';
+const CACHE = 'fittracker-v61';
 const SHELL = ['./', './index.html', './manifest.webmanifest', './icons/icon-192.png', './icons/icon-512.png', './icons/apple-touch-icon.png', './icons/logo.png'];
 
 self.addEventListener('install', (e) => {
