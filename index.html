@@ -893,7 +893,7 @@ function viewAuth() {
   return `<div class="auth">
     <img class="logo" src="icons/logo.png" alt="">
     <h1>Minimal Health Tracker</h1>
-    <p class="sub">Your weight-loss tracker · v31</p>
+    <p class="sub">Your weight-loss tracker · v32</p>
     <div class="seg">
       <button data-act="authMode" data-v="login" class="${login ? 'on' : ''}">Log in</button>
       <button data-act="authMode" data-v="create" class="${!login ? 'on' : ''}">Create account</button>
@@ -1505,9 +1505,9 @@ function calcCard(st, ate, logged, date) {
       <b class="${cls || ''}" style="font-size:${big ? 24 : 18}px;white-space:nowrap">${val} <small style="font-size:12px;font-weight:600;color:var(--muted)">kcal</small></b></div>`;
   const proj = (label, grams) => `<div class="stat" style="text-align:center"><small>${label}</small><b class="${grams >= 0 ? 'good' : 'bad'}">${grams > 0 ? '−' : grams < 0 ? '+' : ''}${Math.abs(grams) >= 1000 ? r1(Math.abs(grams) / 1000) + ' kg' : r0(Math.abs(grams)) + ' g'}</b><span>${grams >= 0 ? 'weight loss' : 'weight gain'}</span></div>`;
   return `<div class="card">
-    ${row('', 'Your body uses today', 'just to live & daily life (no exercise)', r0(need).toLocaleString('en-IN'))}
+    ${row('', 'Your body needs today', 'just to live & daily life (no exercise)', r0(need).toLocaleString('en-IN'))}
     ${row('−', 'You ate', logged ? '' : 'nothing logged yet', r0(ate).toLocaleString('en-IN'))}
-    ${row('=', diff >= 0 ? 'Still under' : 'Extra eaten', diff >= 0 ? 'eaten less than body uses' : 'eaten more than body uses', sign(diff) + r0(Math.abs(diff)).toLocaleString('en-IN'), diff >= 0 ? 'good' : 'bad')}
+    ${row('=', diff >= 0 ? 'Still under' : 'Extra eaten', diff >= 0 ? 'eaten less than body needs' : 'eaten more than body needs', sign(diff) + r0(Math.abs(diff)).toLocaleString('en-IN'), diff >= 0 ? 'good' : 'bad')}
     ${row('+', 'Burned', 'exercise & steps', r0(burn).toLocaleString('en-IN'), 'good')}
     ${row('=', def >= 0 ? 'Deficit' : 'Surplus', def >= 0 ? 'this turns into weight loss' : 'this turns into weight gain', sign(def) + r0(Math.abs(def)).toLocaleString('en-IN'), def >= 0 ? 'good' : 'bad', true)}
     ${logged ? `<div class="grid3" style="margin-top:12px;align-items:stretch">
@@ -1683,16 +1683,16 @@ function sheetConfirm() {
 }
 
 function intakeSummary(date) {
-  const nd = nutritionNeeds(date), ate = dayNutrition(date).tot.kcal, bal = ate - nd.kcal, st = dayStats(date), tg = dailyTarget();
+  const nd = nutritionNeeds(date), ate = dayNutrition(date).tot.kcal, st = dayStats(date), body = st.base, bal = ate - body;
   const fmt = v => r0(v).toLocaleString('en-IN');
   return `<div class="card">
     <div class="sum-grid">
-      <div><small class="muted">Target</small><b>${fmt(nd.kcal)}</b><span>kcal</span></div>
+      <div><small class="muted">Body needs</small><b>${fmt(body)}</b><span>kcal</span></div>
       <div><small class="muted">Ate</small><b>${fmt(ate)}</b><span>kcal</span></div>
-      <div><small class="muted">${bal > 0 ? 'Extra' : 'Left'}</small><b class="${bal > 0 ? 'bad' : 'good'}">${bal > 0 ? '+' : bal < 0 ? '−' : ''}${fmt(Math.abs(bal))}</b><span>kcal</span></div>
+      <div><small class="muted">${bal > 0 ? 'Extra eaten' : 'Still under'}</small><b class="${bal > 0 ? 'bad' : 'good'}">${bal > 0 ? '+' : bal < 0 ? '−' : ''}${fmt(Math.abs(bal))}</b><span>kcal</span></div>
     </div>
-    <div class="sum-foot ${bal > 0 ? 'bad' : 'good'}">${bal > 0 ? `${fmt(bal)} kcal over today's target` : `${fmt(-bal)} kcal left to eat today`}</div>
-    <p class="explain" style="text-align:center;margin:6px 0 0">Target = body uses ${fmt(st.base)} + exercise ${fmt(st.exNet + st.stepsK)} − ${fmt(tg.need)} cut for your goal</p>
+    <div class="sum-foot ${bal > 0 ? 'bad' : 'good'}">${bal > 0 ? `${fmt(bal)} kcal more than your body needs today` : `${fmt(-bal)} kcal less than your body needs today`}</div>
+    <p class="explain" style="text-align:center;margin:6px 0 0">To reach your goal, eat about ${fmt(nd.kcal)} kcal today</p>
   </div>`;
 }
 
@@ -1794,7 +1794,7 @@ function viewProfile() {
       <button class="btn blue block" data-act="exportXlsx">⬇️ Export to Excel</button>
     </div>
     <button class="btn danger block" data-act="logout" style="margin-top:6px">Log out</button>
-    <p class="explain" style="text-align:center;margin-top:14px">Minimal Health Tracker v31 · estimates only, not medical advice</p>
+    <p class="explain" style="text-align:center;margin-top:14px">Minimal Health Tracker v32 · estimates only, not medical advice</p>
   </main>`;
 }
 
