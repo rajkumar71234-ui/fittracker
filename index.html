@@ -918,7 +918,7 @@ function viewAuth() {
   return `<div class="auth">
     <img class="logo" src="icons/logo.png" alt="">
     <h1>Minimal Health Tracker</h1>
-    <p class="sub">Your weight-loss tracker · v41</p>
+    <p class="sub">Your weight-loss tracker · v42</p>
     <div class="seg">
       <button data-act="authMode" data-v="login" class="${login ? 'on' : ''}">Log in</button>
       <button data-act="authMode" data-v="create" class="${!login ? 'on' : ''}">Create account</button>
@@ -1095,7 +1095,7 @@ function dailyCharts(p, last) {
   for (let ds = last, i = 0; ds >= p.startDate && i < 14; ds = addDays(ds, -1), i++) days.unshift(ds);
   if (!days.length) return '<p class="muted" style="margin:0">Your plan starts ' + niceDate(p.startDate) + '.</p>';
   const st = days.map(ds => dayStats(ds));
-  const W = 340, L = 30, R = 6, n = days.length, slot = (W - L - R) / n, bw = Math.min(12, slot * 0.34);
+  const W = 340, L = 30, R = 6, n = days.length, slot = (W - L - R) / Math.max(n, 7), bw = Math.min(12, slot * 0.34);
   const lbl = (ds, i) => (n <= 7 || i % 2 === 0 || i === n - 1) ? `<text x="${L + slot * i + slot / 2}" y="TT" text-anchor="middle">${parseD(ds).getDate()}</text>` : '';
   // chart 1: eaten vs burned (body + exercise)
   const H1 = 170, T1 = 8, B1 = 20, max1 = Math.max(1000, ...st.map(s => Math.max(s.intake, s.base + s.exNet + s.stepsK))) * 1.08;
@@ -1281,7 +1281,7 @@ function viewHome() {
     <div class="section-label">Every day</div>
     <div class="card">${dailyCharts(p, last)}</div>
 
-    <div class="card"><h3>Weight</h3>${weightChart(p, pl)}</div>
+    <div class="card"><h3>Weight &amp; forecast</h3>${weightChart(p, pl)}</div>
   </main>`;
 }
 
@@ -1820,7 +1820,7 @@ function viewProfile() {
       <button class="btn blue block" data-act="exportXlsx">⬇️ Export to Excel</button>
     </div>
     <button class="btn danger block" data-act="logout" style="margin-top:6px">Log out</button>
-    <p class="explain" style="text-align:center;margin-top:14px">Minimal Health Tracker v41 · estimates only, not medical advice</p>
+    <p class="explain" style="text-align:center;margin-top:14px">Minimal Health Tracker v42 · estimates only, not medical advice</p>
   </main>`;
 }
 
