@@ -227,7 +227,6 @@ const SLOTS = [
   { id: 'breakfast', label: 'Breakfast', icon: '🍳' },
   { id: 'lunch',     label: 'Lunch',     icon: '🍛' },
   { id: 'dinner',    label: 'Dinner',    icon: '🍲' },
-  { id: 'protein',   label: 'Protein',   icon: '💪' },
   { id: 'fruits',    label: 'Fruits',    icon: '🍎' },
   { id: 'snacks',    label: 'Snacks',    icon: '🥜' },
 ];
@@ -917,7 +916,7 @@ function viewAuth() {
   return `<div class="auth">
     <img class="logo" src="icons/logo.png" alt="">
     <h1>Minimal Health Tracker</h1>
-    <p class="sub">Your weight-loss tracker · v36</p>
+    <p class="sub">Your weight-loss tracker · v37</p>
     <div class="seg">
       <button data-act="authMode" data-v="login" class="${login ? 'on' : ''}">Log in</button>
       <button data-act="authMode" data-v="create" class="${!login ? 'on' : ''}">Create account</button>
@@ -1728,8 +1727,8 @@ function viewFood() {
     ${intakeSummary(date)}
     <div class="card"><h3>Meals <small class="muted">${r0(st.protein)} g protein · ${r0(st.carbs)} g carbs · ${r0(st.fat)} g fat</small></h3>
       <p class="explain" style="margin:-2px 0 4px"><b class="good">Green</b> = good for your goal · <b class="bad">Red</b> = too much / too little in this food</p>
-      ${SLOTS.map(s => {
-        const items = (d.meals || []).filter(m => m.slot === s.id);
+      ${[...SLOTS, ...((d.meals || []).some(m => m.slot === 'protein' && m.source !== 'whey') ? [{ id: 'protein', label: 'Protein', icon: '💪' }] : [])].map(s => {
+        const items = (d.meals || []).filter(m => m.slot === s.id && m.source !== 'whey');
         const kc = items.reduce((a, m) => a + (m.kcal || 0), 0);
         return `<div class="slot"><div class="slot-h"><span class="name">${s.icon} ${s.label}</span>${items.length ? `<span class="kc">${r0(kc)} kcal</span>` : ''}<button class="add" data-act="addFood" data-slot="${s.id}">+ Add</button></div>
           ${items.map(m => `<button class="li li-wrap" data-act="editMeal" data-id="${m.id}"><span>${esc(m.name)} <small>${r0(m.grams)} g${m.source === 'ai' ? ' · 📷' : ''}</small></span><span class="r">${r0(m.kcal)} kcal</span>${mealMacros(m)}</button>`).join('')}
@@ -1818,7 +1817,7 @@ function viewProfile() {
       <button class="btn blue block" data-act="exportXlsx">⬇️ Export to Excel</button>
     </div>
     <button class="btn danger block" data-act="logout" style="margin-top:6px">Log out</button>
-    <p class="explain" style="text-align:center;margin-top:14px">Minimal Health Tracker v36 · estimates only, not medical advice</p>
+    <p class="explain" style="text-align:center;margin-top:14px">Minimal Health Tracker v37 · estimates only, not medical advice</p>
   </main>`;
 }
 
