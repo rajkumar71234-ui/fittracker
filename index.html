@@ -108,6 +108,13 @@ details summary::-webkit-details-marker{display:none}
 .li{display:flex;justify-content:space-between;align-items:center;gap:10px;width:100%;text-align:left;padding:9px 10px;margin-top:6px;border-radius:12px;background:var(--input);font-size:15px}
 .li small{font-size:13px}
 .li .r{font-weight:650;white-space:nowrap}
+.li-wrap{flex-wrap:wrap;row-gap:6px}
+.mcs{flex-basis:100%;display:grid;grid-template-columns:repeat(5,1fr);gap:4px}
+.mc{display:flex;flex-direction:column;align-items:center;padding:3px 0;border-radius:8px;background:var(--card);color:var(--muted);white-space:nowrap;min-width:0}
+.mc small{font-size:10.5px!important;line-height:1.2}
+.mc b{font-size:13px;font-weight:700;color:var(--text);line-height:1.25}
+.mc.good{background:#e6f6ec;color:#127a3c}.mc.good b{color:#127a3c}
+.mc.bad{background:#fde2e1;color:#b42318}.mc.bad b{color:#b42318}
 .water{display:flex;align-items:center;gap:12px}
 .water .big{flex:1;text-align:center}
 .water .big b{font-size:28px;font-weight:800}
@@ -279,6 +286,23 @@ function microOfMeal(m) {
   const q = (Number(m.grams) || 0) / 100, o = {};
   MICRO_KEYS.forEach((k, i) => { o[k] = MICRO[f.n][i] * q; });
   return o;
+}
+// Per-food macro chips: green = good for fat loss, red = watch out
+function mealMacros(m) {
+  const kcal = Number(m.kcal) || 0, P = Number(m.protein) || 0, C = Number(m.carbs) || 0, F = Number(m.fat) || 0;
+  const mi = microOfMeal(m), S = mi ? Number(mi.sugar) || 0 : null, Fb = mi ? Number(mi.fiber) || 0 : null;
+  const sh = g => kcal > 0 ? g / kcal : 0; // share of calories
+  const pc = sh(P * 4), cc = sh(C * 4), fc = sh(F * 9);
+  const small = kcal < 60;
+  const cls = {
+    p: P >= 10 || pc >= 0.2 ? 'good' : !small && pc < 0.08 ? 'bad' : '',
+    c: !small && cc > 0.6 ? 'bad' : cc <= 0.4 ? 'good' : '',
+    s: S == null ? '' : S > 10 || (!small && sh(S * 4) > 0.15) ? 'bad' : S <= 2 ? 'good' : '',
+    f: !small && fc > 0.4 && pc < 0.25 ? 'bad' : fc <= 0.25 ? 'good' : '',
+    b: Fb == null ? '' : Fb >= 3 || (kcal > 0 && Fb / kcal * 100 >= 2) ? 'good' : !small && Fb < 1 && cc > 0.5 ? 'bad' : ''
+  };
+  const chip = (k, label, v) => `<span class="mc ${cls[k]}"><small>${label}</small><b>${v == null ? '—' : r0(v) + ' g'}</b></span>`;
+  return `<span class="mcs">${chip('p', 'Protein', P)}${chip('c', 'Carbs', C)}${chip('s', 'Sugar', S)}${chip('f', 'Fat', F)}${chip('b', 'Fibre', Fb)}</span>`;
 }
 function dayNutrition(date) {
   const meals = (S.data.days[date] || {}).meals || [];
@@ -893,7 +917,7 @@ function viewAuth() {
   return `<div class="auth">
     <img class="logo" src="icons/logo.png" alt="">
     <h1>Minimal Health Tracker</h1>
-    <p class="sub">Your weight-loss tracker · v34</p>
+    <p class="sub">Your weight-loss tracker · v35</p>
     <div class="seg">
       <button data-act="authMode" data-v="login" class="${login ? 'on' : ''}">Log in</button>
       <button data-act="authMode" data-v="create" class="${!login ? 'on' : ''}">Create account</button>
@@ -1703,11 +1727,12 @@ function viewFood() {
     ${dateBar()}
     ${intakeSummary(date)}
     <div class="card"><h3>Meals <small class="muted">${r0(st.protein)} g protein · ${r0(st.carbs)} g carbs · ${r0(st.fat)} g fat</small></h3>
+      <p class="explain" style="margin:-2px 0 4px"><b class="good">Green</b> = good for your goal · <b class="bad">Red</b> = too much / too little in this food</p>
       ${SLOTS.map(s => {
         const items = (d.meals || []).filter(m => m.slot === s.id);
         const kc = items.reduce((a, m) => a + (m.kcal || 0), 0);
         return `<div class="slot"><div class="slot-h"><span class="name">${s.icon} ${s.label}</span>${items.length ? `<span class="kc">${r0(kc)} kcal</span>` : ''}<button class="add" data-act="addFood" data-slot="${s.id}">+ Add</button></div>
-          ${items.map(m => `<button class="li" data-act="editMeal" data-id="${m.id}"><span>${esc(m.name)} <small>${r0(m.grams)} g${m.source === 'ai' ? ' · 📷' : ''}</small></span><span class="r">${r0(m.kcal)} kcal</span></button>`).join('')}
+          ${items.map(m => `<button class="li li-wrap" data-act="editMeal" data-id="${m.id}"><span>${esc(m.name)} <small>${r0(m.grams)} g${m.source === 'ai' ? ' · 📷' : ''}</small></span><span class="r">${r0(m.kcal)} kcal</span>${mealMacros(m)}</button>`).join('')}
         </div>`;
       }).join('')}
     </div>
@@ -1793,7 +1818,7 @@ function viewProfile() {
       <button class="btn blue block" data-act="exportXlsx">⬇️ Export to Excel</button>
     </div>
     <button class="btn danger block" data-act="logout" style="margin-top:6px">Log out</button>
-    <p class="explain" style="text-align:center;margin-top:14px">Minimal Health Tracker v34 · estimates only, not medical advice</p>
+    <p class="explain" style="text-align:center;margin-top:14px">Minimal Health Tracker v35 · estimates only, not medical advice</p>
   </main>`;
 }
 
