@@ -932,7 +932,7 @@ function viewAuth() {
   return `<div class="auth">
     <img class="logo" src="icons/logo.png" alt="">
     <h1>Minimal Health Tracker</h1>
-    <p class="sub">Your weight-loss tracker · v52</p>
+    <p class="sub">Your weight-loss tracker · v53</p>
     <div class="seg">
       <button data-act="authMode" data-v="login" class="${login ? 'on' : ''}">Log in</button>
       <button data-act="authMode" data-v="create" class="${!login ? 'on' : ''}">Create account</button>
@@ -1118,10 +1118,10 @@ function dailyCharts(p, last) {
   for (let k = 0; k <= 3; k++) { const v = Math.round(max1 * k / 3 / 100) * 100, y = Y1(v); g1 += `<line x1="${L}" x2="${W - R}" y1="${y}" y2="${y}" stroke="var(--line)"/><text x="${L - 4}" y="${y + 3}" text-anchor="end">${v >= 1000 ? r1(v / 1000) + 'k' : v}</text>`; }
   st.forEach((s, i) => {
     const cx = L + slot * i + slot / 2, x1 = cx - bw - 1, x2 = cx + 1;
-    if (s.logged) g1 += `<rect x="${x1}" y="${Y1(s.intake)}" width="${bw}" height="${Y1(0) - Y1(s.intake)}" rx="2" fill="var(--blue)"/>`;
+    if (s.logged) g1 += `<rect x="${x1}" y="${Y1(s.intake)}" width="${bw}" height="${Y1(0) - Y1(s.intake)}" rx="2" fill="var(--bad)"/>`;
     const body = s.base, ex = s.exNet + s.stepsK;
-    g1 += `<rect x="${x2}" y="${Y1(body)}" width="${bw}" height="${Y1(0) - Y1(body)}" rx="2" fill="var(--line)"/>`;
-    if (ex > 0) g1 += `<rect x="${x2}" y="${Y1(body + ex)}" width="${bw}" height="${Y1(body) - Y1(body + ex)}" rx="2" fill="#f97316"/>`;
+    g1 += `<rect x="${x2}" y="${Y1(body)}" width="${bw}" height="${Y1(0) - Y1(body)}" rx="2" fill="var(--blue)"/>`;
+    if (ex > 0) g1 += `<rect x="${x2}" y="${Y1(body + ex)}" width="${bw}" height="${Y1(body) - Y1(body + ex)}" rx="2" fill="var(--accent)"/>`;
     g1 += lbl(days[i], i).replace('TT', H1 - 6);
   });
   // chart 2: grams lost per day
@@ -1143,7 +1143,7 @@ function dailyCharts(p, last) {
   g2 += `<text x="${L - 4}" y="${zero + 3}" text-anchor="end">0 g</text>`;
   return `<p style="margin:0 0 4px;font-weight:650;font-size:14px">Eaten vs burned (kcal)</p>
     <svg class="chart" viewBox="0 0 ${W} ${H1}">${g1}</svg>
-    <div class="legend"><span><i style="background:var(--blue)"></i>eaten</span><span><i style="background:var(--line)"></i>body uses</span><span><i style="background:#f97316"></i>exercise</span></div>
+    <div class="legend"><span><i style="background:var(--bad)"></i>eaten</span><span><i style="background:var(--blue)"></i>body uses</span><span><i style="background:var(--accent)"></i>burned</span></div>
     <p style="margin:16px 0 4px;font-weight:650;font-size:14px">Weight change each day (grams)</p>
     <svg class="chart" viewBox="0 0 ${W} ${H2}">${g2}</svg>
     <div class="legend"><span><i style="background:var(--bad)"></i>gain ↑</span><span><i style="background:var(--accent)"></i>loss ↓</span><span>last ${n} day${n > 1 ? 's' : ''} · date of month below</span></div>`;
@@ -1881,7 +1881,7 @@ function viewProfile() {
       <button class="btn blue block" data-act="exportXlsx">⬇️ Export to Excel</button>
     </div>
     <button class="btn danger block" data-act="logout" style="margin-top:6px">Log out</button>
-    <p class="explain" style="text-align:center;margin-top:14px">Minimal Health Tracker v52 · estimates only, not medical advice</p>
+    <p class="explain" style="text-align:center;margin-top:14px">Minimal Health Tracker v53 · estimates only, not medical advice</p>
   </main>`;
 }
 
