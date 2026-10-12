@@ -893,7 +893,7 @@ function viewAuth() {
   return `<div class="auth">
     <img class="logo" src="icons/logo.png" alt="">
     <h1>Minimal Health Tracker</h1>
-    <p class="sub">Your weight-loss tracker · v33</p>
+    <p class="sub">Your weight-loss tracker · v34</p>
     <div class="seg">
       <button data-act="authMode" data-v="login" class="${login ? 'on' : ''}">Log in</button>
       <button data-act="authMode" data-v="create" class="${!login ? 'on' : ''}">Create account</button>
@@ -1503,7 +1503,7 @@ function calcCard(st, ate, logged, date) {
   const row = (op, label, sub, val, cls, big) => `<div style="display:flex;align-items:center;gap:10px;padding:${big ? '12px 12px' : '9px 4px'};${big ? 'background:var(--input);border-radius:12px;margin-top:4px' : 'border-bottom:1px solid var(--line)'}">
       <span style="flex:1"><b style="font-size:${big ? 16 : 15}px">${label}</b>${sub ? `<br><small class="muted">${sub}</small>` : ''}</span>
       <b class="${cls || ''}" style="font-size:${big ? 24 : 18}px;white-space:nowrap">${val} <small style="font-size:12px;font-weight:600;color:var(--muted)">kcal</small></b></div>`;
-  const proj = (label, grams) => `<div class="stat" style="text-align:center"><small>${label}</small><b class="${grams >= 0 ? 'good' : 'bad'}">${grams > 0 ? '−' : grams < 0 ? '+' : ''}${Math.abs(grams) >= 1000 ? r1(Math.abs(grams) / 1000) + ' kg' : r0(Math.abs(grams)) + ' g'}</b><span>${grams >= 0 ? 'weight loss' : 'weight gain'}</span></div>`;
+  const proj = (label, grams) => { const kg = Math.abs(grams) / 1000; return `<div class="stat" style="text-align:center;padding:10px 4px"><small style="white-space:nowrap">${label}</small><b class="${grams >= 0 ? 'good' : 'bad'}" style="white-space:nowrap;margin:2px 0">${grams > 0 ? '−' : grams < 0 ? '+' : ''}${kg.toFixed(2)}<small style="display:inline;font-size:13px;font-weight:600"> kg</small></b><span style="white-space:nowrap">${grams >= 0 ? 'loss' : 'gain'}</span></div>`; };
   return `<div class="card">
     ${row('', 'Your body needs today', 'just to live & daily life (no exercise)', r0(need).toLocaleString('en-IN'))}
     ${row('−', 'You ate', logged ? '' : 'nothing logged yet', r0(ate).toLocaleString('en-IN'))}
@@ -1512,8 +1512,8 @@ function calcCard(st, ate, logged, date) {
     ${row('=', def >= 0 ? 'Deficit' : 'Surplus', def >= 0 ? 'this turns into weight loss' : 'this turns into weight gain', sign(def) + r0(Math.abs(def)).toLocaleString('en-IN'), def >= 0 ? 'good' : 'bad', true)}
     ${logged ? `<div class="grid3" style="margin-top:12px;align-items:stretch">
       ${proj(date === todayStr() ? 'Today' : 'This day', g)}
-      ${proj('After 1 week', g * 7)}
-      ${proj('After 1 month', g * 30)}
+      ${proj('1 week', g * 7)}
+      ${proj('1 month', g * 30)}
     </div>
     <p class="explain" style="text-align:center;margin:8px 0 0">If every day is like ${date === todayStr() ? 'today' : 'this day'} · 7,700 kcal ≈ 1 kg</p>` :
     `<p class="explain" style="text-align:center;margin:10px 0 0">Add your food in Intake to see today's weight loss.</p>`}
@@ -1793,7 +1793,7 @@ function viewProfile() {
       <button class="btn blue block" data-act="exportXlsx">⬇️ Export to Excel</button>
     </div>
     <button class="btn danger block" data-act="logout" style="margin-top:6px">Log out</button>
-    <p class="explain" style="text-align:center;margin-top:14px">Minimal Health Tracker v33 · estimates only, not medical advice</p>
+    <p class="explain" style="text-align:center;margin-top:14px">Minimal Health Tracker v34 · estimates only, not medical advice</p>
   </main>`;
 }
 
