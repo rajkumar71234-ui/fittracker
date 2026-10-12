@@ -891,7 +891,7 @@ function viewAuth() {
   return `<div class="auth">
     <img class="logo" src="icons/logo.png" alt="">
     <h1>Minimal Health Tracker</h1>
-    <p class="sub">Your weight-loss tracker · v25</p>
+    <p class="sub">Your weight-loss tracker · v26</p>
     <div class="seg">
       <button data-act="authMode" data-v="login" class="${login ? 'on' : ''}">Log in</button>
       <button data-act="authMode" data-v="create" class="${!login ? 'on' : ''}">Create account</button>
@@ -1527,15 +1527,6 @@ function viewToday() {
       <div class="stat" style="background:var(--card)"><small>Medication</small><b class="${meds.taken === 'yes' ? 'good' : meds.taken === 'no' ? 'warnc' : ''}">${meds.taken === 'yes' ? 'Taken ✓' : meds.taken === 'no' ? 'Not taken' : '—'}</b><span>${(meds.list || []).length ? esc(meds.list.map(x => x.name).join(', ')) : 'Meds tab'}</span></div>
     </div>
 
-    <div class="section-label">What you ate</div>
-    <div class="card">${mealList || '<p class="muted" style="margin:0;font-size:14px">Nothing logged yet. Add food in Intake.</p>'}
-      ${mealList ? `<div class="kv" style="margin-top:8px"><span>Total</span><span>${r0(dn.kcal)} kcal · ${r0(dn.protein)} g protein</span></div>` : ''}</div>
-
-    <div class="section-label">Workout done</div>
-    <div class="card">${wk || '<p class="muted" style="margin:0;font-size:14px">No workout logged. Add it in Burn.</p>'}
-      <div class="kv" style="margin-top:8px"><span>Steps</span><span>${d.steps ? `${Number(d.steps).toLocaleString('en-IN')} · ${r0(st.stepsK)} kcal` : '—'}</span></div>
-      <div class="kv"><span>Total exercise burn</span><span>${r0(st.exShow)} kcal</span></div>
-    </div>
     ${meds.remark || d.remark ? `<div class="section-label">Notes</div><div class="card">${meds.remark ? `<p style="margin:0 0 6px;font-size:14px">💊 ${esc(meds.remark)}</p>` : ''}${d.remark ? `<p style="margin:0;font-size:14px">📝 ${esc(d.remark)}</p>` : ''}</div>` : ''}
     ${medAdvice(date)}
   </main>`;
@@ -1761,7 +1752,7 @@ function viewProfile() {
       <button class="btn blue block" data-act="exportXlsx">⬇️ Export to Excel</button>
     </div>
     <button class="btn danger block" data-act="logout" style="margin-top:6px">Log out</button>
-    <p class="explain" style="text-align:center;margin-top:14px">Minimal Health Tracker v25 · estimates only, not medical advice</p>
+    <p class="explain" style="text-align:center;margin-top:14px">Minimal Health Tracker v26 · estimates only, not medical advice</p>
   </main>`;
 }
 
