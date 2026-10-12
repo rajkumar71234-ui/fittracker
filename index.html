@@ -165,6 +165,8 @@ table.today-t td:last-child,table.today-t th:last-child{width:19%}
 .photo-btns{display:grid;grid-template-columns:1fr 1fr;gap:10px}
 .photo-btns label{color:var(--text);font-size:15px}
 .photo-btns label{position:relative;overflow:hidden}
+.photo-btns.three{grid-template-columns:1fr 1fr 1fr;gap:8px}
+.photo-btns.three .btn{padding:12px 6px;font-size:14px}
 .slots{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px}
 .slot-tile{position:relative;border:2px dashed var(--line);border-radius:16px;height:160px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;background:var(--card);padding:8px;text-align:center}
 .slot-tile.filled{border:0;padding:0;overflow:hidden}
@@ -891,7 +893,7 @@ function viewAuth() {
   return `<div class="auth">
     <img class="logo" src="icons/logo.png" alt="">
     <h1>Minimal Health Tracker</h1>
-    <p class="sub">Your weight-loss tracker · v28</p>
+    <p class="sub">Your weight-loss tracker · v29</p>
     <div class="seg">
       <button data-act="authMode" data-v="login" class="${login ? 'on' : ''}">Log in</button>
       <button data-act="authMode" data-v="create" class="${!login ? 'on' : ''}">Create account</button>
@@ -1225,11 +1227,12 @@ function viewHome() {
       <small class="muted">${pl.daysLeft} days left</small>
     </div>
 
-    <div class="card"><h3>🔍 Check a food</h3>
+    <div class="card"><h3>🔍 Check a food · ⚖️ Weight</h3>
       <p class="explain" style="margin:0 0 10px">Add 1 or 2 photos of any food (top view + close-up or label), then tap Find. You'll see calories, protein, carbs, sugar and fat — add it to today's meals only if you want.</p>
-      <div class="photo-btns">
+      <div class="photo-btns three">
         <label class="btn primary">📸 Take photo<input type="file" accept="image/*" capture="environment" class="food-check-input" aria-label="Take photo to check food"></label>
-        <label class="btn">🖼️ From gallery<input type="file" accept="image/*" multiple class="food-check-input" aria-label="Choose 1 or 2 photos to check food"></label>
+        <label class="btn">🖼️ Gallery<input type="file" accept="image/*" multiple class="food-check-input" aria-label="Choose 1 or 2 photos to check food"></label>
+        <button class="btn blue" data-act="openAddWeight">⚖️ Add weight</button>
       </div>
     </div>
 
@@ -1657,6 +1660,18 @@ function maybeHashWeight() {
   S.sheet = { kind: 'confirm', date, weight: r1(w), body };
   renderSheet();
 }
+function sheetAddWeight() {
+  const sh = S.sheet, now = sh.at, prev = weightOn(todayStr());
+  return `<div class="sheet-h"><h2>⚖️ Add weight</h2><button class="x" data-act="closeSheet">✕</button></div>
+    <div class="card" style="text-align:center">
+      <div style="font-size:17px;font-weight:700">${now.toLocaleDateString('en-IN', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}</div>
+      <div class="muted" style="font-size:15px;margin-top:2px">${now.toLocaleTimeString('en-IN', { hour: 'numeric', minute: '2-digit' })}</div>
+      <label style="margin-top:16px;text-align:left">Your weight (kg)
+        <input id="addWeightIn" type="number" step="0.1" inputmode="decimal" placeholder="${r1(prev)}" style="font-size:30px;font-weight:800;height:66px;text-align:center"></label>
+      <p class="explain" style="margin:8px 0 0">Last weight: ${r1(prev)} kg</p>
+    </div>
+    <button class="btn primary block" data-act="saveAddWeight">Save weight</button>`;
+}
 function sheetConfirm() {
   const sh = S.sheet, old = (S.data.days[sh.date] || {}).weight;
   return `<div class="sheet-h"><h2>⚖️ Weight from your scale</h2><button class="x" data-act="closeSheet">✕</button></div>
@@ -1765,7 +1780,7 @@ function viewProfile() {
       <button class="btn blue block" data-act="exportXlsx">⬇️ Export to Excel</button>
     </div>
     <button class="btn danger block" data-act="logout" style="margin-top:6px">Log out</button>
-    <p class="explain" style="text-align:center;margin-top:14px">Minimal Health Tracker v28 · estimates only, not medical advice</p>
+    <p class="explain" style="text-align:center;margin-top:14px">Minimal Health Tracker v29 · estimates only, not medical advice</p>
   </main>`;
 }
 
@@ -2118,7 +2133,7 @@ function onWorkoutInput(t) {
 function renderSheet() {
   const root = $('#sheet-root');
   if (!S.sheet) { root.innerHTML = ''; document.body.classList.remove('lock'); return; }
-  const inner = S.sheet.kind === 'food' ? sheetFood() : S.sheet.kind === 'confirm' ? sheetConfirm() : S.sheet.kind === 'scale' ? sheetScale() : sheetWorkout();
+  const inner = S.sheet.kind === 'food' ? sheetFood() : S.sheet.kind === 'confirm' ? sheetConfirm() : S.sheet.kind === 'scale' ? sheetScale() : S.sheet.kind === 'weight' ? sheetAddWeight() : sheetWorkout();
   const existing = $('.sheet', root);
   if (existing) { const st = existing.scrollTop; existing.innerHTML = '<div class="grab"></div>' + inner; existing.scrollTop = st; }
   else root.innerHTML = `<div class="sheet-backdrop" data-act="closeSheet" data-backdrop="1"><div class="sheet"><div class="grab"></div>${inner}</div></div>`;
@@ -2300,6 +2315,17 @@ const ACT = {
     if (w == null || w < 25 || w > 300) throw fail('Check the weight (kg).');
     const body = {}; BODY_KEYS.forEach(([k]) => { const v = num(($('#sc_' + k) || {}).value); if (v != null) body[k] = r1(v); });
     mutateDay(sh.date, d => { d.weight = r1(w); if (Object.keys(body).length) d.body = body; });
+    S.sheet = null; toast(`Saved ${r1(w)} kg`, 'good'); render();
+  },
+  openAddWeight() {
+    S.sheet = { kind: 'weight', at: new Date() }; renderSheet();
+    setTimeout(() => { const i = $('#addWeightIn'); if (i) i.focus(); }, 250);
+  },
+  saveAddWeight() {
+    const w = num(($('#addWeightIn') || {}).value);
+    if (w == null || w < 25 || w > 300) throw fail('Enter your weight in kg.');
+    const at = S.sheet.at, ds = fmtD(at);
+    mutateDay(ds, d => { d.weight = r1(w); d.weightAt = at.toISOString(); });
     S.sheet = null; toast(`Saved ${r1(w)} kg`, 'good'); render();
   },
   confirmWeight() {
@@ -2506,6 +2532,7 @@ document.addEventListener('change', async (e) => {
   if (t.closest && t.closest('#pf')) updateProfilePreview();
 });
 document.addEventListener('keydown', (e) => {
+  if (e.key === 'Enter' && e.target.id === 'addWeightIn') { e.preventDefault(); const b = $('[data-act=saveAddWeight]'); if (b) b.click(); return; }
   if (e.key === 'Enter' && e.target.closest && (e.target.closest('#loginForm') || e.target.closest('#createForm') || e.target.closest('#setupForm'))) {
     e.preventDefault(); const b = $('#loginForm [data-act=login], #createForm [data-act=create], #setupForm [data-act=setup]'); if (b) b.click();
   }
@@ -2532,7 +2559,7 @@ async function boot() {
 boot();
 
 // expose for testing
-window.__fittrack = { calcCard, openScaleSheet, analyseScaleRun, sheetScale, maybeHashWeight, sheetConfirm, viewBurn, addPhotosToSheet, openWorkoutSheet, sheetWorkout, runAnalysis, sheetFood, viewHome, viewFood, viewToday, viewMeds, wheyCard, ACT, profileForm, startWorkoutPhoto, sheetWorkout, FOOD, nutritionCard, needsCard, todayTable, viewSuggest, viewHome, viewFood, viewBurn, sheetWorkout, bmiOf, bmiCat, fatPct, bmr, treadKcal, bikeKcal, wkSuggest, S, plan, dayStats };
+window.__fittrack = { sheetAddWeight, calcCard, openScaleSheet, analyseScaleRun, sheetScale, maybeHashWeight, sheetConfirm, viewBurn, addPhotosToSheet, openWorkoutSheet, sheetWorkout, runAnalysis, sheetFood, viewHome, viewFood, viewToday, viewMeds, wheyCard, ACT, profileForm, startWorkoutPhoto, sheetWorkout, FOOD, nutritionCard, needsCard, todayTable, viewSuggest, viewHome, viewFood, viewBurn, sheetWorkout, bmiOf, bmiCat, fatPct, bmr, treadKcal, bikeKcal, wkSuggest, S, plan, dayStats };
 })();
 </script>
 </body>
