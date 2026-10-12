@@ -932,7 +932,7 @@ function viewAuth() {
   return `<div class="auth">
     <img class="logo" src="icons/logo.png" alt="">
     <h1>Minimal Health Tracker</h1>
-    <p class="sub">Your weight-loss tracker · v51</p>
+    <p class="sub">Your weight-loss tracker · v52</p>
     <div class="seg">
       <button data-act="authMode" data-v="login" class="${login ? 'on' : ''}">Log in</button>
       <button data-act="authMode" data-v="create" class="${!login ? 'on' : ''}">Create account</button>
@@ -1545,7 +1545,7 @@ function calcCard(st, ate, logged, date) {
     ${row('', 'Your body needs today', 'just to live & daily life (no exercise)', r0(need).toLocaleString('en-IN'))}
     ${row('−', 'You ate', logged ? '' : 'nothing logged yet', r0(ate).toLocaleString('en-IN'))}
     ${row('=', diff >= 0 ? 'Still under' : 'Extra eaten', diff >= 0 ? 'eaten less than body needs' : 'eaten more than body needs', sign(diff) + r0(Math.abs(diff)).toLocaleString('en-IN'), diff >= 0 ? 'good' : 'bad')}
-    ${row('+', 'Burned', 'exercise & steps', r0(burn).toLocaleString('en-IN'), 'good')}
+    ${row('+', 'Burned', `exercise ${r0(st.exNet).toLocaleString('en-IN')} + steps ${r0(st.stepsK).toLocaleString('en-IN')}${st.d && st.d.steps ? ` (${Number(st.d.steps).toLocaleString('en-IN')} steps)` : ''}`, (r0(st.exNet) + r0(st.stepsK)).toLocaleString('en-IN'), 'good')}
     ${row('=', def >= 0 ? 'Deficit' : 'Surplus', def >= 0 ? 'this turns into weight loss' : 'this turns into weight gain', sign(def) + r0(Math.abs(def)).toLocaleString('en-IN'), def >= 0 ? 'good' : 'bad', true)}
     ${logged ? `<div class="grid3" style="margin-top:12px;align-items:stretch">
       ${proj(date === todayStr() ? 'Today' : 'This day', g, true)}
@@ -1881,7 +1881,7 @@ function viewProfile() {
       <button class="btn blue block" data-act="exportXlsx">⬇️ Export to Excel</button>
     </div>
     <button class="btn danger block" data-act="logout" style="margin-top:6px">Log out</button>
-    <p class="explain" style="text-align:center;margin-top:14px">Minimal Health Tracker v51 · estimates only, not medical advice</p>
+    <p class="explain" style="text-align:center;margin-top:14px">Minimal Health Tracker v52 · estimates only, not medical advice</p>
   </main>`;
 }
 
