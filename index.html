@@ -933,7 +933,7 @@ function viewAuth() {
   return `<div class="auth">
     <img class="logo" src="icons/logo.png" alt="">
     <h1>Minimal Health Tracker</h1>
-    <p class="sub">Your weight-loss tracker · v57</p>
+    <p class="sub">Your weight-loss tracker · v58</p>
     <div class="seg">
       <button data-act="authMode" data-v="login" class="${login ? 'on' : ''}">Log in</button>
       <button data-act="authMode" data-v="create" class="${!login ? 'on' : ''}">Create account</button>
@@ -1847,7 +1847,14 @@ function viewBurn() {
 
 function weightChart(p, pl) {
   const W = 340, H = 180, L = 34, R = 10, T = 10, B = 24, N = Math.max(1, pl.N - 1);
-  const target = [{ x: 0, y: p.startWeight }, { x: N, y: pl.targetW }];
+  // goal: 0.5 kg down every week (step), never below the target weight
+  const target = [], wkPts = [];
+  for (let wk = 0, x = 0; x <= N; wk++, x += 7) {
+    const y = Math.max(pl.targetW, p.startWeight - 0.5 * wk), x2 = Math.min(N, x + 7);
+    if (wk) target.push({ x, y: Math.max(pl.targetW, p.startWeight - 0.5 * (wk - 1)) });
+    target.push({ x, y }); wkPts.push({ x, y });
+    if (x2 === N) { target.push({ x: N, y }); break; }
+  }
   const proj = pl.projByDeficit != null && pl.sinceStart >= 0 && pl.sinceStart < pl.N ? [{ x: pl.todayX, y: pl.curW }, { x: N, y: pl.projByDeficit }] : null;
   const ys = [...pl.pts.map(q => q.y), ...target.map(q => q.y), ...(proj ? proj.map(q => q.y) : [])];
   let yMin = Math.floor(Math.min(...ys) - 0.5), yMax = Math.ceil(Math.max(...ys) + 0.5);
@@ -1860,16 +1867,18 @@ function weightChart(p, pl) {
     const v = yMin + (yMax - yMin) * i / steps, yy = Y(v);
     g += `<line x1="${L}" x2="${W - R}" y1="${yy}" y2="${yy}" stroke="var(--line)"/><text x="${L - 5}" y="${yy + 3}" text-anchor="end">${r1(v)}</text>`;
   }
-  [0, Math.round(N / 2), N].forEach((x, i) => { g += `<text x="${X(x)}" y="${H - 6}" text-anchor="${['start', 'middle', 'end'][i]}">Day ${x + 1}</text>`; });
+  const nW = Math.ceil((N + 1) / 7);
+  [0, Math.round(nW / 2) - 1, nW - 1].forEach((w, i) => { g += `<text x="${X(w * 7)}" y="${H - 6}" text-anchor="${['start', 'middle', 'end'][i]}">Week ${w + 1}</text>`; });
   const actual = pl.pts.filter(q => q.x <= N);
   return `<svg class="chart" viewBox="0 0 ${W} ${H}" role="img" aria-label="Weight chart">
     ${g}
-    <path d="${path(target)}" stroke="var(--muted)" stroke-width="1.5" stroke-dasharray="4 4" fill="none"/>
+    <path d="${path(target)}" stroke="var(--muted)" stroke-width="1.5" fill="none"/>
+    ${wkPts.map(q => `<circle cx="${X(q.x)}" cy="${Y(q.y)}" r="1.8" fill="var(--muted)"/>`).join('')}
     ${proj ? `<path d="${path(proj)}" stroke="var(--warn)" stroke-width="2" stroke-dasharray="5 4" fill="none"/>` : ''}
     ${actual.length > 1 ? `<path d="${path(actual)}" stroke="var(--blue)" stroke-width="2.5" fill="none" stroke-linejoin="round"/>` : ''}
     ${actual.map(q => `<circle cx="${X(q.x)}" cy="${Y(q.y)}" r="3" fill="var(--blue)"/>`).join('')}
   </svg>
-  <div class="legend"><span><i style="background:var(--blue)"></i>your weigh-ins</span><span><i style="background:var(--muted)"></i>goal line</span>${proj ? '<span><i style="background:var(--warn)"></i>forecast at current pace</span>' : ''}</div>`;
+  <div class="legend"><span><i style="background:var(--blue)"></i>your weigh-ins</span><span><i style="background:var(--muted)"></i>goal: −0.5 kg every week</span>${proj ? '<span><i style="background:var(--warn)"></i>forecast at current pace</span>' : ''}</div>`;
 }
 
 function viewProfile() {
@@ -1882,7 +1891,7 @@ function viewProfile() {
       <button class="btn blue block" data-act="exportXlsx">⬇️ Export to Excel</button>
     </div>
     <button class="btn danger block" data-act="logout" style="margin-top:6px">Log out</button>
-    <p class="explain" style="text-align:center;margin-top:14px">Minimal Health Tracker v57 · estimates only, not medical advice</p>
+    <p class="explain" style="text-align:center;margin-top:14px">Minimal Health Tracker v58 · estimates only, not medical advice</p>
   </main>`;
 }
 
