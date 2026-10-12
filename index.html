@@ -140,7 +140,7 @@ table.fit th{color:var(--muted);font-weight:600;font-size:12px}
 table.fit td:first-child,table.fit th:first-child{text-align:left;font-weight:600;width:24%}
 table.fit .tag{font-size:10px;padding:1px 6px;margin-top:3px}
 table.today-t{font-size:12.5px}
-table.today-t td:first-child,table.today-t th:first-child{width:19%}
+table.today-t td:first-child,table.today-t th:first-child{width:23%;word-break:normal;overflow-wrap:normal;hyphens:none}
 table.today-t td:last-child,table.today-t th:last-child{width:19%}
 .big2{font-size:30px;font-weight:800;letter-spacing:-.02em;line-height:1.1}
 .scroll-x{overflow-x:auto;-webkit-overflow-scrolling:touch}
@@ -891,7 +891,7 @@ function viewAuth() {
   return `<div class="auth">
     <img class="logo" src="icons/logo.png" alt="">
     <h1>Minimal Health Tracker</h1>
-    <p class="sub">Your weight-loss tracker · v26</p>
+    <p class="sub">Your weight-loss tracker · v27</p>
     <div class="seg">
       <button data-act="authMode" data-v="login" class="${login ? 'on' : ''}">Log in</button>
       <button data-act="authMode" data-v="create" class="${!login ? 'on' : ''}">Create account</button>
@@ -1109,29 +1109,43 @@ function dailyCharts(p, last) {
 }
 
 function todayTable(date) {
-  const st = dayStats(date), nd = nutritionNeeds(date), dn = dayNutrition(date).tot;
-  const fmt = v => r0(v).toLocaleString('en-IN');
+  const st = dayStats(date), nd = nutritionNeeds(date), dn = dayNutrition(date).tot, rda = microRDA(P());
+  const fmt = v => Math.abs(v) < 10 && Math.round(v) !== v ? r1(v) : r0(v).toLocaleString('en-IN');
+  const head = x => `<tr><td colspan="5" style="text-align:left;padding-top:14px;color:var(--muted);font-size:12px;text-transform:uppercase;letter-spacing:.06em;font-weight:800">${x}</td></tr>`;
   const row = (label, need, ate, u, limit) => {
     const bal = need - ate, pct = need > 0 ? ate / need * 100 : 0;
     let cls, word;
     if (limit) { cls = bal >= 0 ? 'good' : 'bad'; word = bal >= 0 ? 'left' : 'over'; }
-    else { cls = bal <= 0 ? 'good' : pct >= 60 ? 'warnc' : 'bad'; word = bal <= 0 ? 'done ✓' : 'short'; }
-    return `<tr><td>${label}</td><td>${limit && label === 'Sugar' ? '≤ ' : ''}${fmt(need)} <small class="muted">${u}</small></td><td>${fmt(ate)} <small class="muted">${u}</small></td>
+    else { cls = bal <= 0 ? 'good' : pct >= 40 ? 'warnc' : 'bad'; word = bal <= 0 ? 'done ✓' : 'short'; }
+    return `<tr><td>${label}</td><td>${limit && (label === 'Sugar' || label === 'Sodium') ? '≤ ' : ''}${fmt(need)} <small class="muted">${u}</small></td><td>${fmt(ate)} <small class="muted">${u}</small></td>
       <td class="${cls}"><b>${bal <= 0 && !limit ? '' : fmt(Math.abs(bal))}</b>${bal <= 0 && !limit ? '' : '<br>'}<small>${word}</small></td><td>${pctBar(ate, need, limit)}</td></tr>`;
   };
   return `<div class="card" style="padding:10px">
     <table class="fit today-t">
       <thead><tr><th></th><th>You need</th><th>You ate</th><th>Balance</th><th>%</th></tr></thead>
       <tbody>
+        ${head('Nutrition')}
         ${row('Calories', nd.kcal, dn.kcal, 'kcal', true)}
         ${row('Protein', nd.protein, dn.protein, 'g', false)}
         ${row('Carbs', nd.carbs, dn.carbs, 'g', true)}
         ${row('Sugar', nd.sugar, dn.sugar, 'g', true)}
         ${row('Fat', nd.fat, dn.fat, 'g', true)}
         ${row('Fibre', nd.fiber, dn.fiber, 'g', false)}
+        ${head('Vitamins')}
+        ${row('Vit A', rda.vitA, dn.vitA, 'µg', false)}
+        ${row('Vit C', rda.vitC, dn.vitC, 'mg', false)}
+        ${row('Vit B12', rda.vitB12, dn.vitB12, 'µg', false)}
+        ${row('Folate', rda.folate, dn.folate, 'µg', false)}
+        ${head('Minerals')}
+        ${row('Calcium', rda.calcium, dn.calcium, 'mg', false)}
+        ${row('Iron', rda.iron, dn.iron, 'mg', false)}
+        ${row('Magnesium', rda.magnesium, dn.magnesium, 'mg', false)}
+        ${row('Potassium', rda.potassium, dn.potassium, 'mg', false)}
+        ${row('Zinc', rda.zinc, dn.zinc, 'mg', false)}
+        ${row('Sodium', rda.sodium, dn.sodium, 'mg', true)}
       </tbody>
     </table>
-    <p class="explain">Calories, carbs, sugar and fat: above 100% turns <b class="bad">red</b>. Protein and fibre: try to reach 100%. "You need" includes the ${r0(st.exShow)} kcal you burned today.</p>
+    <p class="explain">Calories, carbs, sugar, fat and sodium: above 100% turns <b class="bad">red</b>. Protein, fibre, vitamins and minerals: try to reach 100%. "You need" includes the ${r0(st.exShow)} kcal you burned today.</p>
   </div>`;
 }
 
@@ -1752,7 +1766,7 @@ function viewProfile() {
       <button class="btn blue block" data-act="exportXlsx">⬇️ Export to Excel</button>
     </div>
     <button class="btn danger block" data-act="logout" style="margin-top:6px">Log out</button>
-    <p class="explain" style="text-align:center;margin-top:14px">Minimal Health Tracker v26 · estimates only, not medical advice</p>
+    <p class="explain" style="text-align:center;margin-top:14px">Minimal Health Tracker v27 · estimates only, not medical advice</p>
   </main>`;
 }
 
