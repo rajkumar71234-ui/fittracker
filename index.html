@@ -656,7 +656,8 @@ function dayStats(date) {
   const intake = sum('kcal');
   const base = bmr(p, w) * 1.1;                    // resting + light daily life (steps counted separately)
   let exGross = 0, exNet = 0;
-  (d.workouts || []).forEach(x => { exGross += x.kcal || 0; exNet += Math.max(0, (x.kcal || 0) - w * (x.minutes || 0) / 60); });
+  (d.workouts || []).forEach(x => { exGross += x.kcal || 0; });
+  exNet = exGross; // count the full workout kcal (as shown on the machine / entered)
   const stepsK = d.stepsKcal != null ? Number(d.stepsKcal) : (d.steps || 0) * stepKcal(w);
   const burn = base + exNet + stepsK;
   const logged = meals.length > 0;
@@ -932,7 +933,7 @@ function viewAuth() {
   return `<div class="auth">
     <img class="logo" src="icons/logo.png" alt="">
     <h1>Minimal Health Tracker</h1>
-    <p class="sub">Your weight-loss tracker · v53</p>
+    <p class="sub">Your weight-loss tracker · v54</p>
     <div class="seg">
       <button data-act="authMode" data-v="login" class="${login ? 'on' : ''}">Log in</button>
       <button data-act="authMode" data-v="create" class="${!login ? 'on' : ''}">Create account</button>
@@ -1305,8 +1306,7 @@ function summaryCard(st) {
     <details><summary>How the deficit is worked out</summary>
       <div class="explain">
         <div><span>Your body uses just to live (rest + daily life)</span><span>${r0(st.base)}</span></div>
-        <div><span>+ Workouts (above resting)</span><span>${r0(st.exNet)}</span></div>
-        ${st.exGross > st.exNet ? `<p style="margin:2px 0 4px">Your machine/watch total was ${r0(st.exGross)} kcal. ${r0(st.exGross - st.exNet)} kcal of that your body burns anyway at rest, which is already inside "body uses", so it isn't counted twice.</p>` : ''}
+        <div><span>+ Workouts</span><span>${r0(st.exNet)}</span></div>
         <div><span>+ Steps</span><span>${r0(st.stepsK)}</span></div>
         <div><span>− Eaten</span><span>${r0(st.intake)}</span></div>
         <p style="margin:6px 0 0">1 kg of body fat ≈ 7,700 kcal. These are estimates — your weigh-ins are the real check.</p>
@@ -1881,7 +1881,7 @@ function viewProfile() {
       <button class="btn blue block" data-act="exportXlsx">⬇️ Export to Excel</button>
     </div>
     <button class="btn danger block" data-act="logout" style="margin-top:6px">Log out</button>
-    <p class="explain" style="text-align:center;margin-top:14px">Minimal Health Tracker v53 · estimates only, not medical advice</p>
+    <p class="explain" style="text-align:center;margin-top:14px">Minimal Health Tracker v54 · estimates only, not medical advice</p>
   </main>`;
 }
 
