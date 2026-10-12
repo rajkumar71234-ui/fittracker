@@ -932,7 +932,7 @@ function viewAuth() {
   return `<div class="auth">
     <img class="logo" src="icons/logo.png" alt="">
     <h1>Minimal Health Tracker</h1>
-    <p class="sub">Your weight-loss tracker · v49</p>
+    <p class="sub">Your weight-loss tracker · v50</p>
     <div class="seg">
       <button data-act="authMode" data-v="login" class="${login ? 'on' : ''}">Log in</button>
       <button data-act="authMode" data-v="create" class="${!login ? 'on' : ''}">Create account</button>
@@ -1231,7 +1231,8 @@ function viewHome() {
   const wLo = 18.5 * hM * hM, wHi = 22.9 * hM * hM;
 
   // target card
-  const diff = tg.base + tg.burn * 0.85 - tg.eat;
+  const stT = dayStats(t), exDone = stT.exShow > 0, eatT = tg.done ? tg.eat : nutritionNeeds(t).kcal, burnT = exDone ? r0(stT.exShow) : tg.burn;
+  const diff = tg.base + burnT * 0.85 - eatT;
   const grams = diff / 7.7;
   let pace = '';
   if (pl.projByDeficit != null && !notStarted) {
@@ -1240,8 +1241,8 @@ function viewHome() {
   }
   const targetHtml = tg.done ? `<p class="good" style="margin:0"><b>You've reached your goal weight! 🎉</b> Eat about ${r0(tg.base)} kcal/day plus what you burn to stay here.</p>` : `
     <div class="kv"><span>Your body needs every day</span><span>${r0(tg.base).toLocaleString('en-IN')} kcal</span></div>
-    <div class="kv"><span>You eat up to</span><span class="good">${tg.eat.toLocaleString('en-IN')} kcal</span></div>
-    <div class="kv"><span>You burn in exercise</span><span class="warnc">${tg.burn.toLocaleString('en-IN')} kcal</span></div>
+    <div class="kv"><span>You eat up to today</span><span class="good">${eatT.toLocaleString('en-IN')} kcal</span></div>
+    <div class="kv"><span>You burn in exercise <small>(${exDone ? 'done today' : 'plan'})</small></span><span class="warnc">${burnT.toLocaleString('en-IN')} kcal</span></div>
     <div class="kv"><span>Difference (deficit)</span><span>${r0(diff).toLocaleString('en-IN')} kcal</span></div>
     <div class="grid2" style="margin-top:12px">
       <div class="stat"><small>Weight loss each day</small><div class="big2 good">${r0(grams)} g</div><span>${r1(grams * 7 / 1000)} kg a week</span></div>
@@ -1879,7 +1880,7 @@ function viewProfile() {
       <button class="btn blue block" data-act="exportXlsx">⬇️ Export to Excel</button>
     </div>
     <button class="btn danger block" data-act="logout" style="margin-top:6px">Log out</button>
-    <p class="explain" style="text-align:center;margin-top:14px">Minimal Health Tracker v49 · estimates only, not medical advice</p>
+    <p class="explain" style="text-align:center;margin-top:14px">Minimal Health Tracker v50 · estimates only, not medical advice</p>
   </main>`;
 }
 
