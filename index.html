@@ -462,6 +462,7 @@ const WORKOUTS = [
   { id: 'skip', g: 'Outside & sports', name: 'Skipping rope', icon: '🪢', calc: 'met', mets: [8.8, 11.8, 12.3] },
   { id: 'yoga', g: 'Outside & sports', name: 'Yoga / Stretching', icon: '🧘', calc: 'met', mets: [2.5, 3.0, 4.0] },
   { id: 'sports', g: 'Outside & sports', name: 'Badminton / Sports', icon: '🏸', calc: 'met', mets: [4.5, 5.5, 7.0] },
+  { id: 'general', g: 'Outside & sports', name: 'General workout', icon: '💪', calc: 'custom' },
   { id: 'other', g: 'Outside & sports', name: 'Other', icon: '➕', calc: 'custom' },
 ];
 const WK = Object.fromEntries(WORKOUTS.map(w => [w.id, w]));
@@ -926,7 +927,7 @@ function viewAuth() {
   return `<div class="auth">
     <img class="logo" src="icons/logo.png" alt="">
     <h1>Minimal Health Tracker</h1>
-    <p class="sub">Your weight-loss tracker · v43</p>
+    <p class="sub">Your weight-loss tracker · v44</p>
     <div class="seg">
       <button data-act="authMode" data-v="login" class="${login ? 'on' : ''}">Log in</button>
       <button data-act="authMode" data-v="create" class="${!login ? 'on' : ''}">Create account</button>
@@ -1871,7 +1872,7 @@ function viewProfile() {
       <button class="btn blue block" data-act="exportXlsx">⬇️ Export to Excel</button>
     </div>
     <button class="btn danger block" data-act="logout" style="margin-top:6px">Log out</button>
-    <p class="explain" style="text-align:center;margin-top:14px">Minimal Health Tracker v43 · estimates only, not medical advice</p>
+    <p class="explain" style="text-align:center;margin-top:14px">Minimal Health Tracker v44 · estimates only, not medical advice</p>
   </main>`;
 }
 
@@ -2191,7 +2192,7 @@ function sheetWorkout() {
   }
   const ph = sh.photos || [];
   const photoTop = `${sh.busy ? `${photoStrip(ph, '')}<div class="center" style="min-height:80px"><div class="spinner"></div><p class="muted">Finding the machine &amp; reading the screen…</p></div>`
-      : (!sh.editId ? photoSlots('wk-photo-input', ph, 'wkPhotoDel', 'analyseWorkout', 'Detect machine & numbers', !!sh.detectNote) : '')}
+      : (!sh.editId && !sh.noPhoto ? photoSlots('wk-photo-input', ph, 'wkPhotoDel', 'analyseWorkout', 'Detect machine & numbers', !!sh.detectNote) : '')}
     ${sh.changeKey ? keyBox() : ''}
     ${sh.detectNote && !sh.busy ? `<div class="note info" style="margin:0 0 12px">${sh.detectNote}</div>` : ''}
     ${sh.detectErr && !sh.busy ? `<div class="note bad" style="margin:0 0 12px">${esc(sh.detectErr)}</div>` : ''}
@@ -2432,7 +2433,11 @@ const ACT = {
     });
     render();
   },
-  homeWorkout() { S.date = todayStr(); ACT.addWorkout(); },
+  homeWorkout() {
+    S.date = todayStr();
+    S.sheet = { kind: 'workout', editId: null, noPhoto: true, photos: [], w: { type: 'general', name: 'General workout', minutes: null, intensity: 1, kcal: null, manual: true } };
+    renderSheet();
+  },
   openAddWeight() {
     S.sheet = { kind: 'weight', at: new Date() }; renderSheet();
     setTimeout(() => { const i = $('#addWeightIn'); if (i) i.focus(); }, 250);
