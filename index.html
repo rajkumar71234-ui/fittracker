@@ -891,7 +891,7 @@ function viewAuth() {
   return `<div class="auth">
     <img class="logo" src="icons/logo.png" alt="">
     <h1>Minimal Health Tracker</h1>
-    <p class="sub">Your weight-loss tracker · v27</p>
+    <p class="sub">Your weight-loss tracker · v28</p>
     <div class="seg">
       <button data-act="authMode" data-v="login" class="${login ? 'on' : ''}">Log in</button>
       <button data-act="authMode" data-v="create" class="${!login ? 'on' : ''}">Create account</button>
@@ -1535,10 +1535,9 @@ function viewToday() {
     <div class="section-label">Need vs eaten</div>
     ${todayTable(date)}
 
-    <div class="grid2" style="margin-bottom:12px">
-      <div class="stat" style="background:var(--card);position:relative"><small>Weight</small><b>${d.weight ? r1(d.weight) + ' kg' : '—'}</b>
-        <label class="fileb" style="margin-top:6px;text-align:center">📸 ${d.weight ? 'Re-scan' : 'Scan weight'}<input type="file" accept="image/*" capture="environment" class="scale-photo-input" data-slot="0" aria-label="Scan weight"></label></div>
-      <div class="stat" style="background:var(--card)"><small>Medication</small><b class="${meds.taken === 'yes' ? 'good' : meds.taken === 'no' ? 'warnc' : ''}">${meds.taken === 'yes' ? 'Taken ✓' : meds.taken === 'no' ? 'Not taken' : '—'}</b><span>${(meds.list || []).length ? esc(meds.list.map(x => x.name).join(', ')) : 'Meds tab'}</span></div>
+    <div class="grid2" style="margin-bottom:12px;align-items:stretch">
+      <div class="stat" style="background:var(--card);padding:14px 16px"><small>Weight</small><b style="font-size:24px">${d.weight ? r1(d.weight) + ' kg' : '—'}</b></div>
+      <div class="stat" style="background:var(--card);padding:14px 16px"><small>Medication</small><b style="font-size:18px;line-height:1.3;word-break:break-word">${(meds.list || []).length ? esc(meds.list.map(x => x.name).join(', ')) : '—'}</b></div>
     </div>
 
     ${meds.remark || d.remark ? `<div class="section-label">Notes</div><div class="card">${meds.remark ? `<p style="margin:0 0 6px;font-size:14px">💊 ${esc(meds.remark)}</p>` : ''}${d.remark ? `<p style="margin:0;font-size:14px">📝 ${esc(d.remark)}</p>` : ''}</div>` : ''}
@@ -1766,7 +1765,7 @@ function viewProfile() {
       <button class="btn blue block" data-act="exportXlsx">⬇️ Export to Excel</button>
     </div>
     <button class="btn danger block" data-act="logout" style="margin-top:6px">Log out</button>
-    <p class="explain" style="text-align:center;margin-top:14px">Minimal Health Tracker v27 · estimates only, not medical advice</p>
+    <p class="explain" style="text-align:center;margin-top:14px">Minimal Health Tracker v28 · estimates only, not medical advice</p>
   </main>`;
 }
 
