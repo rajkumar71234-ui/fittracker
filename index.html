@@ -27,6 +27,9 @@
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 html,body{margin:0;background:var(--bg);color:var(--text);font:16px/1.45 -apple-system,BlinkMacSystemFont,"SF Pro Text","Segoe UI",Roboto,Helvetica,Arial,sans-serif;-webkit-text-size-adjust:100%}
 body.lock{overflow:hidden}
+/* keep the bottom tab bar still on iPhone: the page scrolls inside #app, not the whole window */
+html,body{height:100%;overflow:hidden;overscroll-behavior:none}
+#app{position:fixed;inset:0;overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch;overscroll-behavior-y:contain}
 button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
 a{color:var(--blue)}
 h1,h2,h3,h4{margin:0}
@@ -933,7 +936,7 @@ function viewAuth() {
   return `<div class="auth">
     <img class="logo" src="icons/logo.png" alt="">
     <h1>Minimal Health Tracker</h1>
-    <p class="sub">Your weight-loss tracker · v64</p>
+    <p class="sub">Your weight-loss tracker · v65</p>
     <div class="seg">
       <button data-act="authMode" data-v="login" class="${login ? 'on' : ''}">Log in</button>
       <button data-act="authMode" data-v="create" class="${!login ? 'on' : ''}">Create account</button>
@@ -1930,7 +1933,7 @@ function viewProfile() {
       <button class="btn blue block" data-act="exportXlsx">⬇️ Export to Excel</button>
     </div>
     <button class="btn danger block" data-act="logout" style="margin-top:6px">Log out</button>
-    <p class="explain" style="text-align:center;margin-top:14px">Minimal Health Tracker v64 · estimates only, not medical advice</p>
+    <p class="explain" style="text-align:center;margin-top:14px">Minimal Health Tracker v65 · estimates only, not medical advice</p>
   </main>`;
 }
 
@@ -2293,6 +2296,7 @@ function renderSheet() {
 /* ================================================================
    RENDER
    ================================================================ */
+function toTop() { const a = $('#app'); if (a) a.scrollTop = 0; window.scrollTo(0, 0); }
 function render() {
   const app = $('#app');
   if (S.screen === 'auth') app.innerHTML = viewAuth();
@@ -2320,9 +2324,9 @@ const ACT = {
   async setup(el) { try { await doSetup(el); } finally { unbusy(el); } },
   retryLoad() { if (S.session) loadData(); else boot(); },
   logout() { logout(); },
-  tab(el) { S.tab = el.dataset.v; render(); window.scrollTo(0, 0); },
-  goToday() { S.tab = 'food'; S.date = todayStr(); render(); window.scrollTo(0, 0); },
-  openDay(el) { S.tab = 'food'; S.date = el.dataset.v; render(); window.scrollTo(0, 0); },
+  tab(el) { S.tab = el.dataset.v; render(); toTop(); },
+  goToday() { S.tab = 'food'; S.date = todayStr(); render(); toTop(); },
+  openDay(el) { S.tab = 'food'; S.date = el.dataset.v; render(); toTop(); },
   prevDay() { S.date = addDays(S.date, -1); render(); },
   nextDay() { if (S.date < todayStr()) { S.date = addDays(S.date, 1); render(); } },
   syncInfo() {
