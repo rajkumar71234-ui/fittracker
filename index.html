@@ -937,7 +937,7 @@ function viewAuth() {
   return `<div class="auth">
     <img class="logo" src="icons/logo.png" alt="">
     <h1>Minimal Health Tracker</h1>
-    <p class="sub">Your weight-loss tracker · v74</p>
+    <p class="sub">Your weight-loss tracker · v75</p>
     <div class="seg">
       <button data-act="authMode" data-v="login" class="${login ? 'on' : ''}">Log in</button>
       <button data-act="authMode" data-v="create" class="${!login ? 'on' : ''}">Create account</button>
@@ -1861,10 +1861,11 @@ function viewBurn() {
     ${dateBar()}
     ${summaryCard(st)}
     <div class="card"><h3>Activities <small class="muted">${r0(st.exNet + st.stepsK)} kcal burned</small></h3>
-      <div class="photo-btns three" style="margin-bottom:6px">
+      <div class="photo-btns" style="margin-bottom:8px">
         <label class="btn primary">📸 Photo<input type="file" accept="image/*" capture="environment" class="wk-photo-input" aria-label="Take photo of machine"></label>
         <label class="btn">🖼️ Gallery<input type="file" accept="image/*" multiple class="wk-photo-input" aria-label="Upload 1 or 2 photos of machine"></label>
-        <button class="btn" data-act="homeWorkout">🏃 Workout</button>
+        <button class="btn" data-act="openStepsFor" data-d="${date}">👟 Steps</button>
+        <button class="btn" data-act="burnWorkout">🏃 Add exercise</button>
       </div>
       <p class="explain" style="margin:0 0 6px">Photo of the machine + its screen → Detect. Or tap + Add under a heading.</p>
       ${burnList(date, d, st)}
@@ -1934,7 +1935,7 @@ function viewProfile() {
       <button class="btn blue block" data-act="exportXlsx">⬇️ Export to Excel</button>
     </div>
     <button class="btn danger block" data-act="logout" style="margin-top:6px">Log out</button>
-    <p class="explain" style="text-align:center;margin-top:14px">Minimal Health Tracker v74 · estimates only, not medical advice</p>
+    <p class="explain" style="text-align:center;margin-top:14px">Minimal Health Tracker v75 · estimates only, not medical advice</p>
   </main>`;
 }
 
@@ -2519,6 +2520,7 @@ const ACT = {
     });
     render();
   },
+  burnWorkout() { const ds = S.date; ACT.homeWorkout(); S.date = ds; },
   homeWorkout() {
     S.date = todayStr();
     S.sheet = { kind: 'workout', editId: null, noPhoto: true, photos: [], w: { type: 'general', name: 'General workout', minutes: null, intensity: 1, kcal: null, manual: true } };
