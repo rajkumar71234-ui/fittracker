@@ -107,7 +107,7 @@ input[type=date]::-webkit-calendar-picker-indicator{opacity:.5}
 .sum-grid span{font-size:12px;color:var(--muted)}
 .sum-grid.four{grid-template-columns:repeat(4,1fr);gap:4px}
 .sum-grid.four b{font-size:21px}
-.sum-grid.four small{font-size:11px;letter-spacing:.02em}
+.sum-grid.four small{font-size:11px;letter-spacing:.02em;white-space:nowrap}
 .sum-foot{text-align:center;margin-top:10px;font-size:14px;font-weight:600}
 details summary{cursor:pointer;color:var(--blue);font-size:14px;font-weight:600;list-style:none;padding:4px 0}
 details summary::-webkit-details-marker{display:none}
@@ -936,7 +936,7 @@ function viewAuth() {
   return `<div class="auth">
     <img class="logo" src="icons/logo.png" alt="">
     <h1>Minimal Health Tracker</h1>
-    <p class="sub">Your weight-loss tracker · v66</p>
+    <p class="sub">Your weight-loss tracker · v67</p>
     <div class="seg">
       <button data-act="authMode" data-v="login" class="${login ? 'on' : ''}">Log in</button>
       <button data-act="authMode" data-v="create" class="${!login ? 'on' : ''}">Create account</button>
@@ -1806,7 +1806,7 @@ function intakeSummary(date) {
   const fmt = v => r0(v).toLocaleString('en-IN');
   return `<div class="card">
     <div class="sum-grid four">
-      <div><small class="muted">Body needs</small><b>${fmt(body)}</b><span>kcal</span></div>
+      <div><small class="muted">Needs</small><b>${fmt(body)}</b><span>kcal</span></div>
       <div><small class="muted">Target</small><b style="color:var(--blue-dark)">${fmt(tgt)}</b><span>kcal</span></div>
       <div><small class="muted">Ate</small><b>${fmt(ate)}</b><span>kcal</span></div>
       <div><small class="muted">${bal > 0 ? 'Extra' : 'Left'}</small><b class="${bal > 0 ? 'bad' : 'good'}">${bal > 0 ? '+' : bal < 0 ? '−' : ''}${fmt(Math.abs(bal))}</b><span>kcal</span></div>
@@ -1938,7 +1938,7 @@ function viewProfile() {
       <button class="btn blue block" data-act="exportXlsx">⬇️ Export to Excel</button>
     </div>
     <button class="btn danger block" data-act="logout" style="margin-top:6px">Log out</button>
-    <p class="explain" style="text-align:center;margin-top:14px">Minimal Health Tracker v66 · estimates only, not medical advice</p>
+    <p class="explain" style="text-align:center;margin-top:14px">Minimal Health Tracker v67 · estimates only, not medical advice</p>
   </main>`;
 }
 
