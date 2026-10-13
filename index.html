@@ -180,6 +180,7 @@ table.today-t td:last-child,table.today-t th:last-child{width:19%}
 @keyframes fade{from{opacity:0}}
 .item-edit{background:var(--card);border-radius:14px;padding:10px;margin-bottom:8px}
 .item-edit .mini{display:grid;grid-template-columns:repeat(5,1fr);gap:6px;margin-top:8px}
+.item-edit .mini.two{grid-template-columns:1fr 1fr}
 .item-edit .mini label{font-size:11px}
 .item-edit .mini input{padding:8px 6px;font-size:15px;text-align:center}
 .photo-prev{width:100%;max-height:240px;object-fit:cover;border-radius:14px;display:block;margin-bottom:10px}
@@ -936,7 +937,7 @@ function viewAuth() {
   return `<div class="auth">
     <img class="logo" src="icons/logo.png" alt="">
     <h1>Minimal Health Tracker</h1>
-    <p class="sub">Your weight-loss tracker · v70</p>
+    <p class="sub">Your weight-loss tracker · v71</p>
     <div class="seg">
       <button data-act="authMode" data-v="login" class="${login ? 'on' : ''}">Log in</button>
       <button data-act="authMode" data-v="create" class="${!login ? 'on' : ''}">Create account</button>
@@ -1938,7 +1939,7 @@ function viewProfile() {
       <button class="btn blue block" data-act="exportXlsx">⬇️ Export to Excel</button>
     </div>
     <button class="btn danger block" data-act="logout" style="margin-top:6px">Log out</button>
-    <p class="explain" style="text-align:center;margin-top:14px">Minimal Health Tracker v70 · estimates only, not medical advice</p>
+    <p class="explain" style="text-align:center;margin-top:14px">Minimal Health Tracker v71 · estimates only, not medical advice</p>
   </main>`;
 }
 
@@ -1994,12 +1995,12 @@ function itemsBlock() {
   return `${sh.mode === 'photo' ? '<p class="muted" style="font-size:14px;margin:0 0 8px">Check each item. Fix the name or weight if it\'s wrong — calories update automatically.</p>' : ''}
     ${items.map((it, i) => `<div class="item-edit">
       <div class="row"><input class="grow" style="margin:0" data-it="${i}" data-k="name" value="${esc(it.name)}" placeholder="Food name">${edit ? '' : `<button class="x" data-act="itemDel" data-i="${i}" aria-label="Remove">✕</button>`}</div>
-      <div class="mini">
+      <div class="mini${it.source !== 'manual' ? ' two' : ''}">
         <label>Grams<input type="number" step="any" inputmode="decimal" data-it="${i}" data-k="grams" id="it${i}grams" value="${r0(it.grams)}"></label>
         <label>kcal<input type="number" step="any" inputmode="decimal" data-it="${i}" data-k="kcal" id="it${i}kcal" value="${r0(it.kcal)}"></label>
-        <label>Protein<input type="number" step="any" inputmode="decimal" data-it="${i}" data-k="protein" id="it${i}protein" value="${r1(it.protein)}"></label>
+        ${it.source !== 'manual' ? '' : `<label>Protein<input type="number" step="any" inputmode="decimal" data-it="${i}" data-k="protein" id="it${i}protein" value="${r1(it.protein)}"></label>
         <label>Carbs<input type="number" step="any" inputmode="decimal" data-it="${i}" data-k="carbs" id="it${i}carbs" value="${r1(it.carbs)}"></label>
-        <label>Fat<input type="number" step="any" inputmode="decimal" data-it="${i}" data-k="fat" id="it${i}fat" value="${r1(it.fat)}"></label>
+        <label>Fat<input type="number" step="any" inputmode="decimal" data-it="${i}" data-k="fat" id="it${i}fat" value="${r1(it.fat)}"></label>`}
       </div>
       <div id="it${i}mc" style="margin-top:8px">${itemChips(it)}</div></div>`).join('')}
     ${sh.check ? checkTotals(items) : ''}
