@@ -937,7 +937,7 @@ function viewAuth() {
   return `<div class="auth">
     <img class="logo" src="icons/logo.png" alt="">
     <h1>Minimal Health Tracker</h1>
-    <p class="sub">Your weight-loss tracker · v71</p>
+    <p class="sub">Your weight-loss tracker · v72</p>
     <div class="seg">
       <button data-act="authMode" data-v="login" class="${login ? 'on' : ''}">Log in</button>
       <button data-act="authMode" data-v="create" class="${!login ? 'on' : ''}">Create account</button>
@@ -1721,7 +1721,7 @@ function quickCard(t) {
       <div class="q-sec">
         <div class="q-h"><b>🔍 Check a food</b><small class="muted">see kcal before you eat</small></div>
         <div class="photo-btns three">
-          <label class="btn primary">📸 Take photo<input type="file" accept="image/*" capture="environment" class="food-check-input" aria-label="Take photo to check food"></label>
+          <label class="btn primary">📸 Photo<input type="file" accept="image/*" capture="environment" class="food-check-input" aria-label="Take photo to check food"></label>
           <label class="btn">🖼️ Gallery<input type="file" accept="image/*" multiple class="food-check-input" aria-label="Choose 1 or 2 photos to check food"></label>
           <button class="btn" data-act="openWheyQ">💪 Whey</button>
         </div>
@@ -1939,7 +1939,7 @@ function viewProfile() {
       <button class="btn blue block" data-act="exportXlsx">⬇️ Export to Excel</button>
     </div>
     <button class="btn danger block" data-act="logout" style="margin-top:6px">Log out</button>
-    <p class="explain" style="text-align:center;margin-top:14px">Minimal Health Tracker v71 · estimates only, not medical advice</p>
+    <p class="explain" style="text-align:center;margin-top:14px">Minimal Health Tracker v72 · estimates only, not medical advice</p>
   </main>`;
 }
 
