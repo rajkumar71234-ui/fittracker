@@ -937,7 +937,7 @@ function viewAuth() {
   return `<div class="auth">
     <img class="logo" src="icons/logo.png" alt="">
     <h1>Minimal Health Tracker</h1>
-    <p class="sub">Your weight-loss tracker · v72</p>
+    <p class="sub">Your weight-loss tracker · v73</p>
     <div class="seg">
       <button data-act="authMode" data-v="login" class="${login ? 'on' : ''}">Log in</button>
       <button data-act="authMode" data-v="create" class="${!login ? 'on' : ''}">Create account</button>
@@ -1852,28 +1852,6 @@ function viewBurn() {
         return `<button class="li" data-act="editWorkout" data-id="${w.id}"><span>${m.icon} ${esc(w.name)} <small>${r0(w.minutes)} min${w.speed ? ` · ${w.speed} km/h` : ''}${w.incline ? ` · ${w.incline}%` : ''}${w.intensity != null && m.calc !== 'tread' && m.calc !== 'custom' ? ' · ' + INTENSITY[w.intensity] : ''}</small></span><span class="r">${r0(w.kcal)} kcal</span></button>`;
       }).join('') : '<p class="muted" style="margin:0;font-size:14px">No workout yet. Tap + Add and pick the gym equipment you used.</p>'}
     </div>
-    <div class="card"><h3>Steps walked</h3>
-      ${d.steps ? `<div class="kv" style="margin-bottom:8px"><span>Saved for this day</span><span class="good">${Number(d.steps).toLocaleString('en-IN')} steps · ${r0(st.stepsK)} kcal</span></div>` : ''}
-      <div class="grid2 field">
-        <label>Steps<input id="stepsIn" type="number" inputmode="numeric" value="${d.steps ?? ''}" placeholder="e.g. 7000"></label>
-        <label>Calories burned<input id="stepsKcal" type="number" inputmode="decimal" value="${d.steps ? r0(st.stepsK) : ''}" placeholder="auto"></label>
-      </div>
-      <p class="explain" id="stepsHint" style="margin-top:-4px">≈ ${r1(stepKcal(st.w) * 1000)} kcal per 1,000 steps at ${r1(st.w)} kg. Check the calories, change them if your watch says different, then confirm.</p>
-      <button class="btn primary block" data-act="saveSteps">Confirm &amp; save steps</button>
-    </div>
-    <div class="card"><h3>Weight</h3>
-      <div class="photo-btns" style="margin-bottom:8px">
-        <label class="btn primary">📸 Scan weight<input type="file" accept="image/*" capture="environment" class="scale-photo-input" data-slot="0" aria-label="Photo of the scale display"></label>
-        <label class="btn">🖼️ Gallery<input type="file" accept="image/*" multiple class="scale-photo-input" data-slot="0" aria-label="Scale photo or Dr Trust screenshot"></label>
-      </div>
-      <p class="explain" style="margin:0 0 10px">Photo of the scale display (and optionally a Dr Trust app screenshot) → tap Read weight → check → Save. Or type it below.</p>
-      ${d.body ? `<div class="chips" style="margin-bottom:10px">${bodyChips(d.body)}</div>` : ''}
-      <form id="bodyForm" onsubmit="return false">
-        <div class="field"><label>Body weight today (kg)<input name="weight" type="number" step="any" inputmode="decimal" value="${d.weight ?? ''}" placeholder="${r1(weightOn(date))}"></label></div>
-        <button class="btn primary block" data-act="saveBody">Save weight</button>
-      </form>
-    </div>
-    ${needsCard(date)}
   </main>`;
 }
 
@@ -1939,7 +1917,7 @@ function viewProfile() {
       <button class="btn blue block" data-act="exportXlsx">⬇️ Export to Excel</button>
     </div>
     <button class="btn danger block" data-act="logout" style="margin-top:6px">Log out</button>
-    <p class="explain" style="text-align:center;margin-top:14px">Minimal Health Tracker v72 · estimates only, not medical advice</p>
+    <p class="explain" style="text-align:center;margin-top:14px">Minimal Health Tracker v73 · estimates only, not medical advice</p>
   </main>`;
 }
 
