@@ -99,6 +99,20 @@ input[type=date]::-webkit-calendar-picker-indicator{opacity:.5}
 .datebar{display:flex;align-items:center;justify-content:space-between;margin:2px 0 12px}
 .datebar button{width:40px;height:40px;border-radius:12px;background:var(--card);font-size:22px;box-shadow:var(--shadow)}
 .datebar button:disabled{opacity:.35}
+.datebar .dpick{flex:1;width:auto;height:auto;background:none;box-shadow:none;font-size:inherit;padding:2px 6px;text-align:center}
+.datebar .dtoday{width:auto;font-size:13px;font-weight:700;padding:0 10px;margin-right:6px;background:var(--blue);color:#fff}
+.datebar .dtoday.on{background:var(--blue-soft);color:var(--blue-dark)}
+.cal-h{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
+.cal-h b{font-size:17px}
+.cal-h .round:disabled{opacity:.35}
+.cal-g{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;text-align:center}
+.cal-w span{font-size:12px;font-weight:700;color:var(--muted);padding:4px 0}
+.cal-d{position:relative;height:42px;border-radius:12px;font-weight:600;font-size:15px;background:var(--input);color:var(--text)}
+.cal-d i{position:absolute;left:50%;bottom:5px;width:5px;height:5px;margin-left:-2.5px;border-radius:50%;background:var(--accent)}
+.cal-d.tdy{box-shadow:inset 0 0 0 2px var(--blue)}
+.cal-d.sel{background:var(--blue);color:#fff}
+.cal-d.sel i{background:#fff}
+.cal-d.fut{opacity:.3}
 .datebar div{text-align:center}
 .datebar b{display:block;font-size:17px}
 .datebar small{font-size:13px}
@@ -939,7 +953,7 @@ function viewAuth() {
   return `<div class="auth">
     <img class="logo" src="icons/logo.png" alt="">
     <h1>Minimal Health Tracker</h1>
-    <p class="sub">Your weight-loss tracker · v83</p>
+    <p class="sub">Your weight-loss tracker · v84</p>
     <div class="seg">
       <button data-act="authMode" data-v="login" class="${login ? 'on' : ''}">Log in</button>
       <button data-act="authMode" data-v="create" class="${!login ? 'on' : ''}">Create account</button>
@@ -1521,7 +1535,8 @@ function dateBar() {
   const dn = diffDays(p.startDate, date) + 1;
   return `<div class="datebar">
       <button data-act="prevDay" aria-label="Previous day">‹</button>
-      <div><b>${date === t ? 'Today' : niceDate(date)}</b><small class="muted">${dn >= 1 && dn <= p.targetDays ? `Day ${dn} of ${p.targetDays}` : dn < 1 ? `Plan starts ${niceDate(p.startDate, { day: 'numeric', month: 'short' })}` : 'After your plan'} · ${niceDate(date, { day: 'numeric', month: 'short', year: 'numeric' })}</small></div>
+      <button class="dpick" data-act="openCal" aria-label="Pick a date"><b>📅 ${date === t ? 'Today' : niceDate(date)}</b><small class="muted">${dn >= 1 && dn <= p.targetDays ? `Day ${dn} of ${p.targetDays}` : dn < 1 ? `Plan starts ${niceDate(p.startDate, { day: 'numeric', month: 'short' })}` : 'After your plan'} · ${niceDate(date, { day: 'numeric', month: 'short', year: 'numeric' })}</small></button>
+      <button class="dtoday${date === t ? ' on' : ''}" data-act="goTodayDate" aria-label="Back to today">Today</button>
       <button data-act="nextDay" ${date >= t ? 'disabled' : ''} aria-label="Next day">›</button>
     </div>`;
 }
@@ -1820,6 +1835,29 @@ function sheetReading() {
     </div>
     <button class="btn primary block" data-act="saveReading">Save</button>`;
 }
+function sheetCal() {
+  const sh = S.sheet, [y, m] = sh.month.split('-').map(Number), t = todayStr();
+  const first = new Date(y, m - 1, 1), days = new Date(y, m, 0).getDate(), lead = (first.getDay() + 6) % 7; // Monday first
+  const thisMonth = t.slice(0, 7), monthKey = sh.month;
+  let cells = '';
+  for (let i = 0; i < lead; i++) cells += '<span></span>';
+  for (let d = 1; d <= days; d++) {
+    const ds = `${y}-${String(m).padStart(2, '0')}-${String(d).padStart(2, '0')}`, dd = S.data.days[ds];
+    const has = dd && ((dd.meals || []).length || (dd.workouts || []).length || dd.weight || dd.steps);
+    const cls = [ds === S.date ? 'sel' : '', ds === t ? 'tdy' : '', ds > t ? 'fut' : ''].join(' ');
+    cells += `<button class="cal-d ${cls}" ${ds > t ? 'disabled' : `data-act="pickDate" data-v="${ds}"`}>${d}${has ? '<i></i>' : ''}</button>`;
+  }
+  return `<div class="sheet-h"><h2>📅 Pick a date</h2><button class="x" data-act="closeSheet">✕</button></div>
+    <div class="card">
+      <div class="cal-h"><button class="round" data-act="calMonth" data-v="-1" aria-label="Previous month">‹</button>
+        <b>${first.toLocaleDateString('en-IN', { month: 'long', year: 'numeric' })}</b>
+        <button class="round" data-act="calMonth" data-v="1" ${monthKey >= thisMonth ? 'disabled' : ''} aria-label="Next month">›</button></div>
+      <div class="cal-g cal-w">${['M', 'T', 'W', 'T', 'F', 'S', 'S'].map(x => `<span>${x}</span>`).join('')}</div>
+      <div class="cal-g">${cells}</div>
+      <p class="explain" style="margin:10px 0 0">A dot means something was logged that day.</p>
+    </div>
+    <button class="btn primary block" data-act="pickDate" data-v="${t}">Go to today</button>`;
+}
 function sheetAddWeight() {
   const sh = S.sheet, now = sh.at, prev = weightOn(todayStr());
   return `<div class="sheet-h"><h2>⚖️ Add weight</h2><button class="x" data-act="closeSheet">✕</button></div>
@@ -1975,7 +2013,7 @@ function viewProfile() {
       <button class="btn blue block" data-act="exportXlsx">⬇️ Export to Excel</button>
     </div>
     <button class="btn danger block" data-act="logout" style="margin-top:6px">Log out</button>
-    <p class="explain" style="text-align:center;margin-top:14px">Minimal Health Tracker v83 · estimates only, not medical advice</p>
+    <p class="explain" style="text-align:center;margin-top:14px">Minimal Health Tracker v84 · estimates only, not medical advice</p>
   </main>`;
 }
 
@@ -2350,7 +2388,7 @@ function onWorkoutInput(t) {
 function renderSheet() {
   const root = $('#sheet-root');
   if (!S.sheet) { root.innerHTML = ''; document.body.classList.remove('lock'); return; }
-  const inner = S.sheet.kind === 'food' ? sheetFood() : S.sheet.kind === 'confirm' ? sheetConfirm() : S.sheet.kind === 'scale' ? sheetScale() : S.sheet.kind === 'weight' ? sheetAddWeight() : S.sheet.kind === 'steps' ? sheetSteps() : S.sheet.kind === 'wheyq' ? sheetWheyQ() : S.sheet.kind === 'reading' ? sheetReading() : sheetWorkout();
+  const inner = S.sheet.kind === 'food' ? sheetFood() : S.sheet.kind === 'confirm' ? sheetConfirm() : S.sheet.kind === 'scale' ? sheetScale() : S.sheet.kind === 'weight' ? sheetAddWeight() : S.sheet.kind === 'steps' ? sheetSteps() : S.sheet.kind === 'wheyq' ? sheetWheyQ() : S.sheet.kind === 'cal' ? sheetCal() : S.sheet.kind === 'reading' ? sheetReading() : sheetWorkout();
   const existing = $('.sheet', root);
   if (existing) { const st = existing.scrollTop; existing.innerHTML = '<div class="grab"></div>' + inner; existing.scrollTop = st; }
   else root.innerHTML = `<div class="sheet-backdrop" data-act="closeSheet" data-backdrop="1"><div class="sheet"><div class="grab"></div>${inner}</div></div>`;
@@ -2391,6 +2429,10 @@ const ACT = {
   tab(el) { S.tab = el.dataset.v; render(); toTop(); },
   goToday() { S.tab = 'food'; S.date = todayStr(); render(); toTop(); },
   openDay(el) { S.tab = 'food'; S.date = el.dataset.v; render(); toTop(); },
+  openCal() { S.sheet = { kind: 'cal', month: S.date.slice(0, 7) }; renderSheet(); },
+  calMonth(el) { const [y, m] = S.sheet.month.split('-').map(Number), d = new Date(y, m - 1 + Number(el.dataset.v), 1); const k = d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0'); if (k <= todayStr().slice(0, 7)) { S.sheet.month = k; renderSheet(); } },
+  pickDate(el) { S.date = el.dataset.v; S.sheet = null; render(); toTop(); },
+  goTodayDate() { S.date = todayStr(); render(); toTop(); },
   prevDay() { S.date = addDays(S.date, -1); render(); },
   nextDay() { if (S.date < todayStr()) { S.date = addDays(S.date, 1); render(); } },
   syncInfo() {
@@ -2852,7 +2894,7 @@ async function boot() {
 boot();
 
 // expose for testing
-window.__fittrack = { sheetReading, healthCard, suggestSlot, sheetWheyQ, sheetSteps, quickCard, sheetAddWeight, calcCard, openScaleSheet, analyseScaleRun, sheetScale, maybeHashWeight, sheetConfirm, viewBurn, addPhotosToSheet, openWorkoutSheet, sheetWorkout, runAnalysis, sheetFood, viewHome, viewFood, viewToday, viewMeds, wheyCard, ACT, profileForm, startWorkoutPhoto, sheetWorkout, FOOD, nutritionCard, needsCard, todayTable, viewSuggest, viewHome, viewFood, viewBurn, sheetWorkout, bmiOf, bmiCat, fatPct, bmr, treadKcal, bikeKcal, wkSuggest, S, plan, dayStats };
+window.__fittrack = { sheetCal, dateBar, sheetReading, healthCard, suggestSlot, sheetWheyQ, sheetSteps, quickCard, sheetAddWeight, calcCard, openScaleSheet, analyseScaleRun, sheetScale, maybeHashWeight, sheetConfirm, viewBurn, addPhotosToSheet, openWorkoutSheet, sheetWorkout, runAnalysis, sheetFood, viewHome, viewFood, viewToday, viewMeds, wheyCard, ACT, profileForm, startWorkoutPhoto, sheetWorkout, FOOD, nutritionCard, needsCard, todayTable, viewSuggest, viewHome, viewFood, viewBurn, sheetWorkout, bmiOf, bmiCat, fatPct, bmr, treadKcal, bikeKcal, wkSuggest, S, plan, dayStats };
 })();
 </script>
 </body>
