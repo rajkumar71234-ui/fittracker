@@ -938,7 +938,7 @@ function viewAuth() {
   return `<div class="auth">
     <img class="logo" src="icons/logo.png" alt="">
     <h1>Minimal Health Tracker</h1>
-    <p class="sub">Your weight-loss tracker · v78</p>
+    <p class="sub">Your weight-loss tracker · v79</p>
     <div class="seg">
       <button data-act="authMode" data-v="login" class="${login ? 'on' : ''}">Log in</button>
       <button data-act="authMode" data-v="create" class="${!login ? 'on' : ''}">Create account</button>
@@ -1305,13 +1305,17 @@ function summaryCard(st) {
   const burnNeed = Math.max(0, ate - body + need), done = r0(st.exNet) + r0(st.stepsK), left = burnNeed - done;
   const fmt = v => r0(v).toLocaleString('en-IN');
   return `<div class="card">
+    <h3 style="justify-content:center;margin-bottom:12px">Burn required <small class="muted">· based on yesterday's eating</small></h3>
     <div class="sum-grid four">
       <div><small class="muted">Ate yesterday</small><b>${fmt(ate)}</b><span>kcal</span></div>
       <div><small class="muted">Body uses</small><b>${fmt(body)}</b><span>kcal</span></div>
       <div><small class="muted">Deficit req.</small><b>${fmt(need)}</b><span>kcal</span></div>
       <div><small class="muted">Burn need</small><b style="color:var(--blue-dark)">${fmt(burnNeed)}</b><span>kcal</span></div>
     </div>
-    <div class="sum-foot ${left <= 0 ? 'good' : 'bad'}">Burned ${fmt(done)} kcal · ${left <= 0 ? `done ✓${left < 0 ? ' +' + fmt(-left) + ' extra' : ''}` : `${fmt(left)} kcal still to burn`}</div>
+    <div class="sum-grid" style="grid-template-columns:1fr 1fr;margin-top:14px;padding-top:12px;border-top:1px solid var(--line)">
+      <div><small class="muted">Today burned</small><b class="good">${fmt(done)}</b><span>kcal</span></div>
+      <div><small class="muted">${left <= 0 ? 'Done ✓' : 'Still to burn'}</small><b class="${left <= 0 ? 'good' : 'bad'}">${left <= 0 ? (left < 0 ? '+' + fmt(-left) : '0') : fmt(left)}</b><span>${left < 0 ? 'kcal extra' : 'kcal'}</span></div>
+    </div>
     <p class="explain" style="text-align:center;margin:6px 0 0">Burn need = Ate yesterday ${fmt(ate)} − Body uses ${fmt(body)} + Deficit req. ${fmt(need)}</p>
   </div>`;
 }
@@ -1931,7 +1935,7 @@ function viewProfile() {
       <button class="btn blue block" data-act="exportXlsx">⬇️ Export to Excel</button>
     </div>
     <button class="btn danger block" data-act="logout" style="margin-top:6px">Log out</button>
-    <p class="explain" style="text-align:center;margin-top:14px">Minimal Health Tracker v78 · estimates only, not medical advice</p>
+    <p class="explain" style="text-align:center;margin-top:14px">Minimal Health Tracker v79 · estimates only, not medical advice</p>
   </main>`;
 }
 
