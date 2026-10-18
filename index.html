@@ -96,6 +96,9 @@ input[type=date]::-webkit-calendar-picker-indicator{opacity:.5}
 .tabbar button{flex:1;min-width:0;display:flex;flex-direction:column;align-items:center;gap:2px;padding:8px 0 6px;font-size:10.5px;font-weight:600;color:var(--muted);letter-spacing:-.01em}
 .tabbar button.on{color:var(--blue)}
 .tabbar svg{width:25px;height:25px}
+.viewbar{position:sticky;top:0;z-index:19;margin:0 16px 8px;padding:8px 12px;border-radius:12px;background:var(--warn-soft);color:var(--warn);font-size:14px;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.viewbar b{color:var(--text)}
+.viewbar button{margin-left:auto;background:var(--blue);color:#fff;border-radius:10px;padding:6px 10px;font-weight:700;font-size:13px}
 .datebar{display:flex;align-items:center;justify-content:space-between;margin:2px 0 12px}
 .datebar button{width:40px;height:40px;border-radius:12px;background:var(--card);font-size:22px;box-shadow:var(--shadow)}
 .datebar button:disabled{opacity:.35}
@@ -244,6 +247,9 @@ table.today-t td:last-child,table.today-t th:last-child{width:19%}
 <div id="sheet-root"></div>
 <div id="toast" class="toast"></div>
 
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
 <script>
 (function () {
 'use strict';
@@ -622,6 +628,7 @@ function siteRepo() {
 function P() { return S.data && S.data.profile; }
 function dayOf(date) { return (S.data.days[date]) || { meals: [], workouts: [], water: 0 }; }
 function mutateDay(date, fn, delay) {
+  if (S.viewing) throw fail('View only — tap "Back to admin" to return to your own account.');
   const d = S.data.days[date] || (S.data.days[date] = { meals: [], workouts: [], water: 0 });
   d.meals = d.meals || []; d.workouts = d.workouts || [];
   fn(d); d.updated = new Date().toISOString();
@@ -741,9 +748,48 @@ function plan() {
 }
 
 /* ================================================================
-   SAVING (to GitHub, with conflict merge + temporary outbox)
+   CLOUD (Firebase Auth + Firestore) — free Spark plan
    ================================================================ */
-function outboxKey() { return 'ft_outbox_' + (S.session ? S.session.username : ''); }
+const FB_CONFIG = { apiKey: 'AIzaSyB9Q7DZ2Qw6sQfbnflqZtYL9MX6Q2T4BLw', authDomain: 'minimal-health-tracker.firebaseapp.com', projectId: 'minimal-health-tracker',
+  storageBucket: 'minimal-health-tracker.firebasestorage.app', messagingSenderId: '869034826172', appId: '1:869034826172:web:6b1d903e2f3ef8e250b3b9' };
+const ADMIN_EMAIL = 'rajkumar71234@gmail.com';
+let fbAuth = null, fbDb = null;
+function fbInit() {
+  if (fbAuth || !window.firebase) return;
+  firebase.initializeApp(FB_CONFIG);
+  fbAuth = firebase.auth(); fbDb = firebase.firestore();
+  try { fbAuth.setPersistence(firebase.auth.Auth.Persistence.LOCAL); } catch (e) {}
+}
+function isAdmin() { const u = fbAuth && fbAuth.currentUser; return !!(u && u.emailVerified && (u.email || '').toLowerCase() === ADMIN_EMAIL); }
+function userRef(uid) { return fbDb.collection('users').doc(uid); }
+function clean(o) { return JSON.parse(JSON.stringify(o, (k, v) => v === undefined ? undefined : v)); }
+function fbErr(e) {
+  const c = (e && e.code) || '';
+  const map = { 'auth/invalid-email': 'That email address looks wrong.', 'auth/user-not-found': 'No account with that email.', 'auth/wrong-password': 'Wrong password.',
+    'auth/invalid-credential': 'Wrong email or password.', 'auth/invalid-login-credentials': 'Wrong email or password.', 'auth/email-already-in-use': 'An account with this email already exists — log in instead.',
+    'auth/weak-password': 'Password must be at least 6 characters.', 'auth/too-many-requests': 'Too many tries — wait a few minutes and try again.',
+    'auth/network-request-failed': 'No internet connection.', 'permission-denied': 'Not allowed — please verify your email first.', 'unavailable': 'No internet connection.' };
+  return fail(map[c] || (e && e.message) || 'Something went wrong.');
+}
+async function fbLoadUser(uid) {
+  const ref = userRef(uid);
+  const [doc, days] = await Promise.all([ref.get(), ref.collection('days').get()]);
+  const data = { version: 2, profile: null, days: {}, meta: {} };
+  if (doc.exists) { const x = doc.data(); data.profile = x.profile || null; data.meta = { legacy: x.legacy || null, email: x.email || '', updated: x.updated || '', created: x.created || '', lastActive: x.lastActive || '' }; }
+  days.forEach(d => { data.days[d.id] = d.data(); });
+  return { data, exists: doc.exists };
+}
+async function fbWriteAll(uid, profile, days, extra) {      // used when linking an old account
+  const ref = userRef(uid), keys = Object.keys(days || {});
+  for (let i = 0; i < keys.length; i += 400) {
+    const b = fbDb.batch();
+    keys.slice(i, i + 400).forEach(k => b.set(ref.collection('days').doc(k), clean(days[k])));
+    await b.commit();
+  }
+  await ref.set(clean(Object.assign({ profile: profile || null, updated: new Date().toISOString() }, extra || {})), { merge: true });
+}
+
+function outboxKey() { return 'ft_outbox_' + (S.session ? S.session.uid : ''); }
 function writeOutbox() {
   const days = {}; S.dirtyDays.forEach(k => { if (S.data.days[k]) days[k] = S.data.days[k]; });
   LS.set(outboxKey(), { days, profile: S.profileDirty ? S.data.profile : null, at: Date.now() });
@@ -757,34 +803,25 @@ function applyOutbox() {
 }
 function setSync(state, msg) { S.sync = state; S.syncMsg = msg || ''; const el = $('#syncPill'); if (el) el.outerHTML = syncPill(); }
 function scheduleSave(delay) {
+  if (S.viewing) return;
   writeOutbox(); setSync('saving');
   clearTimeout(S.saveTimer); S.saveTimer = setTimeout(syncNow, delay == null ? 400 : delay);
 }
 async function syncNow() {
   clearTimeout(S.saveTimer); clearTimeout(S.retryTimer);
-  if (!S.session || !S.data) return;
+  if (!S.session || !S.data || S.viewing) return;
   if (!S.dirtyDays.size && !S.profileDirty) { setSync('ok'); return; }
   if (S.saving) { S.pendingSave = true; return; }
   S.saving = true; setSync('saving');
-  const s = S.session;
-  const dirtyNow = new Set(S.dirtyDays), profNow = S.profileDirty;
-  const msg = 'Log ' + ([...dirtyNow].sort().join(', ') || 'profile');
+  const s = S.session, dirtyNow = new Set(S.dirtyDays), profNow = S.profileDirty;
   try {
-    S.data.updated = new Date().toISOString();
-    try {
-      S.sha = await GH.put(s.owner, s.dataRepo, s.dataPath, JSON.stringify(S.data, null, 1), S.sha, msg, s.token);
-    } catch (e) {
-      if (e.status !== 409 && e.status !== 422) throw e;
-      // someone (another device) saved first → merge our changed days on top of theirs
-      const remote = await GH.get(s.owner, s.dataRepo, s.dataPath, s.token);
-      if (remote) {
-        const rd = JSON.parse(remote.text); rd.days = rd.days || {};
-        dirtyNow.forEach(k => { rd.days[k] = S.data.days[k]; });
-        if (profNow) rd.profile = S.data.profile;
-        S.data = rd;
-      }
-      S.sha = await GH.put(s.owner, s.dataRepo, s.dataPath, JSON.stringify(S.data, null, 1), remote ? remote.sha : null, msg + ' (merged)', s.token);
-    }
+    const ref = userRef(s.uid), b = fbDb.batch(), now = new Date().toISOString();
+    dirtyNow.forEach(k => { const d = S.data.days[k]; if (d) b.set(ref.collection('days').doc(k), clean(d)); else b.delete(ref.collection('days').doc(k)); });
+    const top = { updated: now, email: s.email, lastActive: todayStr() };
+    if (profNow) top.profile = S.data.profile;
+    b.set(ref, clean(top), { merge: true });
+    await b.commit();
+    S.data.meta = Object.assign(S.data.meta || {}, { updated: now });
     dirtyNow.forEach(k => S.dirtyDays.delete(k));
     if (profNow) S.profileDirty = false;
     if (!S.dirtyDays.size && !S.profileDirty) LS.del(outboxKey()); else writeOutbox();
@@ -792,8 +829,7 @@ async function syncNow() {
   } catch (e) {
     console.error(e);
     writeOutbox();
-    setSync('err', e.message);
-    if (e.status === 401) toast('GitHub token expired — update it in Profile → App settings.', 'bad');
+    setSync('err', fbErr(e).message);
     S.retryTimer = setTimeout(syncNow, 20000);
   } finally {
     S.saving = false;
@@ -803,11 +839,15 @@ async function syncNow() {
 window.addEventListener('hashchange', () => { if (S.screen === 'main') maybeHashWeight(); });
 window.addEventListener('online', () => { if (S.dirtyDays.size || S.profileDirty) syncNow(); });
 
-async function refreshFromGitHub(quiet) {
-  if (!S.session || S.saving || S.dirtyDays.size || S.profileDirty || S.screen !== 'main') return;
+async function refreshFromGitHub(quiet) {     // (name kept) — reload from the cloud if another device saved
+  if (!S.session || S.viewing || S.saving || S.dirtyDays.size || S.profileDirty || S.screen !== 'main') return;
   try {
-    const s = S.session; const f = await GH.get(s.owner, s.dataRepo, s.dataPath, s.token);
-    if (f && f.sha !== S.sha) { S.data = JSON.parse(f.text); S.data.days = S.data.days || {}; S.sha = f.sha; if (!S.sheet) render(); if (!quiet) toast('Updated from GitHub'); }
+    const doc = await userRef(S.session.uid).get();
+    const up = doc.exists ? (doc.data().updated || '') : '';
+    if (up && up !== ((S.data.meta || {}).updated || '')) {
+      const r = await fbLoadUser(S.session.uid); S.data = r.data;
+      if (!S.sheet) render(); if (!quiet) toast('Updated from the cloud');
+    }
   } catch (e) { /* ignore background refresh errors */ }
 }
 document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') refreshFromGitHub(true); });
@@ -865,80 +905,104 @@ async function doSetup(btn) {
   toast('Setup done — now create your account', 'good');
 }
 
+function authEmail(f) { return String(f.email || '').trim().toLowerCase(); }
 async function doCreate(btn) {
-  const f = formVals('#createForm');
-  const u = (f.username || '').toLowerCase();
-  if (!/^[a-z0-9][a-z0-9_.-]{2,29}$/.test(u)) throw fail('Username: 3–30 letters or numbers, no spaces.');
+  const f = formVals('#createForm'), email = authEmail(f);
+  if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) throw fail('Enter a valid email address.');
   if ((f.password || '').length < 6) throw fail('Password must be at least 6 characters.');
-  if (!CONFIG) throw fail('App is not set up yet.');
+  if (f.password !== f.password2) throw fail('The two passwords do not match.');
   busy(btn, 'Creating account…');
-  const c = CONFIG, path = `users/${u}.json`;
-  if (await GH.get(c.owner, c.dataRepo, path, c.token)) throw fail('That username is taken — log in instead.');
-  const salt = crypto.getRandomValues(new Uint8Array(16));
-  const rec = { username: u, salt: bytesToB64(salt), iter: PBKDF2_ITER, hash: await pwHash(f.password, salt, PBKDF2_ITER), created: new Date().toISOString() };
-  await GH.put(c.owner, c.dataRepo, path, JSON.stringify(rec, null, 1), null, `Create account ${u}`, c.token);
-  toast('Account created', 'good');
-  await startSession(sessionFor(u), true);
+  try {
+    const cred = await fbAuth.createUserWithEmailAndPassword(email, f.password);
+    await cred.user.sendEmailVerification();
+  } catch (e) { throw fbErr(e); }
+  S.screen = 'verify'; render();
+  toast('Verification email sent — check your inbox', 'good');
 }
-
 async function doLogin(btn) {
-  const f = formVals('#loginForm');
-  const u = (f.username || '').toLowerCase();
-  if (!u || !f.password) throw fail('Enter username and password.');
-  if (!CONFIG) throw fail('App is not set up yet.');
+  const f = formVals('#loginForm'), email = authEmail(f);
+  if (!email || !f.password) throw fail('Enter your email and password.');
   busy(btn, 'Signing in…');
-  const c = CONFIG;
-  const r = await GH.get(c.owner, c.dataRepo, `users/${u}.json`, c.token);
-  if (!r) throw fail('No account with that username.');
-  const rec = JSON.parse(r.text);
-  if (await pwHash(f.password, b64ToBytes(rec.salt), rec.iter || PBKDF2_ITER) !== rec.hash) throw fail('Wrong password.');
-  await startSession(sessionFor(u), true);
+  try { await fbAuth.signInWithEmailAndPassword(email, f.password); } catch (e) { throw fbErr(e); }
+  // onAuthStateChanged takes it from here
 }
-
-function rememberUser(u) {
-  LS.set('ft_user', u);
-  try { document.cookie = 'ft_user=' + encodeURIComponent(u) + '; max-age=31536000; path=/; SameSite=Lax; Secure'; } catch (e) {}
-}
-function rememberedUser() {
-  const a = LS.get('ft_user'); if (a) return a;
-  try { const m = document.cookie.match(/(?:^|; )ft_user=([^;]+)/); return m ? decodeURIComponent(m[1]) : null; } catch (e) { return null; }
+async function doForgot(btn) {
+  const f = formVals('#forgotForm'), email = authEmail(f);
+  if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) throw fail('Enter the email you signed up with.');
+  busy(btn, 'Sending…');
+  try { await fbAuth.sendPasswordResetEmail(email); } catch (e) { if (e.code !== 'auth/user-not-found') throw fbErr(e); }
+  S.authMode = 'login'; render();
+  toast('If that email has an account, a reset link is on its way. Open it, set a new password, then log in.', 'good');
 }
 function forgetUser() {
-  LS.del('ft_user');
+  LS.del('ft_user'); LS.del('ft_session'); SS.del('ft_session');
   try { document.cookie = 'ft_user=; max-age=0; path=/; SameSite=Lax; Secure'; } catch (e) {}
 }
-async function startSession(secret, keep) {
-  S.session = secret;
-  rememberUser(secret.username);
-  SS.set('ft_session', secret);
-  LS.set('ft_session', secret); // always stay signed in until Log out
+function sessionFor(u) {
+  const c = CONFIG || {};
+  return { uid: u.uid, email: (u.email || '').toLowerCase(), username: u.uid, owner: c.owner, appRepo: c.appRepo, dataRepo: c.dataRepo, token: c.token,
+    apiKey: c.apiKey || '', geminiKey: c.geminiKey || '', model: c.model || DEFAULT_MODEL };
+}
+async function startFbSession(u) {
+  if (S.session && S.session.uid === u.uid && S.screen === 'main') return;
+  if (!CONFIG) { try { CONFIG = await loadConfig(); } catch (e) {} }
+  S.session = sessionFor(u);
   await loadData();
 }
-
 async function loadData() {
-  S.screen = 'loading'; S.loadingMsg = 'Loading your data from GitHub…'; render();
-  if (!CONFIG) { try { CONFIG = await loadConfig(); } catch (e) {} }
-  if (CONFIG) Object.assign(S.session, { owner: CONFIG.owner, appRepo: CONFIG.appRepo, dataRepo: CONFIG.dataRepo, token: CONFIG.token, apiKey: CONFIG.apiKey || '', geminiKey: CONFIG.geminiKey || '', model: CONFIG.model || DEFAULT_MODEL });
+  S.screen = 'loading'; S.loadingMsg = 'Loading your data…'; render();
   const s = S.session;
   try {
-    const f = await GH.get(s.owner, s.dataRepo, s.dataPath, s.token);
-    if (f) { S.data = JSON.parse(f.text); S.sha = f.sha; } else { S.data = { version: 1, profile: null, days: {} }; S.sha = null; }
-    S.data.days = S.data.days || {};
+    const r = await fbLoadUser(s.uid);
+    S.data = r.data;
+    if (S.data.meta && S.data.meta.legacy) s.username = S.data.meta.legacy;           // keeps old photo folder
+    if (!r.exists) await userRef(s.uid).set({ email: s.email, created: new Date().toISOString(), lastActive: todayStr() }, { merge: true });
+    else userRef(s.uid).set({ lastActive: todayStr(), email: s.email }, { merge: true }).catch(() => {});
     const hadOutbox = applyOutbox();
-    S.screen = S.data.profile ? 'main' : 'onboard';
     S.tab = 'home'; S.date = todayStr();
+    if (!S.data.profile && !Object.keys(S.data.days).length) { S.screen = 'link'; render(); return; }
+    S.screen = S.data.profile ? 'main' : 'onboard';
     render();
     if (S.data.profile) maybeHashWeight();
     if (hadOutbox) syncNow(); else setSync('ok');
   } catch (e) {
-    S.screen = 'error'; S.errorMsg = e.message; render();
+    console.error(e);
+    S.screen = 'error'; S.errorMsg = fbErr(e).message; render();
   }
 }
-
+// bring an account from the old (GitHub) app into this login
+async function copyLegacy(oldU, uid, checkPw) {
+  const c = CONFIG;
+  if (!c || !c.token) throw fail('Old data store is not reachable right now. Try again later.');
+  const u = String(oldU || '').trim().toLowerCase();
+  if (!u) throw fail('Enter your old username.');
+  const claim = await fbDb.collection('legacy').doc(u).get().catch(() => null);
+  if (claim && claim.exists && claim.data().uid !== uid) throw fail('That old account is already linked to another email.');
+  const r = await GH.get(c.owner, c.dataRepo, `users/${u}.json`, c.token);
+  if (!r) throw fail('No old account with that username.');
+  if (checkPw != null) {
+    const rec = JSON.parse(r.text);
+    if (await pwHash(checkPw, b64ToBytes(rec.salt), rec.iter || PBKDF2_ITER) !== rec.hash) throw fail('Old password is wrong.');
+  }
+  const f = await GH.get(c.owner, c.dataRepo, `data/${u}.json`, c.token);
+  const old = f ? JSON.parse(f.text) : { profile: null, days: {} };
+  if (!(claim && claim.exists)) await fbDb.collection('legacy').doc(u).set({ uid, at: new Date().toISOString() });
+  await fbWriteAll(uid, old.profile || null, old.days || {}, { legacy: u, linkedAt: new Date().toISOString() });
+  return Object.keys(old.days || {}).length;
+}
+async function doLink(btn) {
+  const f = formVals('#linkForm');
+  if (!f.oldUser || !f.oldPass) throw fail('Enter your old username and password.');
+  busy(btn, 'Bringing your data across…');
+  const n = await copyLegacy(f.oldUser, S.session.uid, f.oldPass);
+  toast(`Done — ${n} days of your data are back`, 'good');
+  await loadData();
+}
 function logout() {
-  if ((S.dirtyDays.size || S.profileDirty) && !confirm('Some changes are not saved to GitHub yet. Log out anyway?')) return;
-  SS.del('ft_session'); LS.del('ft_session'); forgetUser();
-  Object.assign(S, { session: null, data: null, sha: null, screen: 'auth', authMode: 'login', sheet: null, dirtyDays: new Set(), profileDirty: false, sync: 'idle' });
+  if ((S.dirtyDays.size || S.profileDirty) && !confirm('Some changes are not saved yet. Log out anyway?')) return;
+  forgetUser();
+  Object.assign(S, { session: null, data: null, sha: null, screen: 'auth', authMode: 'login', sheet: null, dirtyDays: new Set(), profileDirty: false, sync: 'idle', viewing: null, ownData: null, admin: null });
+  if (fbAuth) fbAuth.signOut().catch(() => {});
   render();
 }
 
@@ -949,28 +1013,77 @@ function unbusy(btn) { if (btn && btn.dataset.label) { btn.disabled = false; btn
    VIEWS — AUTH / LOADING / ONBOARDING
    ================================================================ */
 function viewAuth() {
-  const login = S.authMode === 'login';
+  const m = S.authMode === 'create' ? 'create' : S.authMode === 'forgot' ? 'forgot' : 'login';
   return `<div class="auth">
     <img class="logo" src="icons/logo.png" alt="">
     <h1>Minimal Health Tracker</h1>
-    <p class="sub">Your weight-loss tracker · v85</p>
-    <div class="seg">
-      <button data-act="authMode" data-v="login" class="${login ? 'on' : ''}">Log in</button>
-      <button data-act="authMode" data-v="create" class="${!login ? 'on' : ''}">Create account</button>
-    </div>
+    <p class="sub">Your weight-loss tracker · v86</p>
+    ${m !== 'forgot' ? `<div class="seg">
+      <button data-act="authMode" data-v="login" class="${m === 'login' ? 'on' : ''}">Log in</button>
+      <button data-act="authMode" data-v="create" class="${m === 'create' ? 'on' : ''}">Create account</button>
+    </div>` : ''}
     <div class="card">
-    ${login ? `
+    ${m === 'login' ? `
       <form id="loginForm" onsubmit="return false" autocomplete="on">
-        <div class="field"><label>Username<input name="username" autocomplete="username" autocapitalize="none" autocorrect="off"></label></div>
+        <div class="field"><label>Email<input name="email" type="email" inputmode="email" autocomplete="username" autocapitalize="none" autocorrect="off"></label></div>
         <div class="field"><label>Password<input name="password" type="password" autocomplete="current-password"></label></div>
         <button class="btn primary block" data-act="login">Log in</button>
-      </form>` : `
+      </form>
+      <p style="text-align:center;margin:12px 0 0"><button class="muted" style="font-size:14px;text-decoration:underline" data-act="authMode" data-v="forgot">Forgot password?</button></p>`
+    : m === 'create' ? `
       <form id="createForm" onsubmit="return false" autocomplete="on">
-        <div class="field"><label>Username<input name="username" autocomplete="username" autocapitalize="none" autocorrect="off"></label></div>
-        <div class="field"><label>Password<input name="password" type="password" autocomplete="new-password"></label></div>
+        <div class="field"><label>Email<input name="email" type="email" inputmode="email" autocomplete="username" autocapitalize="none" autocorrect="off"></label></div>
+        <div class="field"><label>New password (6+ characters)<input name="password" type="password" autocomplete="new-password"></label></div>
+        <div class="field"><label>Type the password again<input name="password2" type="password" autocomplete="new-password"></label></div>
         <button class="btn primary block" data-act="create">Create account</button>
-      </form>`}
+      </form>
+      <p class="explain" style="margin:10px 0 0">We'll email you a link to verify. Used the app before? Create your account with your email here — after verifying, you can bring your old data across.</p>`
+    : `
+      <h3 style="margin-bottom:6px">Forgot password</h3>
+      <form id="forgotForm" onsubmit="return false">
+        <div class="field"><label>Your email<input name="email" type="email" inputmode="email" autocomplete="username" autocapitalize="none" autocorrect="off"></label></div>
+        <button class="btn primary block" data-act="forgot">Send reset link</button>
+      </form>
+      <p class="explain" style="margin:10px 0 0">Open the email, set a new password, then come back and log in.</p>
+      <p style="text-align:center;margin:10px 0 0"><button class="muted" style="font-size:14px;text-decoration:underline" data-act="authMode" data-v="login">Back to log in</button></p>`}
     </div>
+    ${m === 'login' ? `<div class="note info" style="margin-top:12px">📢 <b>App update:</b> login is now by email. If you used the app before, tap <b>Create account</b> with your email, verify it, and your old data comes back.</div>` : ''}
+  </div>`;
+}
+function viewVerify() {
+  const u = fbAuth && fbAuth.currentUser;
+  return `<div class="auth">
+    <img class="logo" src="icons/logo.png" alt="">
+    <h1>Verify your email</h1>
+    <p class="sub">We sent a link to <b>${esc(u ? u.email : '')}</b>.</p>
+    <div class="card">
+      <ol style="margin:0 0 12px;padding-left:20px;line-height:1.6">
+        <li>Open your email (check Spam too).</li>
+        <li>Tap the link in the email from Minimal Health Tracker.</li>
+        <li>Come back here and tap the button below.</li>
+      </ol>
+      <button class="btn primary block" data-act="checkVerified">I've verified — continue</button>
+      <button class="btn block" style="margin-top:8px" data-act="resendVerify">Send the email again</button>
+      <p style="text-align:center;margin:12px 0 0"><button class="muted" style="font-size:14px;text-decoration:underline" data-act="logout">Use a different email</button></p>
+    </div>
+  </div>`;
+}
+function viewLink() {
+  return `<div class="auth">
+    <img class="logo" src="icons/logo.png" alt="">
+    <h1>Welcome!</h1>
+    <p class="sub">Signed in as <b>${esc(S.session ? S.session.email : '')}</b></p>
+    <div class="card">
+      <h3>Used the app before?</h3>
+      <p class="explain" style="margin:0 0 10px">Enter your <b>old username and password</b> once — all your old meals, workouts and weights come back.</p>
+      <form id="linkForm" onsubmit="return false" autocomplete="off">
+        <div class="field"><label>Old username<input name="oldUser" autocapitalize="none" autocorrect="off"></label></div>
+        <div class="field"><label>Old password<input name="oldPass" type="password"></label></div>
+        <button class="btn primary block" data-act="linkOld">Bring my data across</button>
+      </form>
+      <p class="explain" style="margin:10px 0 0">Forgot the old password? Ask the app admin — they can bring it across for you.</p>
+    </div>
+    <div class="card"><h3>New here?</h3><button class="btn block" data-act="startFresh">Start fresh</button></div>
   </div>`;
 }
 
@@ -1088,7 +1201,7 @@ function updateProfilePreview() {
 
 function viewOnboard() {
   return `<header class="top"><div class="top-in"><h1>Set up your plan</h1>${syncPill()}</div></header>
-    <main><p class="muted" style="margin:0 4px 12px">Hi ${esc(S.session.username)} — tell me about yourself so I can calculate BMI, body fat and your daily target.</p>${profileForm(null, false)}</main>`;
+    <main><p class="muted" style="margin:0 4px 12px">Hi ${esc(String(S.session.email || '').split('@')[0])} — tell me about yourself so I can calculate BMI, body fat and your daily target.</p>${profileForm(null, false)}</main>`;
 }
 
 /* ================================================================
@@ -1100,6 +1213,7 @@ function syncPill() {
   return `<button class="logo-btn" id="syncPill" data-act="syncInfo" aria-label="${t}"><img src="icons/logo.png" alt="Minimal"></button>`;
 }
 const ICONS = {
+  admin: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l8 4v6c0 5-3.5 8.5-8 10-4.5-1.5-8-5-8-10V6z"/><path d="M9 12l2 2 4-4"/></svg>',
   home: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10.5 12 3l9 7.5V20a1 1 0 0 1-1 1h-5v-6h-6v6H4a1 1 0 0 1-1-1z"/></svg>',
   food: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 2v20M4 2v6a3 3 0 0 0 6 0V2M17 2c-2 1.5-3 4-3 7s1 4 3 4v9"/></svg>',
   burn: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22c4.4 0 7-3 7-7 0-4-3-6.5-4-10-1.5 2-2 3.5-2 5-1.5-1-2.5-3-2.5-5C7 7.5 5 11 5 15c0 4 2.6 7 7 7z"/></svg>',
@@ -1110,9 +1224,13 @@ const ICONS = {
 };
 function tabbar() {
   const t = [['home', 'Home'], ['today', 'Today'], ['food', 'Intake'], ['burn', 'Burn'], ['meds', 'Meds'], ['suggest', 'Suggest'], ['profile', 'Profile']];
+  if (isAdmin() && !S.viewing) t.push(['admin', 'Admin']);
   return `<nav class="tabbar"><div class="tabbar-in">${t.map(([id, l]) => `<button class="${S.tab === id ? 'on' : ''}" data-act="tab" data-v="${id}">${ICONS[id]}${l}</button>`).join('')}</div></nav>`;
 }
-function header(title) { return `<header class="top"><div class="top-in"><h1>${title}</h1>${syncPill()}</div></header>`; }
+function header(title) {
+  return `<header class="top"><div class="top-in"><h1>${title}</h1>${syncPill()}</div></header>` +
+    (S.viewing ? `<div class="viewbar">👁 Viewing <b>${esc(S.viewing.name)}</b> · read only <button data-act="adminBack">Back to admin</button></div>` : '');
+}
 
 function healthyFat(sex, age) { // Gallagher et al. healthy body-fat ranges
   if (sex === 'male') return age < 40 ? [8, 19] : age < 60 ? [11, 21] : [13, 24];
@@ -2012,15 +2130,15 @@ function weightChart(p, pl) {
 
 function viewProfile() {
   const s = S.session, p = P();
-  const dataUrl = `https://github.com/${encodeURIComponent(s.owner)}/${encodeURIComponent(s.dataRepo)}/blob/HEAD/${s.dataPath}`;
   return header('Profile') + `<main>
+    <div class="card"><div class="kv"><span>Signed in as</span><b>${esc(S.viewing ? S.viewing.email : s.email)}</b></div></div>
     ${profileForm(p, true)}
     <div class="card"><h3>Download your data</h3>
       <p class="explain" style="margin:0 0 10px">Excel file with every day: summary, each meal, nutrients, workouts, steps and weight.</p>
       <button class="btn blue block" data-act="exportXlsx">⬇️ Export to Excel</button>
     </div>
     <button class="btn danger block" data-act="logout" style="margin-top:6px">Log out</button>
-    <p class="explain" style="text-align:center;margin-top:14px">Minimal Health Tracker v85 · estimates only, not medical advice</p>
+    <p class="explain" style="text-align:center;margin-top:14px">Minimal Health Tracker v86 · estimates only, not medical advice</p>
   </main>`;
 }
 
@@ -2395,7 +2513,7 @@ function onWorkoutInput(t) {
 function renderSheet() {
   const root = $('#sheet-root');
   if (!S.sheet) { root.innerHTML = ''; document.body.classList.remove('lock'); return; }
-  const inner = S.sheet.kind === 'food' ? sheetFood() : S.sheet.kind === 'confirm' ? sheetConfirm() : S.sheet.kind === 'scale' ? sheetScale() : S.sheet.kind === 'weight' ? sheetAddWeight() : S.sheet.kind === 'steps' ? sheetSteps() : S.sheet.kind === 'wheyq' ? sheetWheyQ() : S.sheet.kind === 'cal' ? sheetCal() : S.sheet.kind === 'reading' ? sheetReading() : sheetWorkout();
+  const inner = S.sheet.kind === 'food' ? sheetFood() : S.sheet.kind === 'confirm' ? sheetConfirm() : S.sheet.kind === 'scale' ? sheetScale() : S.sheet.kind === 'weight' ? sheetAddWeight() : S.sheet.kind === 'steps' ? sheetSteps() : S.sheet.kind === 'wheyq' ? sheetWheyQ() : S.sheet.kind === 'adminLink' ? sheetAdminLink() : S.sheet.kind === 'cal' ? sheetCal() : S.sheet.kind === 'reading' ? sheetReading() : sheetWorkout();
   const existing = $('.sheet', root);
   if (existing) { const st = existing.scrollTop; existing.innerHTML = '<div class="grab"></div>' + inner; existing.scrollTop = st; }
   else root.innerHTML = `<div class="sheet-backdrop" data-act="closeSheet" data-backdrop="1"><div class="sheet"><div class="grab"></div>${inner}</div></div>`;
@@ -2409,12 +2527,14 @@ function toTop() { const a = $('#app'); if (a) a.scrollTop = 0; window.scrollTo(
 function render() {
   const app = $('#app');
   if (S.screen === 'auth') app.innerHTML = viewAuth();
+  else if (S.screen === 'verify') app.innerHTML = viewVerify();
+  else if (S.screen === 'link') app.innerHTML = viewLink();
   else if (S.screen === 'setup') app.innerHTML = viewSetup();
   else if (S.screen === 'loading') app.innerHTML = viewLoading();
   else if (S.screen === 'error') app.innerHTML = viewError();
   else if (S.screen === 'onboard') { app.innerHTML = viewOnboard(); updateProfilePreview(); }
   else {
-    const v = { home: viewHome, today: viewToday, food: viewFood, burn: viewBurn, meds: viewMeds, suggest: viewSuggest, profile: viewProfile }[S.tab] || viewHome;
+    const v = { home: viewHome, today: viewToday, food: viewFood, burn: viewBurn, meds: viewMeds, suggest: viewSuggest, profile: viewProfile, admin: viewAdmin }[S.tab] || viewHome;
     app.innerHTML = v() + tabbar();
     if (S.tab === 'meds') setTimeout(loadGhPhotos, 0);
     if (S.tab === 'profile') updateProfilePreview();
@@ -2429,9 +2549,48 @@ const ACT = {
   authMode(el) { S.authMode = el.dataset.v; render(); },
   showAdv() { S.showAdvanced = true; render(); },
   async login(el) { try { await doLogin(el); } finally { unbusy(el); } },
+  async forgot(el) { try { await doForgot(el); } finally { unbusy(el); } },
+  async linkOld(el) { try { await doLink(el); } finally { unbusy(el); } },
+  startFresh() { S.screen = 'onboard'; render(); },
+  async checkVerified(el) {
+    busy(el, 'Checking…');
+    try {
+      const u = fbAuth.currentUser; if (!u) { S.screen = 'auth'; return render(); }
+      await u.reload(); await u.getIdToken(true);
+      if (!fbAuth.currentUser.emailVerified) throw fail('Not verified yet — tap the link in the email first, then try again.');
+      await startFbSession(fbAuth.currentUser);
+    } finally { unbusy(el); }
+  },
+  async resendVerify(el) {
+    busy(el, 'Sending…');
+    try { await fbAuth.currentUser.sendEmailVerification(); toast('Sent again — check your inbox and Spam', 'good'); }
+    catch (e) { throw fbErr(e); } finally { unbusy(el); }
+  },
+  async adminLoad() { await adminLoadUsers(true); },
+  async adminOpen(el) {
+    const u = (S.admin && S.admin.users || []).find(x => x.uid === el.dataset.uid); if (!u) return;
+    S.screen = 'loading'; S.loadingMsg = 'Opening ' + (u.name || u.email) + '…'; render();
+    try {
+      const r = await fbLoadUser(u.uid);
+      S.ownData = S.ownData || S.data; S.data = r.data;
+      S.viewing = { uid: u.uid, name: u.name || u.email, email: u.email };
+      S.screen = 'main'; S.tab = r.data.profile ? 'home' : 'admin'; S.date = todayStr();
+      if (!r.data.profile) { S.data = S.ownData; S.ownData = null; S.viewing = null; toast('This user has not set up their profile yet'); }
+    } catch (e) { S.screen = 'main'; toast(fbErr(e).message, 'bad'); }
+    render(); toTop();
+  },
+  adminBack() { if (S.ownData) S.data = S.ownData; S.ownData = null; S.viewing = null; S.tab = 'admin'; S.screen = 'main'; render(); toTop(); },
+  adminLinkOpen(el) { S.sheet = { kind: 'adminLink', uid: el.dataset.uid, email: el.dataset.email }; renderSheet(); },
+  async adminLinkSave(el) {
+    const u = ($('#adminOldUser') || {}).value || '';
+    busy(el, 'Copying…');
+    try { const n = await copyLegacy(u, S.sheet.uid, null); S.sheet = null; toast(`Linked — ${n} days copied`, 'good'); await adminLoadUsers(true); }
+    finally { unbusy(el); }
+  },
+  async adminExcel(el) { busy(el, 'Preparing Excel…'); try { await adminExport(); } finally { unbusy(el); } },
   async create(el) { try { await doCreate(el); } finally { unbusy(el); } },
   async setup(el) { try { await doSetup(el); } finally { unbusy(el); } },
-  retryLoad() { if (S.session) loadData(); else boot(); },
+  retryLoad() { if (S.session) loadData(); else location.reload(); },
   logout() { logout(); },
   tab(el) { S.tab = el.dataset.v; render(); toTop(); },
   goToday() { S.tab = 'food'; S.date = todayStr(); render(); toTop(); },
@@ -2444,8 +2603,8 @@ const ACT = {
   nextDay() { if (S.date < todayStr()) { S.date = addDays(S.date, 1); render(); } },
   syncInfo() {
     if (S.sync === 'err') { toast('Not saved: ' + S.syncMsg + ' — retrying…', 'bad'); syncNow(); }
-    else if (S.sync === 'saving') toast('Saving to GitHub…');
-    else { toast('All changes are saved to GitHub'); refreshFromGitHub(false); }
+    else if (S.sync === 'saving') toast('Saving…');
+    else { toast('All changes are saved to the cloud'); refreshFromGitHub(false); }
   },
 
   saveProfile() {
@@ -2786,7 +2945,7 @@ const ACT = {
         (d.workouts || []).forEach(w => works.push({ Date: ds, Equipment: w.name, Minutes: R(w.minutes), 'Speed (km/h)': w.speed ?? '', 'Incline (%)': w.incline ?? '', Effort: w.intensity != null ? INTENSITY[w.intensity] : '', kcal: R(w.kcal) }));
       });
       const pl = plan();
-      const prof = [['Name', p.name || ''], ['Username', S.session.username], ['Sex', p.sex], ['Age', p.age], ['Height (cm)', p.heightCm], ['Starting weight (kg)', p.startWeight],
+      const prof = [['Name', p.name || ''], ['Email', S.viewing ? S.viewing.email : S.session.email], ['Sex', p.sex], ['Age', p.age], ['Height (cm)', p.heightCm], ['Starting weight (kg)', p.startWeight],
         ['Goal: lose (kg)', p.targetLoss], ['Goal: days', p.targetDays], ['Start date', p.startDate], ['End date', pl.end], ['Target weight (kg)', R(pl.targetW)],
         ['Current weight (kg)', R(pl.curW)], ['Body fat now (est. %)', R(pl.fatNowPct)], ['Food preference', p.diet || 'nonveg'], ['Health issues', (p.health || []).join(', ')], ['Exported on', new Date().toLocaleString('en-IN')]];
       const wb = XLSX.utils.book_new();
@@ -2801,7 +2960,7 @@ const ACT = {
       add(works, 'Workouts', [11, 30, 9, 12, 11, 10, 8]);
       add(medsRows, 'Medication', [11, 12, 50, 8, 40]);
       add([['Field', 'Value'], ...prof], 'Profile', [22, 40]);
-      XLSX.writeFile(wb, `Minimal-Health-${S.session.username}-${todayStr()}.xlsx`);
+      XLSX.writeFile(wb, `Minimal-Health-${String((S.viewing ? S.viewing.email : S.session.email) || 'me').split('@')[0]}-${todayStr()}.xlsx`);
       toast('Excel downloaded', 'good');
     } finally { unbusy(el); }
   },
@@ -2893,20 +3052,100 @@ if ('serviceWorker' in navigator && location.protocol === 'https:') {
   let reloaded = false;
   navigator.serviceWorker.addEventListener('controllerchange', () => { if (!reloaded) { reloaded = true; location.reload(); } });
 }
+/* ================================================================
+   ADMIN
+   ================================================================ */
+async function adminLoadUsers(force) {
+  if (!isAdmin()) return;
+  if (S.admin && S.admin.users && !force) return;
+  S.admin = { loading: true, users: (S.admin && S.admin.users) || [] }; if (S.tab === 'admin') render();
+  try {
+    const snap = await fbDb.collection('users').get();
+    const users = [];
+    snap.forEach(d => { const x = d.data(), p = x.profile || {}; users.push({ uid: d.id, email: x.email || '', name: p.name || '', legacy: x.legacy || '', lastActive: x.lastActive || '', created: x.created || '', p }); });
+    users.sort((a, b) => (b.lastActive || '').localeCompare(a.lastActive || ''));
+    S.admin = { users, at: Date.now() };
+  } catch (e) { S.admin = { users: [], error: fbErr(e).message }; }
+  if (S.tab === 'admin' && !S.viewing) render();
+}
+function viewAdmin() {
+  if (!isAdmin()) return header('Admin') + '<main><p class="muted">Admin only.</p></main>';
+  if (!S.admin) setTimeout(() => adminLoadUsers(false), 0);
+  const a = S.admin || { loading: true, users: [] };
+  const rows = (a.users || []).map(u => `<div class="li" style="flex-wrap:wrap;row-gap:6px">
+      <span style="min-width:0"><b>${esc(u.name || '(no profile yet)')}</b><br><small>${esc(u.email)}${u.legacy ? ' · old: ' + esc(u.legacy) : ''}</small><br>
+        <small class="muted">${u.p.startWeight ? `${u.p.startWeight} kg → ${r1(u.p.startWeight - (u.p.targetLoss || 0))} kg · ` : ''}last active ${u.lastActive ? niceDate(u.lastActive, { day: 'numeric', month: 'short' }) : '—'}</small></span>
+      <span style="display:flex;gap:6px;margin-left:auto">${u.legacy ? '' : `<button class="btn small" data-act="adminLinkOpen" data-uid="${u.uid}" data-email="${esc(u.email)}">Link old</button>`}<button class="btn small" data-act="adminOpen" data-uid="${u.uid}">Open</button></span>
+    </div>`).join('');
+  return header('Admin') + `<main>
+    <div class="card"><h3>All users <small class="muted">${(a.users || []).length}</small></h3>
+      <div class="photo-btns"><button class="btn" data-act="adminLoad">🔄 Refresh</button><button class="btn" data-act="adminExcel">⬇️ Full Excel</button></div>
+      ${a.error ? `<div class="note bad" style="margin-top:10px">${esc(a.error)}</div>` : ''}
+      ${a.loading && !(a.users || []).length ? '<div class="center" style="min-height:80px"><div class="spinner"></div></div>' : rows || '<p class="muted" style="margin:10px 0 0">No users yet.</p>'}
+    </div>
+    <p class="explain" style="text-align:center">Open = see that user's app (read only). Link old = copy their data from the old app if they forgot the old password.</p>
+  </main>`;
+}
+function sheetAdminLink() {
+  const sh = S.sheet;
+  return `<div class="sheet-h"><h2>Link old account</h2><button class="x" data-act="closeSheet">✕</button></div>
+    <div class="card"><p class="explain" style="margin:0 0 10px">Copy data from the old app into <b>${esc(sh.email)}</b>.</p>
+      <label>Old username<input id="adminOldUser" autocapitalize="none" autocorrect="off"></label></div>
+    <button class="btn primary block" data-act="adminLinkSave">Copy data</button>`;
+}
+async function adminExport() {
+  if (!window.XLSX) await new Promise((ok, bad) => {
+    const sc = document.createElement('script'); sc.src = 'https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js';
+    sc.onload = ok; sc.onerror = () => bad(fail('Could not load the Excel tool — check your internet.')); document.head.appendChild(sc);
+  });
+  await adminLoadUsers(true);
+  const users = (S.admin && S.admin.users) || [], keep = S.data, R = v => v == null || v === '' ? '' : Math.round(v * 10) / 10;
+  const wb = XLSX.utils.book_new(), summary = [], used = new Set();
+  try {
+    for (const u of users) {
+      const r = await fbLoadUser(u.uid); S.data = r.data;
+      const p = r.data.profile, days = Object.keys(r.data.days).sort(), rows = [];
+      if (p) days.forEach(ds => {
+        const st = dayStats(ds), d = r.data.days[ds] || {}, t = dayNutrition(ds).tot;
+        rows.push({ Date: ds, 'Weight (kg)': d.weight ?? '', 'Eaten (kcal)': R(t.kcal), 'Protein (g)': R(t.protein), 'Carbs (g)': R(t.carbs), 'Fat (g)': R(t.fat), 'Sugar (g)': R(t.sugar),
+          'Workout (kcal)': R(st.exGross), Steps: d.steps ?? '', 'Steps (kcal)': R(st.stepsK), 'Body uses (kcal)': R(st.base), 'Deficit (kcal)': st.deficit == null ? '' : R(st.deficit),
+          'Meals': (d.meals || []).map(m => m.name).join(', '), 'Workouts': (d.workouts || []).map(w => `${w.name} ${R(w.minutes)}min`).join(', '),
+          'BP': (d.bp || []).map(x => `${x.sys}/${x.dia}`).join(', '), 'Sugar (mg/dL)': (d.sugar || []).map(x => `${x.val} ${x.kind}`).join(', '),
+          'Medicines': ((d.meds || {}).list || []).map(x => [x.name, x.dose, x.time].filter(Boolean).join(' ')).join(', ') });
+      });
+      const pl = p ? plan() : null;
+      summary.push({ Name: u.name, Email: u.email, 'Old username': u.legacy, 'Start date': p ? p.startDate : '', 'Start weight': p ? p.startWeight : '', 'Target weight': pl ? R(pl.targetW) : '',
+        'Current weight': pl ? R(pl.curW) : '', 'Lost so far (kg)': pl ? R(p.startWeight - pl.curW) : '', 'Days logged': days.length, 'Last active': u.lastActive });
+      let name = (u.name || u.email.split('@')[0] || 'user').replace(/[\\/?*\[\]:]/g, ' ').slice(0, 28) || 'user', n = name, i = 2;
+      while (used.has(n.toLowerCase()) || n.toLowerCase() === 'all users') n = name.slice(0, 26) + ' ' + i++;
+      used.add(n.toLowerCase());
+      const ws = XLSX.utils.json_to_sheet(rows.length ? rows : [{ Note: 'No data yet' }]); XLSX.utils.book_append_sheet(wb, ws, n);
+    }
+  } finally { S.data = keep; }
+  const ws = XLSX.utils.json_to_sheet(summary.length ? summary : [{ Note: 'No users' }]);
+  ws['!cols'] = [18, 28, 14, 12, 12, 12, 13, 14, 11, 12].map(w => ({ wch: w }));
+  XLSX.utils.book_append_sheet(wb, ws, 'All users');
+  wb.SheetNames.unshift(wb.SheetNames.pop());
+  XLSX.writeFile(wb, `Minimal-Health-ALL-USERS-${todayStr()}.xlsx`);
+  toast('Excel downloaded', 'good');
+}
+
 async function boot() {
-  const saved = SS.get('ft_session') || LS.get('ft_session');
-  if (saved && saved.token && saved.username && saved.dataPath) { S.session = saved; return loadData(); }
+  forgetUser();                      // the old GitHub username login is retired — everyone signs in by email now
   S.screen = 'loading'; S.loadingMsg = 'Starting…'; render();
-  try { CONFIG = await loadConfig(); }
-  catch (e) { if (e.offline) { S.screen = 'error'; S.errorMsg = e.message; return render(); } CONFIG = null; }
-  const u = rememberedUser();
-  if (CONFIG && u) { S.session = sessionFor(u); return loadData(); }   // stay signed in
-  S.screen = CONFIG ? 'auth' : 'setup'; render();
+  try { CONFIG = await loadConfig(); } catch (e) { CONFIG = null; }
+  fbInit();
+  if (!fbAuth) { S.screen = 'error'; S.errorMsg = 'Could not load the login service — check your internet.'; return render(); }
+  fbAuth.onAuthStateChanged(async u => {
+    if (!u) { if (!['auth'].includes(S.screen)) { S.screen = 'auth'; render(); } return; }
+    if (!u.emailVerified) { S.screen = 'verify'; render(); return; }
+    try { await startFbSession(u); } catch (e) { S.screen = 'error'; S.errorMsg = e.message; render(); }
+  });
 }
 boot();
 
 // expose for testing
-window.__fittrack = { sheetCal, dateBar, sheetReading, healthCard, suggestSlot, sheetWheyQ, sheetSteps, quickCard, sheetAddWeight, calcCard, openScaleSheet, analyseScaleRun, sheetScale, maybeHashWeight, sheetConfirm, viewBurn, addPhotosToSheet, openWorkoutSheet, sheetWorkout, runAnalysis, sheetFood, viewHome, viewFood, viewToday, viewMeds, wheyCard, ACT, profileForm, startWorkoutPhoto, sheetWorkout, FOOD, nutritionCard, needsCard, todayTable, viewSuggest, viewHome, viewFood, viewBurn, sheetWorkout, bmiOf, bmiCat, fatPct, bmr, treadKcal, bikeKcal, wkSuggest, S, plan, dayStats };
+window.__fittrack = { viewAuth, viewLink, viewVerify, viewAdmin, sheetCal, dateBar, sheetReading, healthCard, suggestSlot, sheetWheyQ, sheetSteps, quickCard, sheetAddWeight, calcCard, openScaleSheet, analyseScaleRun, sheetScale, maybeHashWeight, sheetConfirm, viewBurn, addPhotosToSheet, openWorkoutSheet, sheetWorkout, runAnalysis, sheetFood, viewHome, viewFood, viewToday, viewMeds, wheyCard, ACT, profileForm, startWorkoutPhoto, sheetWorkout, FOOD, nutritionCard, needsCard, todayTable, viewSuggest, viewHome, viewFood, viewBurn, sheetWorkout, bmiOf, bmiCat, fatPct, bmr, treadKcal, bikeKcal, wkSuggest, S, plan, dayStats };
 })();
 </script>
 </body>
