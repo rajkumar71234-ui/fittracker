@@ -1017,7 +1017,7 @@ function viewAuth() {
   return `<div class="auth">
     <img class="logo" src="icons/logo.png" alt="">
     <h1>Minimal Health Tracker</h1>
-    <p class="sub">Your weight-loss tracker · v87</p>
+    <p class="sub">Your weight-loss tracker · v88</p>
     ${m !== 'forgot' ? `<div class="seg">
       <button data-act="authMode" data-v="login" class="${m === 'login' ? 'on' : ''}">Log in</button>
       <button data-act="authMode" data-v="create" class="${m === 'create' ? 'on' : ''}">Create account</button>
@@ -1910,7 +1910,7 @@ function sheetWheyQ() {
   const d = S.data.days[ds] || {};
   const unit = egg ? ['egg', 'eggs'] : ['scoop', 'scoops'], u = n == 1 ? unit[0] : unit[1];
   const white = egg && sh.eggType === 'white';
-  const P1 = egg ? (white ? EGGW_P : EGG_P) : WHEY_P, K1 = egg ? (white ? EGGW_K : EGG_K) : wd.k;
+  const P1 = egg ? (white ? EGGW_P : EGG_P) : WHEY_P, K1 = egg ? (white ? EGGW_K : EGG_K) : wd.k, F1 = egg ? (white ? 0.06 : 5.3) : r1(wd.g * 0.05);
   const done = (d.meals || []).filter(m => m.slot === (egg ? 'egg' : 'whey')).reduce((a, m) => a + (Number(m.protein) || 0), 0);
   return `<div class="sheet-h"><h2>${egg ? '🥚 Egg' : '💪 Whey protein'}</h2><button class="x" data-act="closeSheet">✕</button></div>
     <div class="card" style="text-align:center">
@@ -1921,8 +1921,8 @@ function sheetWheyQ() {
         <div class="big"><b style="font-size:40px">${n}</b> <span class="muted">${u}</span></div>
         <button class="round" data-act="wheyQStep" data-v="${egg ? 1 : 0.5}" aria-label="More">+</button>
       </div>
-      <p style="margin:8px 0 0;font-size:17px;font-weight:700">${r1(n * P1)} g protein · ${r0(n * K1)} kcal</p>
-      <p class="explain" style="margin:4px 0 0">1 ${unit[0]} = ${P1} g protein · ${K1} kcal${done ? ` · already: ${r0(done)} g protein` : ''}</p>
+      <p style="margin:8px 0 0;font-size:17px;font-weight:700">${r1(n * P1)} g protein · ${r0(n * K1)} kcal · ${r1(n * F1)} g fat</p>
+      <p class="explain" style="margin:4px 0 0">1 ${unit[0]} = ${P1} g protein · ${K1} kcal · ${F1} g fat${done ? ` · already: ${r0(done)} g protein` : ''}</p>
     </div>
     <button class="btn primary block" data-act="saveWheyQ">Save ${n} ${u}</button>
     ${egg ? '' : `<button class="btn block" style="margin-top:8px" data-act="addFood" data-slot="whey">Other protein drink</button>`}`;
@@ -2141,7 +2141,7 @@ function viewProfile() {
       <button class="btn blue block" data-act="exportXlsx">⬇️ Export to Excel</button>
     </div>
     <button class="btn danger block" data-act="logout" style="margin-top:6px">Log out</button>
-    <p class="explain" style="text-align:center;margin-top:14px">Minimal Health Tracker v87 · estimates only, not medical advice</p>
+    <p class="explain" style="text-align:center;margin-top:14px">Minimal Health Tracker v88 · estimates only, not medical advice</p>
   </main>`;
 }
 
