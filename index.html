@@ -493,6 +493,12 @@ const WORKOUTS = [
   { id: 'skip', g: 'Outside & sports', name: 'Skipping rope', icon: '🪢', calc: 'met', mets: [8.8, 11.8, 12.3] },
   { id: 'yoga', g: 'Outside & sports', name: 'Yoga / Stretching', icon: '🧘', calc: 'met', mets: [2.5, 3.0, 4.0] },
   { id: 'sports', g: 'Outside & sports', name: 'Badminton / Sports', icon: '🏸', calc: 'met', mets: [4.5, 5.5, 7.0] },
+  { id: 'cricket', g: 'Outside & sports', name: 'Cricket', icon: '🏏', calc: 'met', mets: [4.8, 5.5, 6.5] },
+  { id: 'football', g: 'Outside & sports', name: 'Football', icon: '⚽', calc: 'met', mets: [7.0, 8.0, 10.0] },
+  { id: 'tennis', g: 'Outside & sports', name: 'Tennis / Table tennis', icon: '🎾', calc: 'met', mets: [4.0, 7.3, 8.0] },
+  { id: 'ballgame', g: 'Outside & sports', name: 'Volleyball / Basketball', icon: '🏐', calc: 'met', mets: [4.0, 6.5, 8.0] },
+  { id: 'stretch', g: 'Outside & sports', name: 'Stretching / Mobility', icon: '🤸', calc: 'met', mets: [2.3, 2.8, 3.5] },
+  { id: 'pilates', g: 'Outside & sports', name: 'Pilates', icon: '🧘', calc: 'met', mets: [3.0, 3.8, 4.5] },
   { id: 'general', g: 'Outside & sports', name: 'General workout', icon: '💪', calc: 'custom' },
   { id: 'other', g: 'Outside & sports', name: 'Other', icon: '➕', calc: 'custom' },
 ];
@@ -1017,7 +1023,7 @@ function viewAuth() {
   return `<div class="auth">
     <img class="logo" src="icons/logo.png" alt="">
     <h1>Minimal Health Tracker</h1>
-    <p class="sub">Your weight-loss tracker · v88</p>
+    <p class="sub">Your weight-loss tracker · v89</p>
     ${m !== 'forgot' ? `<div class="seg">
       <button data-act="authMode" data-v="login" class="${m === 'login' ? 'on' : ''}">Log in</button>
       <button data-act="authMode" data-v="create" class="${m === 'create' ? 'on' : ''}">Create account</button>
@@ -2043,23 +2049,36 @@ function viewFood() {
 }
 
 const BURN_CATS = [
-  { g: 'Cardio machines', icon: '🏃', label: 'Cardio machines' },
-  { g: 'Strength machines', icon: '🏋️', label: 'Strength machines' },
-  { g: 'Free weights & bodyweight', icon: '💪', label: 'Free weights & bodyweight' },
-  { g: 'Outside & sports', icon: '🏸', label: 'Outside, sports & general' },
+  { c: 'cardio', icon: '🏃', label: 'Cardio', note: 'Gets the heart pumping — the easiest and fastest way to burn kcal and fat.', first: 'treadmill' },
+  { c: 'strength', icon: '🏋️', label: 'Strength', note: 'Builds and repairs muscle — eat enough protein on these days.', first: 'legpress' },
+  { c: 'endurance', icon: '🚴', label: 'Endurance', note: 'Long, steady walks, runs, cycling or swimming — builds stamina and burns fat.', first: 'walkrun' },
+  { c: 'flex', icon: '🧘', label: 'Flexibility', note: 'Yoga and stretching — loosens joints, helps recovery and avoids injury.', first: 'yoga' },
+  { c: 'sports', icon: '🏸', label: 'Sports & games', note: 'Badminton, cricket, football and more — a fun way to burn kcal.', first: 'sports' },
+  { c: 'general', icon: '💪', label: 'General workout', note: 'Anything else — enter the minutes and kcal yourself.', first: 'general' },
 ];
+function wkCat(type) {
+  const m = WK[type] || WK.other;
+  if (['hiit', 'battlerope', 'skip'].includes(type) || m.g === 'Cardio machines') return 'cardio';
+  if (m.g === 'Strength machines' || m.g === 'Free weights & bodyweight') return 'strength';
+  if (['walkrun', 'cycle', 'swim'].includes(type)) return 'endurance';
+  if (['yoga', 'stretch', 'pilates'].includes(type)) return 'flex';
+  if (['sports', 'cricket', 'football', 'tennis', 'ballgame'].includes(type)) return 'sports';
+  return 'general';
+}
 function burnList(date, d, st) {
   const ws = d.workouts || [];
   const wkRow = w => { const m = WK[w.type] || WK.other;
     return `<button class="li" data-act="editWorkout" data-id="${w.id}"><span>${m.icon} ${esc(w.name)} <small>${r0(w.minutes)} min${w.speed ? ` · ${w.speed} km/h` : ''}${w.incline ? ` · ${w.incline}%` : ''}${w.intensity != null && m.calc !== 'tread' && m.calc !== 'custom' ? ' · ' + INTENSITY[w.intensity] : ''}</small></span><span class="r">${r0(w.kcal)} kcal</span></button>`; };
   const cats = BURN_CATS.map(c => {
-    const items = ws.filter(w => ((WK[w.type] || WK.other).g || 'Outside & sports') === c.g);
+    const items = ws.filter(w => wkCat(w.type) === c.c);
     const kc = items.reduce((a, w) => a + (w.kcal || 0), 0);
-    return `<div class="slot"><div class="slot-h"><span class="name">${c.icon} ${c.label}</span>${items.length ? `<span class="kc">${r0(kc)} kcal</span>` : ''}<button class="add" data-act="addWorkoutG" data-g="${esc(c.g)}">+ Add</button></div>${items.map(wkRow).join('')}</div>`;
+    return `<div class="slot"><div class="slot-h"><span class="name">${c.icon} ${c.label}</span>${items.length ? `<span class="kc">${r0(kc)} kcal</span>` : ''}<button class="add" data-act="addWorkoutG" data-c="${c.c}">+ Add</button></div>
+      <p class="explain" style="margin:2px 0 0">${c.note}</p>${items.map(wkRow).join('')}</div>`;
   }).join('');
   const log = stepLogOf(d), w = st.w;
   const stepsRows = log.map(x => `<button class="li" data-act="openStepsFor" data-d="${date}"><span>👟 ${x.at ? new Date(x.at).toLocaleTimeString('en-IN', { hour: 'numeric', minute: '2-digit' }) : 'Walk'} <small>${Math.round(x.steps).toLocaleString('en-IN')} steps</small></span><span class="r">${r0(x.kcal != null ? x.kcal : x.steps * stepKcal(w))} kcal</span></button>`).join('');
-  return cats + `<div class="slot"><div class="slot-h"><span class="name">👟 Steps</span>${log.length ? `<span class="kc">${r0(st.stepsK)} kcal</span>` : ''}<button class="add" data-act="openStepsFor" data-d="${date}">+ Add</button></div>${stepsRows}</div>`;
+  return cats + `<div class="slot"><div class="slot-h"><span class="name">👟 Steps</span>${log.length ? `<span class="kc">${r0(st.stepsK)} kcal</span>` : ''}<button class="add" data-act="openStepsFor" data-d="${date}">+ Add</button></div>
+    <p class="explain" style="margin:2px 0 0">Everyday walking — every 1,000 steps burns about ${r0(stepKcal(w) * 1000)} kcal.</p>${stepsRows}</div>`;
 }
 function viewBurn() {
   const date = S.date, d = dayOf(date), st = dayStats(date);
@@ -2141,7 +2160,7 @@ function viewProfile() {
       <button class="btn blue block" data-act="exportXlsx">⬇️ Export to Excel</button>
     </div>
     <button class="btn danger block" data-act="logout" style="margin-top:6px">Log out</button>
-    <p class="explain" style="text-align:center;margin-top:14px">Minimal Health Tracker v88 · estimates only, not medical advice</p>
+    <p class="explain" style="text-align:center;margin-top:14px">Minimal Health Tracker v89 · estimates only, not medical advice</p>
   </main>`;
 }
 
@@ -2748,11 +2767,12 @@ const ACT = {
   },
   wRange(el) { S.wRange = el.dataset.v; render(); },
   addWorkoutG(el) {
+    const c = BURN_CATS.find(x => x.c === el.dataset.c) || BURN_CATS[0];
+    if (c.c === 'general') { ACT.burnWorkout(); return; }
     ACT.addWorkout();
-    const t = (WORKOUTS.find(x => x.g === el.dataset.g) || WORKOUTS[0]).id;
-    if (S.sheet && S.sheet.w && (WK[S.sheet.w.type] || {}).g !== el.dataset.g) ACT.wkType({ dataset: { v: el.dataset.g === 'Outside & sports' ? 'general' : t } });
-    if (S.sheet && S.sheet.w && S.sheet.w.type === 'general' && !S.sheet.w.name) S.sheet.w.name = 'General workout';
+    if (S.sheet && S.sheet.w && wkCat(S.sheet.w.type) !== c.c) ACT.wkType({ dataset: { v: c.first } });
   },
+
   openStepsFor(el) {
     const ds = el.dataset.d || todayStr(), now = new Date();
     const at = ds === todayStr() ? now : new Date(ds + 'T12:00:00');
