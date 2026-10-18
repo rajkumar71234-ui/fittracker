@@ -953,7 +953,7 @@ function viewAuth() {
   return `<div class="auth">
     <img class="logo" src="icons/logo.png" alt="">
     <h1>Minimal Health Tracker</h1>
-    <p class="sub">Your weight-loss tracker · v84</p>
+    <p class="sub">Your weight-loss tracker · v85</p>
     <div class="seg">
       <button data-act="authMode" data-v="login" class="${login ? 'on' : ''}">Log in</button>
       <button data-act="authMode" data-v="create" class="${!login ? 'on' : ''}">Create account</button>
@@ -1739,10 +1739,11 @@ function quickCard(t) {
   return `<div class="card quick">
       <div class="q-sec">
         <div class="q-h"><b>🔍 Check a food</b><small class="muted">see kcal before you eat</small></div>
-        <div class="photo-btns three">
+        <div class="photo-btns">
           <label class="btn primary">📸 Photo<input type="file" accept="image/*" capture="environment" class="food-check-input" aria-label="Take photo to check food"></label>
           <label class="btn">🖼️ Gallery<input type="file" accept="image/*" multiple class="food-check-input" aria-label="Choose 1 or 2 photos to check food"></label>
           <button class="btn" data-act="openWheyQ">💪 Whey</button>
+          <button class="btn" data-act="openEggQ">🥚 Boiled egg</button>
         </div>
       </div>
       <div class="q-sec">
@@ -1784,20 +1785,26 @@ function sheetSteps() {
     </div>`;
 }
 const WHEY_P = 25; // g protein per scoop
+const EGG_P = 6.5, EGG_K = 78, EGG_G = 50; // one boiled egg
 function sheetWheyQ() {
-  const sh = S.sheet, wd = wheyDefaults(), n = sh.n;
-  const d = S.data.days[todayStr()] || {}, done = (d.meals || []).filter(m => m.slot === 'whey').reduce((a, m) => a + (Number(m.protein) || 0), 0);
-  return `<div class="sheet-h"><h2>💪 Whey protein</h2><button class="x" data-act="closeSheet">✕</button></div>
+  const sh = S.sheet, wd = wheyDefaults(), n = sh.n, egg = sh.what === 'egg', ds = sh.date || todayStr();
+  const d = S.data.days[ds] || {};
+  const unit = egg ? ['egg', 'eggs'] : ['scoop', 'scoops'], u = n == 1 ? unit[0] : unit[1];
+  const P1 = egg ? EGG_P : WHEY_P, K1 = egg ? EGG_K : wd.k;
+  const done = (d.meals || []).filter(m => m.slot === (egg ? 'egg' : 'whey')).reduce((a, m) => a + (Number(m.protein) || 0), 0);
+  return `<div class="sheet-h"><h2>${egg ? '🥚 Boiled egg' : '💪 Whey protein'}</h2><button class="x" data-act="closeSheet">✕</button></div>
     <div class="card" style="text-align:center">
+      <p class="muted" style="margin:0 0 6px">How many ${unit[1]}?${ds !== todayStr() ? ` · ${niceDate(ds)}` : ''}</p>
       <div class="water" style="margin:6px 0 4px">
-        <button class="round" data-act="wheyQStep" data-v="-0.5" aria-label="Less">−</button>
-        <div class="big"><b style="font-size:40px">${n}</b> <span class="muted">scoop${n == 1 ? '' : 's'}</span></div>
-        <button class="round" data-act="wheyQStep" data-v="0.5" aria-label="More">+</button>
+        <button class="round" data-act="wheyQStep" data-v="${egg ? -1 : -0.5}" aria-label="Less">−</button>
+        <div class="big"><b style="font-size:40px">${n}</b> <span class="muted">${u}</span></div>
+        <button class="round" data-act="wheyQStep" data-v="${egg ? 1 : 0.5}" aria-label="More">+</button>
       </div>
-      <p style="margin:8px 0 0;font-size:17px;font-weight:700">${r1(n * WHEY_P)} g protein · ${r0(n * wd.k)} kcal</p>
-      <p class="explain" style="margin:4px 0 0">1 scoop = ${WHEY_P} g protein · ${wd.k} kcal${done ? ` · already today: ${r0(done)} g` : ''}</p>
+      <p style="margin:8px 0 0;font-size:17px;font-weight:700">${r1(n * P1)} g protein · ${r0(n * K1)} kcal</p>
+      <p class="explain" style="margin:4px 0 0">1 ${unit[0]} = ${P1} g protein · ${K1} kcal${done ? ` · already: ${r0(done)} g protein` : ''}</p>
     </div>
-    <button class="btn primary block" data-act="saveWheyQ">Save ${n} scoop${n == 1 ? '' : 's'}</button>`;
+    <button class="btn primary block" data-act="saveWheyQ">Save ${n} ${u}</button>
+    <button class="btn block" style="margin-top:8px" data-act="addFood" data-slot="${egg ? 'egg' : 'whey'}">${egg ? 'Other egg dish (omelette…)' : 'Other protein drink'}</button>`;
 }
 // ---- BP & blood sugar readings ----
 function bpLevel(r) { return r.sys >= 140 || r.dia >= 90 ? ['High', 'bad'] : r.sys >= 120 || r.dia >= 80 ? ['Slightly high', 'warnc'] : r.sys < 90 || r.dia < 60 ? ['Low', 'warnc'] : ['Normal', 'good']; }
@@ -1906,7 +1913,7 @@ function viewFood() {
       ${[...SLOTS, ...((d.meals || []).some(m => m.slot === 'protein' && m.source !== 'whey') ? [{ id: 'protein', label: 'Protein', icon: '💪' }] : [])].map(s => {
         const items = (d.meals || []).filter(m => s.id === 'whey' ? (m.slot === 'whey' || m.source === 'whey') : m.slot === s.id && m.source !== 'whey');
         const kc = items.reduce((a, m) => a + (m.kcal || 0), 0);
-        return `<div class="slot"><div class="slot-h"><span class="name">${s.icon} ${s.label}</span>${items.length ? `<span class="kc">${r0(kc)} kcal</span>` : ''}<button class="add" data-act="addFood" data-slot="${s.id}">+ Add</button></div>
+        return `<div class="slot"><div class="slot-h"><span class="name">${s.icon} ${s.label}</span>${items.length ? `<span class="kc">${r0(kc)} kcal</span>` : ''}<button class="add" ${s.id === 'egg' || s.id === 'whey' ? `data-act="openQtyFor" data-w="${s.id}"` : `data-act="addFood" data-slot="${s.id}"`}>+ Add</button></div>
           ${items.map(m => `<button class="li li-wrap" data-act="editMeal" data-id="${m.id}"><span>${esc(m.name)} <small>${r0(m.grams)} g${m.source === 'ai' ? ' · 📷' : ''}</small></span><span class="r">${r0(m.kcal)} kcal</span>${mealMacros(m)}</button>`).join('')}
         </div>`;
       }).join('')}
@@ -2013,7 +2020,7 @@ function viewProfile() {
       <button class="btn blue block" data-act="exportXlsx">⬇️ Export to Excel</button>
     </div>
     <button class="btn danger block" data-act="logout" style="margin-top:6px">Log out</button>
-    <p class="explain" style="text-align:center;margin-top:14px">Minimal Health Tracker v84 · estimates only, not medical advice</p>
+    <p class="explain" style="text-align:center;margin-top:14px">Minimal Health Tracker v85 · estimates only, not medical advice</p>
   </main>`;
 }
 
@@ -2610,14 +2617,19 @@ const ACT = {
     S.sheet = null; render();
   },
   delReading(el) { const k = el.dataset.k; mutateDay(S.date, d => { d[k] = (d[k] || []).filter(r => r.id !== el.dataset.id); }); render(); },
-  openWheyQ() { S.sheet = { kind: 'wheyq', n: 1 }; renderSheet(); },
-  wheyQStep(el) { const s = S.sheet; s.n = Math.min(5, Math.max(0.5, Math.round((s.n + Number(el.dataset.v)) * 2) / 2)); renderSheet(); },
+  openWheyQ() { S.sheet = { kind: 'wheyq', what: 'whey', n: 1, date: todayStr() }; renderSheet(); },
+  openEggQ() { S.sheet = { kind: 'wheyq', what: 'egg', n: 1, date: todayStr() }; renderSheet(); },
+  openQtyFor(el) { S.sheet = { kind: 'wheyq', what: el.dataset.w, n: 1, date: S.date }; renderSheet(); },
+  wheyQStep(el) { const s = S.sheet, egg = s.what === 'egg'; s.n = egg ? Math.min(12, Math.max(1, s.n + Number(el.dataset.v))) : Math.min(5, Math.max(0.5, Math.round((s.n + Number(el.dataset.v)) * 2) / 2)); renderSheet(); },
   saveWheyQ() {
-    const n = S.sheet.n, wd = wheyDefaults(), t = todayStr();
-    mutateDay(t, d => { d.meals = d.meals || []; d.meals.push({ id: uid(), slot: 'whey', name: `Whey protein (${n} scoop${n == 1 ? '' : 's'})`, grams: r1(n * wd.g), scoops: n,
-      kcal: r0(n * wd.k), protein: r1(n * WHEY_P), carbs: r1(n * wd.g * 0.08), fat: r1(n * wd.g * 0.05), source: 'wheyq', at: new Date().toISOString() }); });
-    S.sheet = null; toast(`Saved ${n} scoop${n == 1 ? '' : 's'} = ${r1(n * WHEY_P)} g protein`, 'good'); render();
+    const sh = S.sheet, n = sh.n, wd = wheyDefaults(), t = sh.date || todayStr(), egg = sh.what === 'egg';
+    const rec = egg
+      ? { id: uid(), slot: 'egg', name: `Boiled egg (${n} egg${n == 1 ? '' : 's'})`, grams: n * EGG_G, eggs: n, kcal: r0(n * EGG_K), protein: r1(n * EGG_P), carbs: r1(n * 0.55), fat: r1(n * 5.3), source: 'eggq', at: new Date().toISOString() }
+      : { id: uid(), slot: 'whey', name: `Whey protein (${n} scoop${n == 1 ? '' : 's'})`, grams: r1(n * wd.g), scoops: n, kcal: r0(n * wd.k), protein: r1(n * WHEY_P), carbs: r1(n * wd.g * 0.08), fat: r1(n * wd.g * 0.05), source: 'wheyq', at: new Date().toISOString() };
+    mutateDay(t, d => { d.meals = d.meals || []; d.meals.push(rec); });
+    S.sheet = null; toast(`Saved ${n} ${egg ? (n == 1 ? 'egg' : 'eggs') : (n == 1 ? 'scoop' : 'scoops')} = ${r1(rec.protein)} g protein`, 'good'); render();
   },
+
   openSteps() {
     S.sheet = { kind: 'steps', at: new Date() }; renderSheet();
     setTimeout(() => { const i = $('#stepAddIn'); if (i) i.focus(); }, 250);
