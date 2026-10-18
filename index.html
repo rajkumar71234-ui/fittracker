@@ -1023,7 +1023,7 @@ function viewAuth() {
   return `<div class="auth">
     <img class="logo" src="icons/logo.png" alt="">
     <h1>Minimal Health Tracker</h1>
-    <p class="sub">Your weight-loss tracker · v90</p>
+    <p class="sub">Your weight-loss tracker · v91</p>
     ${m !== 'forgot' ? `<div class="seg">
       <button data-act="authMode" data-v="login" class="${m === 'login' ? 'on' : ''}">Log in</button>
       <button data-act="authMode" data-v="create" class="${m === 'create' ? 'on' : ''}">Create account</button>
@@ -1766,17 +1766,50 @@ async function loadGhPhotos() {
     try { const b = await GH.getB64(s.owner, s.dataRepo, p, s.token); if (b) { PHOTO_CACHE[p] = 'data:image/jpeg;base64,' + b; img.src = PHOTO_CACHE[p]; } } catch (e) { }
   }
 }
+const MED_PENDING = new Set();
+function medKey(n) { return (n || '').trim().toLowerCase(); }
+function medInfoOf(n) { return ((S.data.profile || {}).medInfo || {})[medKey(n)] || ''; }
+function medLastTaken(name, beforeDate) {
+  const k = medKey(name), ds = Object.keys(S.data.days).filter(x => x < beforeDate).sort().reverse();
+  for (const x of ds) { const l = (((S.data.days[x] || {}).meds || {}).list || []).filter(m => medKey(m.name) === k); if (l.length) return { date: x, time: l[l.length - 1].time || '' }; }
+  return null;
+}
+function medLastLine(name, beforeDate) {
+  const L = medLastTaken(name, beforeDate); if (!L) return '';
+  const y = addDays(beforeDate, -1) === L.date ? 'Yesterday' : niceDate(L.date, { day: 'numeric', month: 'short' });
+  return 'Last: ' + y + (L.time ? ' · ' + L.time : '');
+}
+async function fetchMedInfo(names) {
+  if (S.viewing || !S.data.profile) return;
+  const todo = names.filter(n => !medInfoOf(n) && !MED_PENDING.has(medKey(n))).slice(0, 12);
+  if (!todo.length || (!S.session.geminiKey && !S.session.apiKey)) return;
+  todo.forEach(n => MED_PENDING.add(medKey(n)));
+  try {
+    const text = await askVision([], `For each medicine name (as sold in India), give what it is for in 2 to 4 plain English words, e.g. "Dolo 650" -> "Fever and pain relief", "Metformin" -> "Diabetes sugar control", "Pan 40" -> "Acidity and gas". If unknown, use "Unknown medicine".
+Names: ${JSON.stringify(todo)}
+Reply with ONLY JSON: {"items":[{"name":"...","use":"..."}]}`);
+    const m = text.match(/\{[\s\S]*\}/); if (!m) return;
+    const out = JSON.parse(m[0]), info = Object.assign({}, S.data.profile.medInfo || {});
+    (out.items || []).forEach(x => { const u = String(x.use || '').trim().slice(0, 40); if (x.name && u) info[medKey(x.name)] = u; });
+    todo.forEach(n => { if (!info[medKey(n)]) info[medKey(n)] = 'Unknown medicine'; });
+    S.data.profile.medInfo = info; S.profileDirty = true; scheduleSave();
+    if (S.tab === 'meds' && !S.sheet) render();
+  } catch (e) { /* offline or no key — try again next visit */ }
+  finally { todo.forEach(n => MED_PENDING.delete(medKey(n))); }
+}
 function viewMeds() {
   const date = S.date, d = dayOf(date), meds = d.meds || {};
   const list = meds.list || [], known = {};
   for (let i = 1; i <= 60; i++) { const pd = S.data.days[addDays(date, -i)]; ((pd && pd.meds && pd.meds.list) || []).forEach(x => { const k = (x.name || '').trim().toLowerCase(); if (k && !known[k]) known[k] = { name: x.name.trim(), dose: x.dose || '' }; }); }
   const prev = Object.values(known);
+  setTimeout(() => fetchMedInfo([...prev.map(x => x.name), ...list.map(x => x.name)].filter((x, i, a) => a.findIndex(y => medKey(y) === medKey(x)) === i)), 50);
+  const info = n => { const t = medInfoOf(n); return t ? `<i>${esc(t)}</i>` : ''; };
   return header('Medication') + `<main>
     ${dateBar()}
     ${healthCard(date, d)}
     <div class="card"><h3>Medicines</h3>
-      ${list.map(x => `<div class="li"><span>💊 ${esc(x.name)} <small>${esc([x.dose, x.time].filter(Boolean).join(' · '))}</small></span><button class="x" style="width:28px;height:28px;font-size:12px" data-act="medDel" data-id="${x.id}" aria-label="Remove">✕</button></div>`).join('') || '<p class="muted" style="margin:0 0 6px;font-size:14px">None added for this day.</p>'}
-      ${prev.length ? `<p class="explain" style="margin:10px 0 6px">Your medicines — tap one, then pick the time:</p><div class="chips">${prev.map(x => `<button class="chip" data-act="medPick" data-n="${esc(x.name)}" data-d="${esc(x.dose)}">💊 ${esc(x.name)}${x.dose ? ' · ' + esc(x.dose) : ''}</button>`).join('')}</div>` : ''}
+      ${list.map(x => `<div class="li"><span style="line-height:1.3">💊 ${esc(x.name)} <small>${esc([x.dose, x.time].filter(Boolean).join(' · '))}</small><br><small class="muted">${[info(x.name), esc(medLastLine(x.name, date))].filter(Boolean).join(' · ')}</small></span><button class="x" style="width:28px;height:28px;font-size:12px" data-act="medDel" data-id="${x.id}" aria-label="Remove">✕</button></div>`).join('') || '<p class="muted" style="margin:0 0 6px;font-size:14px">None added for this day.</p>'}
+      ${prev.length ? `<p class="explain" style="margin:10px 0 6px">Your medicines — tap one, then pick the time:</p><div style="display:grid;gap:6px">${prev.map(x => `<button class="chip" style="display:block;text-align:left;line-height:1.3;padding:8px 12px;border-radius:12px;width:100%;height:auto" data-act="medPick" data-n="${esc(x.name)}" data-d="${esc(x.dose)}">💊 <b>${esc(x.name)}</b>${x.dose ? ' · ' + esc(x.dose) : ''}<br><small>${[info(x.name), esc(medLastLine(x.name, date))].filter(Boolean).join(' · ')}</small></button>`).join('')}</div>` : ''}
       <div class="grid3" style="margin-top:10px">
         <label>Name<input id="medName" placeholder="e.g. Dolo 650"></label>
         <label>Dose<input id="medDose" inputmode="decimal" placeholder="e.g. 1"></label>
@@ -1938,34 +1971,61 @@ function bpLevel(r) { return r.sys >= 140 || r.dia >= 90 ? ['High', 'bad'] : r.s
 function sugarLevel(r) {
   const v = r.val, k = r.kind;
   if (v < 70) return ['Low', 'bad'];
-  if (k === 'Fasting') return v < 100 ? ['Normal', 'good'] : v < 126 ? ['Slightly high', 'warnc'] : ['High', 'bad'];
+  if (k === 'Fasting' || k === 'Before food') return v < 100 ? ['Normal', 'good'] : v < 126 ? ['Slightly high', 'warnc'] : ['High', 'bad'];
   return v < 140 ? ['Normal', 'good'] : v < 200 ? ['Slightly high', 'warnc'] : ['High', 'bad'];
+}
+function spo2Level(r) { return r.val >= 95 ? ['Normal', 'good'] : r.val >= 91 ? ['A bit low', 'warnc'] : ['Low', 'bad']; }
+function tempLevel(r) { const f = r.val; return f >= 100.4 ? ['Fever', 'bad'] : f >= 99.1 ? ['Slightly high', 'warnc'] : f < 95 ? ['Low', 'bad'] : ['Normal', 'good']; }
+const READINGS = {
+  bp: { icon: '🩺', label: 'BP', show: r => `${r.sys}/${r.dia}`, sub: r => r.pulse ? 'pulse ' + r.pulse : '', level: bpLevel },
+  sugar: { icon: '🩸', label: 'Sugar', show: r => `${r.val} mg/dL`, sub: r => r.kind === 'Fasting' ? 'Before food' : r.kind, level: sugarLevel },
+  spo2: { icon: '🫁', label: 'SpO₂', show: r => `${r.val}%`, sub: r => r.pulse ? 'pulse ' + r.pulse : '', level: spo2Level },
+  temp: { icon: '🌡️', label: 'Temp', show: r => `${r.val}°F`, sub: () => '', level: tempLevel },
+};
+function lastReading(k, beforeDate) {        // latest reading strictly before this day
+  const ds = Object.keys(S.data.days).filter(x => x < beforeDate).sort().reverse();
+  for (const x of ds) { const arr = (S.data.days[x] || {})[k] || []; if (arr.length) return { date: x, r: arr[arr.length - 1] }; }
+  return null;
 }
 function healthCard(date, d) {
   const tm = x => x.at ? new Date(x.at).toLocaleTimeString('en-IN', { hour: 'numeric', minute: '2-digit' }) : '';
-  const bp = (d.bp || []).map(r => { const [l, c] = bpLevel(r); return `<div class="li"><span>🩺 ${tm(r)} <small>${r.pulse ? 'pulse ' + r.pulse : ''}</small></span><span class="r" style="display:flex;align-items:center;gap:6px"><span style="text-align:right;line-height:1.2"><b class="${c}">${r.sys}/${r.dia}</b><br><small class="${c}">${l}</small></span><button class="x" data-act="delReading" data-k="bp" data-id="${r.id}" aria-label="Delete">✕</button></span></div>`; }).join('');
-  const sg = (d.sugar || []).map(r => { const [l, c] = sugarLevel(r); return `<div class="li"><span>🩸 ${tm(r)} <small>${esc(r.kind)}</small></span><span class="r" style="display:flex;align-items:center;gap:6px"><span style="text-align:right;line-height:1.2"><b class="${c}">${r.val} mg/dL</b><br><small class="${c}">${l}</small></span><button class="x" data-act="delReading" data-k="sugar" data-id="${r.id}" aria-label="Delete">✕</button></span></div>`; }).join('');
-  return `<div class="card"><h3>BP &amp; sugar</h3>
-    <div class="photo-btns"><button class="btn" data-act="openReading" data-k="bp">🩺 Add BP</button><button class="btn" data-act="openReading" data-k="sugar">🩸 Add sugar</button></div>
-    ${bp || sg ? `<div style="margin-top:6px">${bp}${sg}</div>` : '<p class="explain" style="margin:8px 0 0">No readings for this day yet.</p>'}
+  const rows = Object.keys(READINGS).map(k => (d[k] || []).map(r => { const R = READINGS[k], [l, c] = R.level(r);
+    return `<div class="li"><span>${R.icon} ${tm(r)} <small>${esc(R.sub(r))}</small></span><span class="r" style="display:flex;align-items:center;gap:6px"><span style="text-align:right;line-height:1.2"><b class="${c}">${R.show(r)}</b><br><small class="${c}">${l}</small></span><button class="x" data-act="delReading" data-k="${k}" data-id="${r.id}" aria-label="Delete">✕</button></span></div>`; }).join('')).join('');
+  const lasts = Object.keys(READINGS).map(k => { const L = lastReading(k, date); if (!L) return ''; const R = READINGS[k], [, c] = R.level(L.r);
+    return `<div class="kv" style="font-size:13px"><span class="muted">Last ${R.label}</span><span><b class="${c}">${R.show(L.r)}</b> <small class="muted">${niceDate(L.date, { day: 'numeric', month: 'short' })}${L.r.at ? ' · ' + tm(L.r) : ''}</small></span></div>`; }).join('');
+  return `<div class="card"><h3>BP, sugar, SpO₂ &amp; temperature</h3>
+    <div class="photo-btns"><button class="btn" data-act="openReading" data-k="bp">🩺 Add BP</button><button class="btn" data-act="openReading" data-k="sugar">🩸 Add sugar</button>
+      <button class="btn" data-act="openReading" data-k="spo2">🫁 Add SpO₂</button><button class="btn" data-act="openReading" data-k="temp">🌡️ Add temp</button></div>
+    ${rows ? `<div style="margin-top:6px">${rows}</div>` : '<p class="explain" style="margin:8px 0 0">No readings for this day yet.</p>'}
+    ${lasts ? `<div style="margin-top:10px;padding-top:6px;border-top:1px solid var(--line)">${lasts}</div>` : ''}
   </div>`;
 }
 function sheetReading() {
-  const sh = S.sheet, now = sh.at, isBp = sh.k === 'bp';
+  const sh = S.sheet, now = sh.at, k = sh.k;
   const big = 'style="font-size:26px;font-weight:800;height:60px;text-align:center"';
-  return `<div class="sheet-h"><h2>${isBp ? '🩺 Add BP' : '🩸 Add blood sugar'}</h2><button class="x" data-act="closeSheet">✕</button></div>
-    <div class="card" style="text-align:center">
-      <div style="font-size:17px;font-weight:700">${now.toLocaleDateString('en-IN', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}</div>
-      <div class="muted" style="font-size:15px;margin-top:2px">${now.toLocaleTimeString('en-IN', { hour: 'numeric', minute: '2-digit' })}</div>
-      ${isBp ? `<div class="grid3" style="margin-top:14px;text-align:left">
+  const title = { bp: '🩺 Add BP', sugar: '🩸 Add blood sugar', spo2: '🫁 Add SpO₂ (oxygen)', temp: '🌡️ Add temperature' }[k];
+  const L = lastReading(k, fmtD(now) + 'z');
+  const body = k === 'bp' ? `<div class="grid3" style="margin-top:14px;text-align:left">
           <label>Upper (SYS)<input id="rdA" type="number" inputmode="numeric" placeholder="120" ${big}></label>
           <label>Lower (DIA)<input id="rdB" type="number" inputmode="numeric" placeholder="80" ${big}></label>
           <label>Pulse<input id="rdC" type="number" inputmode="numeric" placeholder="–" ${big}></label></div>
         <p class="explain" style="margin:8px 0 0">Normal is below 120/80. Pulse is optional.</p>`
-      : `<div class="grid2" style="margin-top:14px;text-align:left">
+    : k === 'sugar' ? `<div class="grid2" style="margin-top:14px;text-align:left">
           <label>Sugar (mg/dL)<input id="rdA" type="number" inputmode="decimal" placeholder="e.g. 110" ${big}></label>
-          <label>When<select id="rdK" style="height:60px">${['Fasting', 'After food', 'Random'].map(x => `<option ${x === (now.getHours() < 10 ? 'Fasting' : 'After food') ? 'selected' : ''}>${x}</option>`).join('')}</select></label></div>
-        <p class="explain" style="margin:8px 0 0">Normal: fasting below 100 · 2 hours after food below 140.</p>`}
+          <label>When<select id="rdK" style="height:60px">${['Before food', 'After food', 'Random'].map(x => `<option ${x === 'Before food' ? 'selected' : ''}>${x}</option>`).join('')}</select></label></div>
+        <p class="explain" style="margin:8px 0 0">Normal: before food below 100 · 2 hours after food below 140.</p>`
+    : k === 'spo2' ? `<div class="grid2" style="margin-top:14px;text-align:left">
+          <label>SpO₂ (%)<input id="rdA" type="number" inputmode="numeric" placeholder="98" ${big}></label>
+          <label>Pulse<input id="rdC" type="number" inputmode="numeric" placeholder="–" ${big}></label></div>
+        <p class="explain" style="margin:8px 0 0">Normal is 95–100%. Pulse is optional.</p>`
+    : `<div style="margin-top:14px;text-align:left"><label>Temperature (°F)<input id="rdA" type="number" step="0.1" inputmode="decimal" placeholder="98.6" ${big}></label></div>
+        <p class="explain" style="margin:8px 0 0">Normal is about 97–99 °F. You can also type °C (e.g. 37.2) — it is changed to °F.</p>`;
+  return `<div class="sheet-h"><h2>${title}</h2><button class="x" data-act="closeSheet">✕</button></div>
+    <div class="card" style="text-align:center">
+      <div style="font-size:17px;font-weight:700">${now.toLocaleDateString('en-IN', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}</div>
+      <div class="muted" style="font-size:15px;margin-top:2px">${now.toLocaleTimeString('en-IN', { hour: 'numeric', minute: '2-digit' })}</div>
+      ${body}
+      ${L ? `<p class="explain" style="margin:8px 0 0">Last time: <b>${READINGS[k].show(L.r)}</b> on ${niceDate(L.date, { day: 'numeric', month: 'short' })}${L.r.at ? ' · ' + new Date(L.r.at).toLocaleTimeString('en-IN', { hour: 'numeric', minute: '2-digit' }) : ''}</p>` : ''}
     </div>
     <button class="btn primary block" data-act="saveReading">Save</button>`;
 }
@@ -1997,6 +2057,7 @@ function sheetMedPick() {
   const sh = S.sheet;
   return `<div class="sheet-h"><h2>💊 ${esc(sh.name)}</h2><button class="x" data-act="closeSheet">✕</button></div>
     <div class="card">
+      ${medInfoOf(sh.name) || medLastLine(sh.name, S.date) ? `<p class="explain" style="margin:0 0 10px">${esc([medInfoOf(sh.name), medLastLine(sh.name, S.date)].filter(Boolean).join(' · '))}</p>` : ''}
       <p class="muted" style="margin:0 0 8px">When did you take it?</p>
       <div class="seg" style="margin:0 0 12px">${['Morning', 'Lunch', 'Evening', 'Night'].map(t => `<button class="${sh.time === t ? 'on' : ''}" data-act="medPickTime" data-v="${t}">${t}</button>`).join('')}</div>
       <label>Dose<input id="medPickDose" inputmode="decimal" value="${esc(sh.dose)}" placeholder="e.g. 1"></label>
@@ -2171,7 +2232,7 @@ function viewProfile() {
       <button class="btn blue block" data-act="exportXlsx">⬇️ Export to Excel</button>
     </div>
     <button class="btn danger block" data-act="logout" style="margin-top:6px">Log out</button>
-    <p class="explain" style="text-align:center;margin-top:14px">Minimal Health Tracker v90 · estimates only, not medical advice</p>
+    <p class="explain" style="text-align:center;margin-top:14px">Minimal Health Tracker v91 · estimates only, not medical advice</p>
   </main>`;
 }
 
@@ -2802,20 +2863,27 @@ const ACT = {
     setTimeout(() => { const i = $('#rdA'); if (i) i.focus(); }, 250);
   },
   saveReading() {
-    const sh = S.sheet, a = num(($('#rdA') || {}).value), ds = fmtD(sh.at);
+    const sh = S.sheet, a = num(($('#rdA') || {}).value), ds = fmtD(sh.at), at = sh.at.toISOString();
+    const add = (k, rec) => mutateDay(ds, d => { d[k] = d[k] || []; d[k].push(Object.assign({ id: uid(), at }, rec)); });
     if (sh.k === 'bp') {
       const b = num(($('#rdB') || {}).value), c = num(($('#rdC') || {}).value);
       if (!(a > 60 && a < 260) || !(b > 30 && b < 160)) throw fail('Enter upper and lower BP numbers, e.g. 120 and 80.');
-      mutateDay(ds, d => { d.bp = d.bp || []; d.bp.push({ id: uid(), at: sh.at.toISOString(), sys: Math.round(a), dia: Math.round(b), pulse: c ? Math.round(c) : null }); });
-      toast(`Saved BP ${Math.round(a)}/${Math.round(b)}`, 'good');
-    } else {
+      add('bp', { sys: Math.round(a), dia: Math.round(b), pulse: c ? Math.round(c) : null }); toast(`Saved BP ${Math.round(a)}/${Math.round(b)}`, 'good');
+    } else if (sh.k === 'sugar') {
       if (!(a >= 20 && a <= 600)) throw fail('Enter your sugar in mg/dL, e.g. 110.');
-      const kind = ($('#rdK') || {}).value || 'Random';
-      mutateDay(ds, d => { d.sugar = d.sugar || []; d.sugar.push({ id: uid(), at: sh.at.toISOString(), val: Math.round(a), kind }); });
-      toast(`Saved sugar ${Math.round(a)} mg/dL`, 'good');
+      add('sugar', { val: Math.round(a), kind: ($('#rdK') || {}).value || 'Before food' }); toast(`Saved sugar ${Math.round(a)} mg/dL`, 'good');
+    } else if (sh.k === 'spo2') {
+      const c = num(($('#rdC') || {}).value);
+      if (!(a >= 50 && a <= 100)) throw fail('Enter SpO₂ between 50 and 100 %.');
+      add('spo2', { val: Math.round(a), pulse: c ? Math.round(c) : null }); toast(`Saved SpO₂ ${Math.round(a)}%`, 'good');
+    } else {
+      let f = a; if (f != null && f >= 30 && f <= 45) f = f * 9 / 5 + 32;   // °C → °F
+      if (!(f >= 90 && f <= 110)) throw fail('Enter temperature in °F (e.g. 98.6) or °C (e.g. 37).');
+      add('temp', { val: Math.round(f * 10) / 10 }); toast(`Saved ${Math.round(f * 10) / 10}°F`, 'good');
     }
     S.sheet = null; render();
   },
+
   delReading(el) { const k = el.dataset.k; mutateDay(S.date, d => { d[k] = (d[k] || []).filter(r => r.id !== el.dataset.id); }); render(); },
   openWheyQ() { S.sheet = { kind: 'wheyq', what: 'whey', n: 1, date: todayStr() }; renderSheet(); },
   eggType(el) { S.sheet.eggType = el.dataset.v; renderSheet(); },
