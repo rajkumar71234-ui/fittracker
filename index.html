@@ -179,6 +179,10 @@ table.fit th{color:var(--muted);font-weight:600;font-size:12px}
 table.fit td:first-child,table.fit th:first-child{text-align:left;font-weight:600;width:24%}
 table.fit .tag{font-size:10px;padding:1px 6px;margin-top:3px}
 table.today-t{font-size:12.5px}
+.nutname{background:none;border:0;padding:0;margin:0;font:inherit;color:inherit;text-align:left;width:100%;cursor:pointer;line-height:1.25}
+.nutname .why{display:block;font-size:10.5px;font-weight:400;color:var(--muted);margin-top:1px}
+.nutname .car{color:var(--muted);font-size:10px;margin-right:2px}
+tr.nut-x > td{background:var(--input);border-radius:10px}
 table.today-t td:first-child,table.today-t th:first-child{width:23%;word-break:normal;overflow-wrap:normal;hyphens:none}
 table.today-t td:last-child,table.today-t th:last-child{width:19%}
 .big2{font-size:30px;font-weight:800;letter-spacing:-.02em;line-height:1.1}
@@ -1042,7 +1046,7 @@ function viewAuth() {
   return `<div class="auth">
     <img class="logo" src="icons/logo.png" alt="">
     <h1>Minimal Health Tracker</h1>
-    <p class="sub">Your weight-loss tracker · v117</p>
+    <p class="sub">Your weight-loss tracker · v118</p>
     ${m !== 'forgot' ? `<div class="seg">
       <button data-act="authMode" data-v="login" class="${m === 'login' ? 'on' : ''}">Log in</button>
       <button data-act="authMode" data-v="create" class="${m === 'create' ? 'on' : ''}">Create account</button>
@@ -1294,6 +1298,49 @@ function dailyCharts(p, last) {
     <div class="legend"><span><i style="background:var(--bad)"></i>gain ↑</span><span><i style="background:var(--accent)"></i>loss ↓</span><span>last ${n} day${n > 1 ? 's' : ''} · date of month below</span></div>`;
 }
 
+const NUT_WHY = {
+  'Calories': 'fuel \u2014 more than you burn turns into weight',
+  'Protein': 'repairs and builds muscle',
+  'Carbs': 'your main day-to-day energy',
+  'Sugar': 'fast energy, spikes blood sugar',
+  'Fat': 'hormones, and absorbing vitamins A, D, E, K',
+  'Saturated fat': 'raises your blood LDL the most',
+  'Unsaturated fat': 'the helpful fat \u2014 works against LDL',
+  'Trans fat': 'raises LDL and lowers HDL at the same time',
+  'Fibre': 'digestion, keeps you full, pulls LDL down',
+  'Cholesterol': 'from animal food \u2014 nudges LDL up',
+  'Vit A': 'eyes, skin and immunity',
+  'Vit C': 'immunity, and helps you absorb iron',
+  'Vit B12': 'nerves and red blood cells',
+  'Folate': 'making red blood cells',
+  'Calcium': 'bones and teeth',
+  'Iron': 'carries oxygen around your blood',
+  'Magnesium': 'muscle recovery and better sleep',
+  'Potassium': 'helps keep blood pressure down',
+  'Zinc': 'immunity and healing',
+  'Sodium': 'salt \u2014 too much pushes blood pressure up',
+};
+const NUT_MICRO = { 'Sugar': 'sugar', 'Saturated fat': 'satfat', 'Trans fat': 'transfat', 'Fibre': 'fiber',
+  'Cholesterol': 'chol', 'Vit A': 'vitA', 'Vit C': 'vitC', 'Vit B12': 'vitB12', 'Folate': 'folate',
+  'Calcium': 'calcium', 'Iron': 'iron', 'Magnesium': 'magnesium', 'Potassium': 'potassium', 'Zinc': 'zinc', 'Sodium': 'sodium' };
+function nutValue(m, label) {
+  if (label === 'Calories') return Number(m.kcal) || 0;
+  if (label === 'Protein') return Number(m.protein) || 0;
+  if (label === 'Carbs') return Number(m.carbs) || 0;
+  if (label === 'Fat') return Number(m.fat) || 0;
+  if (label === 'Unsaturated fat') {
+    const mi = microOfMeal(m), f = Number(m.fat) || 0;
+    return Math.max(0, f - (mi && mi.satfat != null ? Number(mi.satfat) || 0 : 0));
+  }
+  const k = NUT_MICRO[label]; if (!k) return 0;
+  const mi = microOfMeal(m);
+  return mi && mi[k] != null ? Number(mi[k]) || 0 : 0;
+}
+function nutBreakdown(date, label) {
+  return ((S.data.days[date] || {}).meals || [])
+    .map(m => ({ name: m.name, grams: Number(m.grams) || 0, v: nutValue(m, label) }))
+    .filter(x => x.v > 0.0005).sort((a, b) => b.v - a.v);
+}
 function todayTable(date) {
   const st = dayStats(date), nd = nutritionNeeds(date), dn = dayNutrition(date).tot, rda = microRDA(P());
   const fmt = v => Math.abs(v) < 10 && Math.round(v) !== v ? r1(v) : r0(v).toLocaleString('en-IN');
@@ -1303,8 +1350,20 @@ function todayTable(date) {
     let cls, word;
     if (limit) { cls = bal >= 0 ? 'good' : 'bad'; word = bal >= 0 ? 'left' : 'over'; }
     else { cls = bal <= 0 ? 'good' : pct >= 40 ? 'warnc' : 'bad'; word = bal <= 0 ? 'done ✓' : 'short'; }
-    return `<tr><td>${label}</td><td>${limit && (label === 'Sugar' || label === 'Sodium' || label === 'Cholesterol' || label === 'Saturated fat' || label === 'Trans fat') ? '≤ ' : ''}${fmt(need)} <small class="muted">${u}</small></td><td>${fmt(ate)} <small class="muted">${u}</small></td>
-      <td class="${cls}"><b>${bal <= 0 && !limit ? '' : fmt(Math.abs(bal))}</b>${bal <= 0 && !limit ? '' : '<br>'}<small>${word}</small></td><td>${pctBar(ate, need, limit)}</td></tr>`;
+    const open = !!(S.openNut || {})[label];
+    const why = NUT_WHY[label] ? `<span class="why">${NUT_WHY[label]}</span>` : '';
+    const name = `<button class="nutname" data-act="toggleNut" data-n="${esc(label)}" aria-expanded="${open}"><span class="car">${open ? '▾' : '▸'}</span>${label}${why}</button>`;
+    let drop = '';
+    if (open) {
+      const list = nutBreakdown(date, label), top = list.length ? list[0].v : 0;
+      drop = `<tr class="nut-x"><td colspan="5" style="padding:8px 10px 10px">
+        ${list.length ? list.map(x => `<div class="kv" style="font-size:12.5px;padding:2px 0"><span>${esc(x.name)}${x.grams ? ` <small class="muted">${r0(x.grams)} g</small>` : ''}</span><span><b>${fmt(x.v)}</b> <small class="muted">${u}</small></span></div>
+          <div class="bar" style="height:4px;margin:0 0 7px"><i style="width:${top > 0 ? Math.round(x.v / top * 100) : 0}%"></i></div>`).join('')
+          : `<p class="explain" style="margin:0">Nothing you logged today has any ${label.toLowerCase()}.</p>`}
+      </td></tr>`;
+    }
+    return `<tr><td>${name}</td><td>${limit && (label === 'Sugar' || label === 'Sodium' || label === 'Cholesterol' || label === 'Saturated fat' || label === 'Trans fat') ? '≤ ' : ''}${fmt(need)} <small class="muted">${u}</small></td><td>${fmt(ate)} <small class="muted">${u}</small></td>
+      <td class="${cls}"><b>${bal <= 0 && !limit ? '' : fmt(Math.abs(bal))}</b>${bal <= 0 && !limit ? '' : '<br>'}<small>${word}</small></td><td>${pctBar(ate, need, limit)}</td></tr>${drop}`;
   };
   return `<div class="card" style="padding:10px">
     <table class="fit today-t">
@@ -1335,6 +1394,7 @@ function todayTable(date) {
         ${row('Sodium', rda.sodium, dn.sodium, 'mg', true)}
       </tbody>
     </table>
+    <p class="explain" style="margin-top:6px"><b>Tap any name</b> to see which foods it came from, and tap it again to close.</p>
     <p class="explain">A <b>~</b> in front of a fat figure means the split was worked out from the kind of food it is, not read off a label. <b>Saturated fat</b> comes from ghee, butter, coconut, full-cream dairy and fatty meat. Of everything you eat, it is what pushes your blood LDL up the most &mdash; more than cholesterol in food does. <b>Unsaturated fat</b> is the rest of the fat &mdash; groundnut and sunflower oil, nuts, seeds and fish &mdash; and it works the other way. Cholesterol comes only from animal food &mdash; egg yolk, meat, fish, prawn, ghee, butter, full-cream milk, paneer, cheese. Your limit is ${nd.chol} mg a day${nd.cholTight ? ` and your saturated-fat limit is ${nd.satfat} g (6% of calories), both tightened because of ${nd.tightWhy}` : ' and your saturated-fat limit is ' + nd.satfat + ' g (10% of calories)'}; food cholesterol nudges your blood LDL up too, but less than saturated fat does. <b>Trans fat</b> is the worst of the three for your heart &mdash; it pushes LDL up and HDL down at the same time. It is 0 in fresh and home-cooked food, and shows up in vanaspati bakery items, shop-fried snacks and a little naturally in ghee and dairy. Keep it under ${nd.transfat} g a day; less is always better. <b>LDL and HDL are not in food at all</b> &mdash; they are carriers in your blood that only a blood test measures, and you log them in the vitals card. Calories, carbs, sugar, fat, cholesterol and sodium: above 100% turns <b class="bad">red</b>. Protein, fibre, vitamins and minerals: try to reach 100%. Calorie target = what your body uses (${r0(st.base)}) + exercise (${r0(st.exNet + st.stepsK)}) − ${r0(dailyTarget().need)} kcal cut for your goal.</p>
   </div>`;
 }
@@ -2469,7 +2529,7 @@ function viewProfile() {
       <button class="btn blue block" data-act="exportXlsx">⬇️ Export to Excel</button>
     </div>
     <button class="btn danger block" data-act="logout" style="margin-top:6px">Log out</button>
-    <p class="explain" style="text-align:center;margin-top:14px">Minimal Health Tracker v117 · estimates only, not medical advice</p>
+    <p class="explain" style="text-align:center;margin-top:14px">Minimal Health Tracker v118 · estimates only, not medical advice</p>
   </main>`;
 }
 
@@ -3249,6 +3309,12 @@ const ACT = {
     });
     S.sheet = null;
     toast(`Saved ${n} cup${n == 1 ? '' : 's'} = ${r0(tot.protein)} g protein`, 'good');
+    render();
+  },
+  toggleNut(el) {
+    const k = el.dataset.n;
+    S.openNut = S.openNut || {};
+    if (S.openNut[k]) delete S.openNut[k]; else S.openNut[k] = 1;
     render();
   },
   openSnackQ(el) { const k = el.dataset.w; S.sheet = { kind: 'snackq', what: k, n: SNACKQ[k].n0 || 1, date: S.date || todayStr() }; renderSheet(); },
