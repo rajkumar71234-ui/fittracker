@@ -978,26 +978,6 @@ async function loadData() {
     S.screen = 'error'; S.errorMsg = fbErr(e).message; render();
   }
 }
-// bring an account from the old (GitHub) app into this login
-async function copyLegacy(oldU, uid, checkPw) {
-  const c = CONFIG;
-  if (!c || !c.token) throw fail('Old data store is not reachable right now. Try again later.');
-  const u = String(oldU || '').trim().toLowerCase();
-  if (!u) throw fail('Enter your old username.');
-  const claim = await fbDb.collection('legacy').doc(u).get().catch(() => null);
-  if (claim && claim.exists && claim.data().uid !== uid) throw fail('That old account is already linked to another email.');
-  const r = await GH.get(c.owner, c.dataRepo, `users/${u}.json`, c.token);
-  if (!r) throw fail('No old account with that username.');
-  if (checkPw != null) {
-    const rec = JSON.parse(r.text);
-    if (await pwHash(checkPw, b64ToBytes(rec.salt), rec.iter || PBKDF2_ITER) !== rec.hash) throw fail('Old password is wrong.');
-  }
-  const f = await GH.get(c.owner, c.dataRepo, `data/${u}.json`, c.token);
-  const old = f ? JSON.parse(f.text) : { profile: null, days: {} };
-  if (!(claim && claim.exists)) await fbDb.collection('legacy').doc(u).set({ uid, at: new Date().toISOString() });
-  await fbWriteAll(uid, old.profile || null, old.days || {}, { legacy: u, linkedAt: new Date().toISOString() });
-  return Object.keys(old.days || {}).length;
-}
 function logout() {
   if ((S.dirtyDays.size || S.profileDirty) && !confirm('Some changes are not saved yet. Log out anyway?')) return;
   forgetUser();
@@ -1017,7 +997,7 @@ function viewAuth() {
   return `<div class="auth">
     <img class="logo" src="icons/logo.png" alt="">
     <h1>Minimal Health Tracker</h1>
-    <p class="sub">Your weight-loss tracker · v92</p>
+    <p class="sub">Your weight-loss tracker · v93</p>
     ${m !== 'forgot' ? `<div class="seg">
       <button data-act="authMode" data-v="login" class="${m === 'login' ? 'on' : ''}">Log in</button>
       <button data-act="authMode" data-v="create" class="${m === 'create' ? 'on' : ''}">Create account</button>
@@ -2242,7 +2222,7 @@ function viewProfile() {
       <button class="btn blue block" data-act="exportXlsx">⬇️ Export to Excel</button>
     </div>
     <button class="btn danger block" data-act="logout" style="margin-top:6px">Log out</button>
-    <p class="explain" style="text-align:center;margin-top:14px">Minimal Health Tracker v92 · estimates only, not medical advice</p>
+    <p class="explain" style="text-align:center;margin-top:14px">Minimal Health Tracker v93 · estimates only, not medical advice</p>
   </main>`;
 }
 
@@ -2626,7 +2606,7 @@ function onWorkoutInput(t) {
 function renderSheet() {
   const root = $('#sheet-root');
   if (!S.sheet) { root.innerHTML = ''; document.body.classList.remove('lock'); return; }
-  const inner = S.sheet.kind === 'food' ? sheetFood() : S.sheet.kind === 'confirm' ? sheetConfirm() : S.sheet.kind === 'scale' ? sheetScale() : S.sheet.kind === 'weight' ? sheetAddWeight() : S.sheet.kind === 'steps' ? sheetSteps() : S.sheet.kind === 'wheyq' ? sheetWheyQ() : S.sheet.kind === 'medPick' ? sheetMedPick() : S.sheet.kind === 'adminLink' ? sheetAdminLink() : S.sheet.kind === 'cal' ? sheetCal() : S.sheet.kind === 'reading' ? sheetReading() : sheetWorkout();
+  const inner = S.sheet.kind === 'food' ? sheetFood() : S.sheet.kind === 'confirm' ? sheetConfirm() : S.sheet.kind === 'scale' ? sheetScale() : S.sheet.kind === 'weight' ? sheetAddWeight() : S.sheet.kind === 'steps' ? sheetSteps() : S.sheet.kind === 'wheyq' ? sheetWheyQ() : S.sheet.kind === 'medPick' ? sheetMedPick() : S.sheet.kind === 'cal' ? sheetCal() : S.sheet.kind === 'reading' ? sheetReading() : sheetWorkout();
   const existing = $('.sheet', root);
   if (existing) { const st = existing.scrollTop; existing.innerHTML = '<div class="grab"></div>' + inner; existing.scrollTop = st; }
   else root.innerHTML = `<div class="sheet-backdrop" data-act="closeSheet" data-backdrop="1"><div class="sheet"><div class="grab"></div>${inner}</div></div>`;
@@ -2690,13 +2670,6 @@ const ACT = {
     render(); toTop();
   },
   adminBack() { if (S.ownData) S.data = S.ownData; S.ownData = null; S.viewing = null; S.tab = 'admin'; S.screen = 'main'; render(); toTop(); },
-  adminLinkOpen(el) { S.sheet = { kind: 'adminLink', uid: el.dataset.uid, email: el.dataset.email }; renderSheet(); },
-  async adminLinkSave(el) {
-    const u = ($('#adminOldUser') || {}).value || '';
-    busy(el, 'Copying…');
-    try { const n = await copyLegacy(u, S.sheet.uid, null); S.sheet = null; toast(`Linked — ${n} days copied`, 'good'); await adminLoadUsers(true); }
-    finally { unbusy(el); }
-  },
   async adminExcel(el) { busy(el, 'Preparing Excel…'); try { await adminExport(); } finally { unbusy(el); } },
   async create(el) { try { await doCreate(el); } finally { unbusy(el); } },
   async setup(el) { try { await doSetup(el); } finally { unbusy(el); } },
@@ -3215,7 +3188,7 @@ function viewAdmin() {
   const rows = (a.users || []).map(u => `<div class="li" style="flex-wrap:wrap;row-gap:6px">
       <span style="min-width:0"><b>${esc(u.name || '(no profile yet)')}</b><br><small>${esc(u.email)}${u.legacy ? ' · old: ' + esc(u.legacy) : ''}</small><br>
         <small class="muted">${u.p.startWeight ? `${u.p.startWeight} kg → ${r1(u.p.startWeight - (u.p.targetLoss || 0))} kg · ` : ''}last active ${u.lastActive ? niceDate(u.lastActive, { day: 'numeric', month: 'short' }) : '—'}</small></span>
-      <span style="display:flex;gap:6px;margin-left:auto">${u.legacy ? '' : `<button class="btn small" data-act="adminLinkOpen" data-uid="${u.uid}" data-email="${esc(u.email)}">Link old</button>`}<button class="btn small" data-act="adminOpen" data-uid="${u.uid}">Open</button></span>
+      <span style="display:flex;gap:6px;margin-left:auto"><button class="btn small" data-act="adminOpen" data-uid="${u.uid}">Open</button></span>
     </div>`).join('');
   return header('Admin') + `<main>
     <div class="card"><h3>All users <small class="muted">${(a.users || []).length}</small></h3>
@@ -3223,15 +3196,8 @@ function viewAdmin() {
       ${a.error ? `<div class="note bad" style="margin-top:10px">${esc(a.error)}</div>` : ''}
       ${a.loading && !(a.users || []).length ? '<div class="center" style="min-height:80px"><div class="spinner"></div></div>' : rows || '<p class="muted" style="margin:10px 0 0">No users yet.</p>'}
     </div>
-    <p class="explain" style="text-align:center">Open = see that user's app (read only). Link old = copy their data from the old app if they forgot the old password.</p>
+    <p class="explain" style="text-align:center">Open = see that user's app, read only.</p>
   </main>`;
-}
-function sheetAdminLink() {
-  const sh = S.sheet;
-  return `<div class="sheet-h"><h2>Link old account</h2><button class="x" data-act="closeSheet">✕</button></div>
-    <div class="card"><p class="explain" style="margin:0 0 10px">Copy data from the old app into <b>${esc(sh.email)}</b>.</p>
-      <label>Old username<input id="adminOldUser" autocapitalize="none" autocorrect="off"></label></div>
-    <button class="btn primary block" data-act="adminLinkSave">Copy data</button>`;
 }
 async function adminExport() {
   if (!window.XLSX) await new Promise((ok, bad) => {
