@@ -266,6 +266,7 @@ const SLOTS = [
   { id: 'lunch',     label: 'Lunch',     icon: '🍛' },
   { id: 'dinner',    label: 'Dinner',    icon: '🍲' },
   { id: 'sprouts',   label: 'Sprouted',  icon: '🌱' },
+  { id: 'seeds',     label: 'Nuts & seeds', icon: '🌰' },
   { id: 'fruits',    label: 'Fruits',    icon: '🍎' },
   { id: 'snacks',    label: 'Tea & Snacks', icon: '☕' },
   { id: 'whey',      label: 'Whey protein', icon: '💪' },
@@ -1038,7 +1039,7 @@ function viewAuth() {
   return `<div class="auth">
     <img class="logo" src="icons/logo.png" alt="">
     <h1>Minimal Health Tracker</h1>
-    <p class="sub">Your weight-loss tracker · v112</p>
+    <p class="sub">Your weight-loss tracker · v113</p>
     ${m !== 'forgot' ? `<div class="seg">
       <button data-act="authMode" data-v="login" class="${m === 'login' ? 'on' : ''}">Log in</button>
       <button data-act="authMode" data-v="create" class="${m === 'create' ? 'on' : ''}">Create account</button>
@@ -1923,6 +1924,7 @@ function quickCard(t) {
           <button class="btn" data-act="openEggQ">🥚 Egg</button>
           <button class="btn" data-act="openSproutQ">🌱 Sprouts</button>
           <button class="btn" data-act="openSnackQ" data-w="pumpkin">🎃 Pumpkin seeds</button>
+          <button class="btn" data-act="openSnackQ" data-w="almond">🌰 Almonds</button>
           <button class="btn" data-act="openSnackQ" data-w="ellu">🟤 Sesame balls</button>
         </div>
       </div>
@@ -2017,7 +2019,7 @@ function sheetSprouts() {
 const SNACKQ = {
   pumpkin: {
     icon: '\u{1F383}', title: 'Pumpkin seeds', unit: ['spoon', 'spoons'], step: 0.5, max: 10,
-    gKey: 'pumpkinG', gDef: 5, gLabel: 'Grams in one spoon',
+    gKey: 'pumpkinG', gDef: 5, gLabel: 'Grams in one spoon', slot: 'seeds',
     per100: { k: 559, p: 30.2, c: 10.7, f: 49.1 },
     micro100: { fiber: 6, sugar: 1.4, calcium: 46, iron: 8.8, magnesium: 592, potassium: 809, sodium: 7, zinc: 7.8, vitA: 1, vitC: 0.3, vitB12: 0, folate: 58, chol: 0, satfat: 8.7 },
     hi: m => `${r0(m.magnesium)} mg magnesium · ${r1(m.zinc)} mg zinc`,
@@ -2025,11 +2027,19 @@ const SNACKQ = {
   },
   ellu: {
     icon: '\u{1F7E4}', title: 'Sesame balls', unit: ['ball', 'balls'], step: 1, max: 10,
-    gKey: 'elluG', gDef: 20, gLabel: 'Grams in one ball',
+    gKey: 'elluG', gDef: 20, gLabel: 'Grams in one ball', slot: 'snacks',
     per100: { k: 489, p: 10, c: 55.8, f: 27.3 },
     micro100: { fiber: 6.5, sugar: 40.5, calcium: 571, iron: 13, magnesium: 193, potassium: 450, sodium: 12, zinc: 4.2, vitA: 0, vitC: 0, vitB12: 0, folate: 50, chol: 0, satfat: 3.9 },
     hi: m => `${r0(m.calcium)} mg calcium · ${r1(m.sugar)} g sugar`,
     note: 'Ellu urundai — roasted sesame with palm jaggery, about 55:45 by weight. Great calcium and iron, but the jaggery is still sugar, so it counts against your sugar limit.',
+  },
+  almond: {
+    icon: '\u{1F330}', title: 'Almonds', unit: ['almond', 'almonds'], step: 1, max: 40, n0: 5,
+    gKey: 'almondG', gDef: 1.5, gLabel: 'Grams in one almond', slot: 'seeds',
+    per100: { k: 579, p: 21, c: 22, f: 50 },
+    micro100: { fiber: 12.5, sugar: 4.4, calcium: 270, iron: 3.7, magnesium: 270, potassium: 733, sodium: 1, zinc: 3.1, vitA: 0, vitC: 0, vitB12: 0, folate: 44, chol: 0, satfat: 4 },
+    hi: m => `${r0(m.magnesium)} mg magnesium \u00b7 ${r1(m.fiber)} g fibre`,
+    note: 'One almond is about 1.5 g, so 10 make a 15 g handful. No cholesterol, and only about a twelfth of the fat is saturated \u2014 the rest is the kind that helps your LDL.',
   },
 };
 function snackDefaults(key) {
@@ -2058,7 +2068,7 @@ function sheetSnackQ() {
         <button class="round" data-act="snackStep" data-v="${c.step}" aria-label="More">+</button>
       </div>
       <p style="margin:8px 0 0;font-size:17px;font-weight:700">${r0(t.kcal)} kcal · ${r1(t.protein)} g protein · ${r1(t.fat)} g fat</p>
-      <p class="explain" style="margin:4px 0 0">1 ${c.unit[0]} = ${r0(one.grams)} g · ${r0(one.kcal)} kcal · ${c.hi(one.micro)}</p>
+      <p class="explain" style="margin:4px 0 0">1 ${c.unit[0]} = ${one.grams < 10 ? r1(one.grams) : r0(one.grams)} g · ${r0(one.kcal)} kcal · ${c.hi(one.micro)}</p>
       ${done ? `<p class="explain" style="margin:6px 0 0"><b class="good">Already logged today:</b> ${r0(done)} kcal from ${c.title.toLowerCase()}. Saving now adds to that.</p>` : ''}
     </div>
     <div class="card">
@@ -2407,7 +2417,7 @@ function viewProfile() {
       <button class="btn blue block" data-act="exportXlsx">⬇️ Export to Excel</button>
     </div>
     <button class="btn danger block" data-act="logout" style="margin-top:6px">Log out</button>
-    <p class="explain" style="text-align:center;margin-top:14px">Minimal Health Tracker v112 · estimates only, not medical advice</p>
+    <p class="explain" style="text-align:center;margin-top:14px">Minimal Health Tracker v113 · estimates only, not medical advice</p>
   </main>`;
 }
 
@@ -3188,7 +3198,7 @@ const ACT = {
     toast(`Saved ${n} cup${n == 1 ? '' : 's'} = ${r0(tot.protein)} g protein`, 'good');
     render();
   },
-  openSnackQ(el) { S.sheet = { kind: 'snackq', what: el.dataset.w, n: 1, date: S.date || todayStr() }; renderSheet(); },
+  openSnackQ(el) { const k = el.dataset.w; S.sheet = { kind: 'snackq', what: k, n: SNACKQ[k].n0 || 1, date: S.date || todayStr() }; renderSheet(); },
   snackStep(el) {
     const s = S.sheet, c = SNACKQ[s.what];
     const v = s.n + Number(el.dataset.v);
@@ -3205,7 +3215,7 @@ const ACT = {
     const u = n == 1 ? c.unit[0] : c.unit[1];
     mutateDay(t, d => {
       d.meals = d.meals || [];
-      d.meals.push({ id: uid(), slot: 'snacks', name: `${c.title} (${n} ${u})`,
+      d.meals.push({ id: uid(), slot: c.slot || 'snacks', name: `${c.title} (${n} ${u})`,
         grams: r1(tot.grams), kcal: r0(tot.kcal), protein: r1(tot.protein), carbs: r1(tot.carbs), fat: r1(tot.fat),
         micro: mi, source: key, at: new Date().toISOString() });
     });
