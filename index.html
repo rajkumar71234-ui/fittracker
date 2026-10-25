@@ -997,7 +997,7 @@ function viewAuth() {
   return `<div class="auth">
     <img class="logo" src="icons/logo.png" alt="">
     <h1>Minimal Health Tracker</h1>
-    <p class="sub">Your weight-loss tracker · v95</p>
+    <p class="sub">Your weight-loss tracker · v96</p>
     ${m !== 'forgot' ? `<div class="seg">
       <button data-act="authMode" data-v="login" class="${m === 'login' ? 'on' : ''}">Log in</button>
       <button data-act="authMode" data-v="create" class="${m === 'create' ? 'on' : ''}">Create account</button>
@@ -1644,21 +1644,6 @@ function wheyCard(date) {
   </div>`;
 }
 
-function cholStrip(date, nd) {
-  const ateC = dayNutrition(date).tot.chol || 0, tg = nd.chol, left = tg - ateC, over = left < 0;
-  const box = (l, v, u, c, foot) => `<div class="stat" style="text-align:center;padding:10px 4px"><small style="white-space:nowrap">${l}</small><b class="${c || ''}" style="white-space:nowrap;margin:2px 0">${v}<small style="display:inline;font-size:13px;font-weight:600"> ${u}</small></b><span style="white-space:nowrap">${foot}</span></div>`;
-  return `<div style="margin-top:12px;padding-top:10px;border-top:1px solid var(--line)">
-    <div style="display:flex;align-items:baseline;justify-content:space-between;gap:10px">
-      <b style="font-size:15px">🫀 Cholesterol</b>
-      <small class="muted" style="font-size:12.5px">the bad-cholesterol kind</small>
-    </div>
-    <div class="grid3" style="margin-top:8px;align-items:stretch">
-      ${box('Target', r0(tg), 'mg', '', 'a day')}
-      ${box('Ate', r0(ateC), 'mg', over ? 'bad' : 'good', 'from food')}
-      ${box(over ? 'Over' : 'Left', (over ? '+' : '') + r0(Math.abs(left)), 'mg', over ? 'bad' : 'good', over ? 'too much' : 'still ok')}
-    </div>
-  </div>`;
-}
 function calcCard(st, ate, logged, date) {
   const need = st.base, burn = st.exNet + st.stepsK;
   const diff = need - ate;                  // + = still under, − = extra eaten
@@ -1684,7 +1669,7 @@ function calcCard(st, ate, logged, date) {
     ${row('+', 'Burned', [`Exercise ${fmt(st.exNet)}`, `Steps ${fmt(st.stepsK)}${st.d && st.d.steps ? ` (${Number(st.d.steps).toLocaleString('en-IN')} steps)` : ''}`], bDone.toLocaleString('en-IN'), 'good', false,
       [`Target ${fmt(burnTg)}`, `<span class="${bGap >= 0 ? 'good' : 'bad'}">${bGap >= 0 ? 'done ✓' + (bGap > 0 ? ' +' + fmt(bGap) : '') : fmt(-bGap) + ' to go'}</span>`])}
     ${row('=', def >= 0 ? 'Deficit' : 'Surplus', def >= 0 ? 'this turns into weight loss' : 'this turns into weight gain', sign(def) + r0(Math.abs(def)).toLocaleString('en-IN'), def >= 0 ? 'good' : 'bad', true)}
-    ${cholStrip(date, nd)}
+    ${cholLine(date)}
     ${logged ? `<div class="grid3" style="margin-top:12px;align-items:stretch">
       ${proj(date === todayStr() ? 'Today' : 'This day', g, true)}
       ${proj('1 week', g * 7)}
@@ -2239,7 +2224,7 @@ function viewProfile() {
       <button class="btn blue block" data-act="exportXlsx">⬇️ Export to Excel</button>
     </div>
     <button class="btn danger block" data-act="logout" style="margin-top:6px">Log out</button>
-    <p class="explain" style="text-align:center;margin-top:14px">Minimal Health Tracker v95 · estimates only, not medical advice</p>
+    <p class="explain" style="text-align:center;margin-top:14px">Minimal Health Tracker v96 · estimates only, not medical advice</p>
   </main>`;
 }
 
