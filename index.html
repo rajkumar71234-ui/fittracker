@@ -478,6 +478,9 @@ function needsCard(date) {
 
 // Workouts. calc: tread = ACSM treadmill equation, bike = ACSM cycle equation, met = MET table, custom = you enter kcal
 const INTENSITY = ['Light', 'Moderate', 'Hard'];
+/* some machines are set a different way — a spin bike by the position you ride in */
+function effortOf(m) { return (m && m.levels) || INTENSITY; }
+function effortLabel(m, i) { const L = effortOf(m); return L[i] != null ? L[i] : L[1]; }
 const STR = [3.5, 5.0, 6.0]; // MET for resistance training: light / moderate / hard
 const WORKOUTS = [
   // Cardio machines
@@ -485,7 +488,8 @@ const WORKOUTS = [
   { id: 'elliptical', g: 'Cardio machines', name: 'Elliptical / Cross trainer', icon: '〰️', calc: 'met', mets: [4.0, 5.0, 7.0] },
   { id: 'bike', g: 'Cardio machines', name: 'Upright exercise bike', icon: '🚴', calc: 'bike' },
   { id: 'recumbent', g: 'Cardio machines', name: 'Recumbent bike', icon: '🚴', calc: 'bike' },
-  { id: 'spin', g: 'Cardio machines', name: 'Spin bike', icon: '🚴', calc: 'met', mets: [5.5, 8.5, 11.0] },
+  { id: 'spin', g: 'Cardio machines', name: 'Spin bike', icon: '🚴', calc: 'met', mets: [5.5, 8.5, 11.0, 13.0],
+    levels: ['Flat', 'Jog', 'Hills', 'Heavy'], effortLabel: 'Position' },
   { id: 'airbike', g: 'Cardio machines', name: 'Air bike (fan bike)', icon: '🌀', calc: 'met', mets: [6.0, 9.0, 12.0] },
   { id: 'rower', g: 'Cardio machines', name: 'Rowing machine', icon: '🚣', calc: 'met', mets: [4.8, 7.0, 8.5] },
   { id: 'stair', g: 'Cardio machines', name: 'Stair climber / Stepper', icon: '🪜', calc: 'met', mets: [6.0, 8.8, 10.0] },
@@ -529,6 +533,13 @@ const WORKOUTS = [
   { id: 'other', g: 'Outside & sports', name: 'Other', icon: '➕', calc: 'custom' },
 ];
 const WK = Object.fromEntries(WORKOUTS.map(w => [w.id, w]));
+/* the cardio machines that get a one-tap button on the home screen */
+const CARDIO_QUICK = [
+  { id: 'treadmill', label: 'Treadmill' },
+  { id: 'elliptical', label: 'Elliptical' },
+  { id: 'bike', label: 'Upright bike' },
+  { id: 'spin', label: 'Spin bike' },
+];
 
 /* ================================================================
    STATE & SMALL HELPERS
@@ -1020,7 +1031,7 @@ function viewAuth() {
   return `<div class="auth">
     <img class="logo" src="icons/logo.png" alt="">
     <h1>Minimal Health Tracker</h1>
-    <p class="sub">Your weight-loss tracker · v104</p>
+    <p class="sub">Your weight-loss tracker · v105</p>
     ${m !== 'forgot' ? `<div class="seg">
       <button data-act="authMode" data-v="login" class="${m === 'login' ? 'on' : ''}">Log in</button>
       <button data-act="authMode" data-v="create" class="${m === 'create' ? 'on' : ''}">Create account</button>
@@ -1915,6 +1926,8 @@ function quickCard(t) {
           <label class="btn">🖼️ Gallery<input type="file" accept="image/*" multiple class="wk-photo-input" data-home="1" aria-label="Upload 1 or 2 photos of machine"></label>
           <button class="btn" data-act="homeWorkout">🏃 Workout</button>
         </div>
+        <p class="explain" style="margin:10px 0 6px">Cardio &mdash; tap the machine and fill in the numbers from its screen.</p>
+        <div class="photo-btns">${CARDIO_QUICK.map(c => `<button class="btn" data-act="quickCardio" data-v="${c.id}">${WK[c.id].icon} ${c.label}</button>`).join('')}</div>
       </div>
     </div>`;
 }
@@ -2221,7 +2234,7 @@ function wkCat(type) {
 function burnList(date, d, st) {
   const ws = d.workouts || [];
   const wkRow = w => { const m = WK[w.type] || WK.other;
-    return `<button class="li" data-act="editWorkout" data-id="${w.id}"><span>${m.icon} ${esc(w.name)} <small>${r0(w.minutes)} min${w.speed ? ` · ${w.speed} km/h` : ''}${w.incline ? ` · ${w.incline}%` : ''}${w.intensity != null && m.calc !== 'tread' && m.calc !== 'custom' ? ' · ' + INTENSITY[w.intensity] : ''}</small></span><span class="r">${r0(w.kcal)} kcal</span></button>`; };
+    return `<button class="li" data-act="editWorkout" data-id="${w.id}"><span>${m.icon} ${esc(w.name)} <small>${r0(w.minutes)} min${w.speed ? ` · ${w.speed} km/h` : ''}${w.incline ? ` · ${w.incline}%` : ''}${w.intensity != null && m.calc !== 'tread' && m.calc !== 'custom' ? ' · ' + effortLabel(m, w.intensity) : ''}</small></span><span class="r">${r0(w.kcal)} kcal</span></button>`; };
   const cats = BURN_CATS.map(c => {
     const items = ws.filter(w => wkCat(w.type) === c.c);
     const kc = items.reduce((a, w) => a + (w.kcal || 0), 0);
@@ -2314,7 +2327,7 @@ function viewProfile() {
       <button class="btn blue block" data-act="exportXlsx">⬇️ Export to Excel</button>
     </div>
     <button class="btn danger block" data-act="logout" style="margin-top:6px">Log out</button>
-    <p class="explain" style="text-align:center;margin-top:14px">Minimal Health Tracker v104 · estimates only, not medical advice</p>
+    <p class="explain" style="text-align:center;margin-top:14px">Minimal Health Tracker v105 · estimates only, not medical advice</p>
   </main>`;
 }
 
@@ -2702,7 +2715,7 @@ function keyBox() {
 function sheetWorkout() {
   const sh = S.sheet, w = sh.w, m = WK[w.type], kg = weightOn(S.date);
   const sugg = r0(wkSuggest(w, kg));
-  const intensitySel = `<label>Effort<select data-wf="intensity">${INTENSITY.map((l, i) => `<option value="${i}" ${(w.intensity ?? 1) === i ? 'selected' : ''}>${l}</option>`).join('')}</select></label>`;
+  const intensitySel = `<label>${m.effortLabel || 'Effort'}<select data-wf="intensity">${effortOf(m).map((l, i) => `<option value="${i}" ${(w.intensity ?? 1) === i ? 'selected' : ''}>${l}</option>`).join('')}</select></label>`;
   let fields = `<label>Minutes<input type="number" step="any" inputmode="decimal" data-wf="minutes" value="${w.minutes ?? ''}"></label>`;
   if (m.calc === 'tread') {
     fields = `<div class="grid3 field">${fields}<label>Speed (km/h)<input type="number" step="any" inputmode="decimal" data-wf="speed" value="${w.speed ?? ''}"></label>
@@ -3099,6 +3112,14 @@ const ACT = {
     render();
   },
   burnWorkout() { const ds = S.date; ACT.homeWorkout(); S.date = ds; },
+  quickCardio(el) {
+    const id = el.dataset.v, m = WK[id]; if (!m) return;
+    S.date = todayStr();
+    S.sheet = { kind: 'workout', editId: null, noPhoto: true, photos: [],
+      w: { type: id, name: m.name, minutes: null, speed: null, incline: null, intensity: 1, watts: null, kcal: null, manual: false } };
+    renderSheet();
+    setTimeout(() => { const i = document.querySelector('[data-wf="minutes"]'); if (i) i.focus(); }, 250);
+  },
   homeWorkout() {
     S.date = todayStr();
     S.sheet = { kind: 'workout', editId: null, noPhoto: true, photos: [], w: { type: 'general', name: 'General workout', minutes: null, intensity: 1, kcal: null, manual: true } };
@@ -3227,7 +3248,7 @@ const ACT = {
             'Calcium (mg)': R(mi.calcium), 'Iron (mg)': R(mi.iron), 'Vit C (mg)': R(mi.vitC), 'Sodium (mg)': R(mi.sodium), Source: { ai: 'Photo AI', list: 'Food list', suggest: 'Suggestion', manual: 'Manual' }[m.source] || (m.source || 'Manual') });
         });
         if (d.meds) medsRows.push({ Date: ds, 'Taken?': { yes: 'Yes', no: 'No', none: 'No medicine' }[d.meds.taken] || '', Medicines: (d.meds.list || []).map(x => [x.name, x.dose, x.time].filter(Boolean).join(' ')).join('; '), Photos: (d.meds.photos || []).length, Remark: d.meds.remark || '' });
-        (d.workouts || []).forEach(w => works.push({ Date: ds, Equipment: w.name, Minutes: R(w.minutes), 'Speed (km/h)': w.speed ?? '', 'Incline (%)': w.incline ?? '', Effort: w.intensity != null ? INTENSITY[w.intensity] : '', kcal: R(w.kcal) }));
+        (d.workouts || []).forEach(w => works.push({ Date: ds, Equipment: w.name, Minutes: R(w.minutes), 'Speed (km/h)': w.speed ?? '', 'Incline (%)': w.incline ?? '', Effort: w.intensity != null ? effortLabel(WK[w.type], w.intensity) : '', kcal: R(w.kcal) }));
       });
       const pl = plan();
       const prof = [['Name', p.name || ''], ['Email', S.viewing ? S.viewing.email : S.session.email], ['Sex', p.sex], ['Age', p.age], ['Height (cm)', p.heightCm], ['Starting weight (kg)', p.startWeight],
