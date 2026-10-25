@@ -1002,7 +1002,7 @@ function viewAuth() {
   return `<div class="auth">
     <img class="logo" src="icons/logo.png" alt="">
     <h1>Minimal Health Tracker</h1>
-    <p class="sub">Your weight-loss tracker · v99</p>
+    <p class="sub">Your weight-loss tracker · v100</p>
     ${m !== 'forgot' ? `<div class="seg">
       <button data-act="authMode" data-v="login" class="${m === 'login' ? 'on' : ''}">Log in</button>
       <button data-act="authMode" data-v="create" class="${m === 'create' ? 'on' : ''}">Create account</button>
@@ -1913,20 +1913,21 @@ function sheetSteps() {
 }
 /* Sprouts are measured by the DRY weight you soaked, which is how people
    actually buy and measure them. Per 100 g dry (IFCT/USDA-style):
-     pacha payaru (whole green gram) — 347 kcal, 24 P, 59 C, 1.2 F, 16 fibre
-     sundal (brown chana)            — 364 kcal, 19 P, 61 C, 6 F, 17 fibre
+     green gram (whole moong)  — 347 kcal, 24 P, 59 C, 1.2 F, 16 fibre
+     white chickpeas (kabuli)  — 378 kcal, 20.5 P, 63 C, 6 F, 12.2 fibre
    Soaking and sprouting adds water, not calories. */
 const SPR = {
-  moong: { label: 'Pacha payaru', sub: 'green gram', k: 347, p: 24, c: 59, f: 1.2, fib: 16, na: 15 },
-  chana: { label: 'Sundal', sub: 'brown chana', k: 364, p: 19, c: 61, f: 6, fib: 17, na: 24 },
+  moong: { label: 'Green gram', sub: 'pacha payaru', k: 347, p: 24, c: 59, f: 1.2, fib: 16, na: 15, sat: 0.30 },
+  chana: { label: 'White chickpeas', sub: 'kabuli / sundal kadalai', k: 378, p: 20.5, c: 63, f: 6, fib: 12.2, na: 24, sat: 0.10 },
 };
-function sproutDefaults() { const x = (P() || {}).sprouts || {}; return { m: x.m ?? 60, c: x.c ?? 0 }; }
+function sproutDefaults() { const x = (P() || {}).sprouts || {}; return { m: x.m ?? 60, c: x.c ?? 40 }; }
 function sproutTotals(n, sd) {
-  const t = { grams: 0, kcal: 0, protein: 0, carbs: 0, fat: 0, fiber: 0, sodium: 0 };
+  const t = { grams: 0, kcal: 0, protein: 0, carbs: 0, fat: 0, fiber: 0, sodium: 0, satfat: 0 };
   [['moong', sd.m], ['chana', sd.c]].forEach(([key, g]) => {
     const q = (Number(g) || 0) * n / 100, x = SPR[key];
     t.grams += (Number(g) || 0) * n; t.kcal += x.k * q; t.protein += x.p * q;
     t.carbs += x.c * q; t.fat += x.f * q; t.fiber += x.fib * q; t.sodium += x.na * q;
+    t.satfat += x.f * x.sat * q;
   });
   return t;
 }
@@ -1953,7 +1954,7 @@ function sheetSprouts() {
         <label>${SPR.moong.label} (g)<input id="sprM" type="number" step="any" inputmode="decimal" value="${sd.m}"></label>
         <label>${SPR.chana.label} (g)<input id="sprC" type="number" step="any" inputmode="decimal" value="${sd.c}"></label>
       </div>
-      <p class="explain" style="margin:8px 0 0">${SPR.moong.label} = ${SPR.moong.sub} · ${SPR.chana.label} = ${SPR.chana.sub}. Change these once and they are remembered.</p>
+      <p class="explain" style="margin:8px 0 0">${SPR.moong.label} is ${SPR.moong.sub} · ${SPR.chana.label} is ${SPR.chana.sub}. Change these once and they are remembered.</p>
     </div>
     <button class="btn primary block" data-act="saveSprouts">Save ${n} ${u}</button>`;
 }
@@ -2283,7 +2284,7 @@ function viewProfile() {
       <button class="btn blue block" data-act="exportXlsx">⬇️ Export to Excel</button>
     </div>
     <button class="btn danger block" data-act="logout" style="margin-top:6px">Log out</button>
-    <p class="explain" style="text-align:center;margin-top:14px">Minimal Health Tracker v99 · estimates only, not medical advice</p>
+    <p class="explain" style="text-align:center;margin-top:14px">Minimal Health Tracker v100 · estimates only, not medical advice</p>
   </main>`;
 }
 
@@ -3022,7 +3023,7 @@ const ACT = {
       d.meals = d.meals || [];
       d.meals.push({ id: uid(), slot: 'sprouts', name: `Sprouts (${n} cup${n == 1 ? '' : 's'} · ${parts.join(' + ')})`,
         grams: r1(tot.grams), cups: n, kcal: r0(tot.kcal), protein: r1(tot.protein), carbs: r1(tot.carbs), fat: r1(tot.fat),
-        micro: { fiber: r1(tot.fiber), sodium: r0(tot.sodium), chol: 0 }, source: 'sprouts', at: new Date().toISOString() });
+        micro: { fiber: r1(tot.fiber), sodium: r0(tot.sodium), chol: 0, satfat: r1(tot.satfat) }, source: 'sprouts', at: new Date().toISOString() });
     });
     S.sheet = null;
     toast(`Saved ${n} cup${n == 1 ? '' : 's'} = ${r0(tot.protein)} g protein`, 'good');
