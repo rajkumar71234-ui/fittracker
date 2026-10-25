@@ -311,9 +311,9 @@ const FOOD = [
   ['Sugar',387,0,100,0,5,'1 tsp'],['Ghee',900,0,0,100,5,'1 tsp'],['Cooking oil',884,0,0,100,5,'1 tsp'],
 ].map(a => ({ n: a[0], k: a[1], p: a[2], c: a[3], f: a[4], s: a[5], sl: a[6] }));
 
-const MICRO_KEYS = ['fiber', 'sugar', 'calcium', 'iron', 'magnesium', 'potassium', 'sodium', 'zinc', 'vitA', 'vitC', 'vitB12', 'folate'];
+const MICRO_KEYS = ['fiber', 'sugar', 'calcium', 'iron', 'magnesium', 'potassium', 'sodium', 'zinc', 'vitA', 'vitC', 'vitB12', 'folate', 'chol'];
 // per 100 g (approximate, IFCT/USDA-style values)
-const MICRO = {"Sambar rice (sambar sadam)":[1.8, 1.2, 20, 0.8, 20, 120, 250, 0.6, 30, 3, 0, 18],"Rasam rice":[0.6, 0.8, 12, 0.4, 14, 80, 280, 0.5, 10, 4, 0, 6],"Tamarind rice (puliyodarai)":[1.5, 2.5, 25, 1.2, 20, 110, 350, 0.6, 5, 1, 0, 8],"Tomato rice":[1, 2, 15, 0.6, 15, 120, 320, 0.5, 30, 5, 0, 8],"Coconut rice":[1.5, 0.8, 10, 0.6, 20, 90, 250, 0.6, 0, 0.5, 0, 5],"Bisi bele bath":[2.5, 1.5, 30, 1.2, 25, 180, 350, 0.7, 60, 4, 0, 30],"Vegetable pulao":[1.2, 1, 15, 0.6, 15, 100, 300, 0.5, 60, 3, 0, 8],"Ghee rice":[0.4, 0.2, 8, 0.3, 10, 40, 200, 0.5, 60, 0, 0, 3],"Sakkarai pongal (sweet)":[1, 20, 20, 1.5, 20, 100, 30, 0.5, 40, 0, 0, 8],"Rava kesari":[0.6, 28, 15, 0.6, 10, 60, 40, 0.3, 50, 0, 0, 5],"Set dosa":[1.2, 0.6, 18, 0.8, 18, 70, 280, 0.5, 0, 0, 0, 12],"Ghee roast dosa":[1.2, 0.5, 18, 1, 20, 80, 300, 0.5, 60, 0, 0, 12],"Kal dosa":[1.4, 0.5, 20, 1, 20, 80, 280, 0.5, 0, 0, 0, 14],"Adai":[3.5, 1, 40, 2, 40, 250, 280, 1, 10, 2, 0, 60],"Rava idli":[1, 1, 30, 0.8, 15, 80, 330, 0.4, 20, 2, 0, 10],"Mini idli with sambar":[1.8, 1, 22, 0.9, 20, 120, 300, 0.5, 20, 2, 0, 20],"Kuzhi paniyaram":[1.2, 1, 20, 0.8, 18, 80, 250, 0.5, 5, 1, 0, 12],"Wheat dosa":[3, 1, 20, 2, 40, 150, 250, 1, 0, 0, 0, 25],"Semiya upma":[1.5, 1.5, 15, 0.8, 15, 90, 320, 0.4, 30, 3, 0, 10],"Kothu parotta":[1.5, 1.5, 30, 1.5, 20, 150, 480, 0.8, 40, 4, 0.2, 15],"Idli podi with oil":[8, 2, 150, 6, 120, 500, 600, 2.5, 10, 0, 0, 80],"Coconut chutney":[5, 2, 15, 1, 30, 250, 280, 0.5, 0, 2, 0, 15],"Tomato chutney":[1.5, 4, 15, 0.6, 12, 250, 350, 0.2, 40, 12, 0, 12],"Mint / coriander chutney":[3, 2, 60, 2.5, 30, 300, 300, 0.4, 150, 20, 0, 40],"Peanut chutney":[4, 3, 40, 1.5, 90, 350, 300, 1.5, 0, 1, 0, 60],"Kara kuzhambu":[1.8, 3, 25, 1, 15, 200, 450, 0.3, 30, 5, 0, 15],"Vatha kuzhambu":[1.5, 3, 25, 1, 15, 180, 500, 0.3, 10, 2, 0, 10],"Mor kuzhambu":[0.8, 2.5, 70, 0.3, 10, 150, 300, 0.4, 20, 3, 0.15, 8],"Keerai poriyal (greens)":[3, 1, 150, 3, 60, 400, 200, 0.6, 400, 20, 0, 100],"Beans poriyal":[3, 2.5, 40, 1, 25, 200, 220, 0.3, 35, 10, 0, 30],"Cabbage poriyal":[2.5, 3, 40, 0.6, 15, 180, 220, 0.2, 5, 25, 0, 35],"Potato fry / roast":[2, 1, 10, 0.6, 20, 350, 300, 0.3, 0, 8, 0, 15],"Egg curry":[1, 2, 40, 1.2, 12, 180, 350, 0.8, 100, 3, 0.6, 30],"Chicken chettinad":[1, 1.5, 20, 1.2, 22, 250, 400, 1.5, 30, 2, 0.3, 8],"Mutton biryani":[1, 1, 20, 1.5, 20, 160, 420, 1.8, 20, 1, 0.6, 10],"Egg biryani":[1, 1, 25, 1, 18, 140, 400, 0.8, 50, 1, 0.4, 15],"Fish (grilled / tawa)":[0.2, 0, 30, 0.8, 30, 350, 300, 0.6, 30, 0, 2, 10],"Paruppu vadai (masala vada)":[6, 1.5, 40, 3, 50, 300, 400, 1.2, 10, 2, 0, 90],"Payasam (semiya)":[0.5, 18, 100, 0.4, 12, 140, 50, 0.4, 40, 0.5, 0.3, 5],"Banana chips":[4, 4, 10, 1.2, 75, 500, 250, 0.4, 5, 6, 0, 14],"Mixture / namkeen":[5, 3, 40, 3, 70, 350, 700, 1.5, 5, 1, 0, 40],"Sundal (chana, tempered)":[7, 2, 50, 2.5, 45, 280, 250, 1.5, 5, 2, 0, 170],"Tea with milk (no sugar)":[0, 2.4, 50, 0.1, 6, 80, 20, 0.2, 15, 0, 0.2, 3],"Filter coffee (milk, no sugar)":[0, 2.8, 60, 0.1, 12, 110, 20, 0.2, 15, 0, 0.2, 3],"Black tea (no sugar)":[0, 0, 1, 0.02, 3, 40, 2, 0, 0, 0, 0, 5],"Milk (full cream)":[0, 4.8, 120, 0.1, 11, 150, 45, 0.4, 50, 0.5, 0.4, 5],"Rose milk":[0, 12, 100, 0.1, 10, 130, 40, 0.4, 40, 0.4, 0.3, 4],"Lassi (sweet)":[0, 13, 100, 0.1, 10, 130, 45, 0.4, 30, 0.4, 0.3, 5],"Ragi koozh / malt":[1.5, 1, 70, 0.8, 25, 80, 150, 0.3, 0, 0, 0, 5],"Sugar (in tea / coffee)":[0, 100, 1, 0, 0, 2, 1, 0, 0, 0, 0, 0],"Idli":[1.5,0.5,20,0.8,20,80,260,0.5,0,0,0,15],"Plain dosa":[1.5,0.5,20,1.2,25,90,300,0.6,0,0,0,15],"Masala dosa":[2,1.5,25,1.3,25,200,350,0.6,10,6,0,18],"Rava dosa":[1,0.5,20,1,15,70,320,0.4,0,0,0,10],"Onion uttapam":[1.8,1.5,25,1.1,22,120,300,0.5,5,3,0,15],"Ven pongal":[1.5,0.5,20,1,25,90,280,0.6,20,0,0.05,15],"Rava upma":[1.5,1,15,1,20,90,330,0.4,30,3,0,12],"Poori":[3,1,20,2,30,120,250,0.8,0,0,0,20],"Chapati / roti":[4,1,30,2.5,60,200,250,1.5,0,0,0,30],"Parotta":[2,1.5,20,1.5,20,100,450,0.6,30,0,0,20],"Appam":[1,3,15,0.6,15,70,150,0.4,0,0,0,8],"Idiyappam":[0.8,0.2,8,0.5,15,40,50,0.5,0,0,0,5],"Ragi dosa":[3,0.5,120,1.5,40,120,280,0.6,0,0,0,15],"Medu vada":[4,1,40,2.5,50,250,450,1,5,0,0,60],"Pesarattu":[4,1,30,2,45,280,250,0.9,10,2,0,90],"White rice (cooked)":[0.4,0.1,10,0.2,12,35,1,0.5,0,0,0,3],"Brown rice (cooked)":[1.8,0.4,10,0.4,43,43,5,0.6,0,0,0,4],"Curd rice":[0.4,2,70,0.2,12,80,250,0.5,15,0.5,0.15,5],"Lemon rice":[0.8,0.3,15,0.5,15,60,300,0.5,5,4,0,6],"Sambar":[2.5,2,30,1.2,20,200,350,0.4,60,6,0,35],"Rasam":[0.8,1.5,15,0.6,10,150,400,0.2,30,8,0,10],"Dal / paruppu (cooked)":[2.5,0.5,20,1.5,30,200,250,0.8,5,1,0,60],"Vegetable poriyal":[3,3,40,1,20,250,250,0.4,150,15,0,30],"Kootu":[3,2,40,1.2,25,220,250,0.6,80,8,0,40],"Aviyal":[2.5,2.5,30,0.8,20,230,230,0.4,100,10,0.05,25],"Chana masala":[5,2,45,2,35,280,350,1.2,20,4,0,80],"Rajma curry":[5,1.5,40,2,40,320,320,1,10,3,0,90],"Paneer curry":[1,3,250,0.5,15,150,350,1.5,150,4,0.4,15],"Paneer (raw)":[0,1.2,480,0.2,20,100,20,2.5,200,0,0.8,10],"Chicken curry":[0.8,1.5,15,0.9,20,200,350,1.2,30,2,0.3,8],"Chicken breast (grilled)":[0,0,15,1,29,256,74,1,9,0,0.3,4],"Chicken 65":[0.5,1,15,1,22,220,500,1.2,20,1,0.3,6],"Chicken biryani":[1,1,20,1,20,150,400,0.9,20,1,0.2,10],"Veg biryani":[1.5,1.5,20,0.8,20,120,380,0.5,40,3,0,10],"Mutton curry":[0.5,1,15,2,20,250,350,3.5,10,2,1.5,6],"Fish curry":[0.5,1,40,1,25,300,350,0.5,30,3,1.5,10],"Fish fry":[0.5,0.5,30,1,30,350,450,0.6,30,0,2,10],"Prawn curry":[0.5,1,60,1.5,30,200,450,1.3,40,3,1,15],"Boiled egg":[0,1.1,50,1.2,10,126,124,1.1,149,0,1.1,44],"Egg white (boiled)":[0,0.7,7,0.1,11,163,166,0,0,0,0.1,4],"Omelette (1 egg)":[0,1,55,1.3,12,140,300,1.1,160,0,1,40],"Boiled chickpeas / sundal":[7,2,50,2.5,45,280,250,1.5,1,1,0,170],"Moong sprouts":[1.8,4,13,0.9,21,149,6,0.4,1,13,0,61],"Soya chunks (dry)":[13,7,350,20,280,2000,10,4.5,0,0,0,300],"Whey protein":[0,5,450,1,120,500,200,3,0,0,1.5,0],"Curd / yogurt":[0,4.7,121,0.1,12,155,46,0.6,30,0.5,0.4,7],"Greek yogurt (plain)":[0,3.6,110,0.1,11,141,36,0.5,1,0,0.75,7],"Milk (toned)":[0,4.8,120,0.1,11,150,45,0.4,45,0.5,0.4,5],"Buttermilk":[0,2.5,60,0.05,6,80,150,0.2,10,0.3,0.2,3],"Tea with milk & sugar":[0,6.5,40,0.1,5,60,15,0.1,10,0,0.1,2],"Filter coffee (milk & sugar)":[0,7.5,50,0.1,10,90,15,0.1,12,0,0.15,2],"Black coffee / green tea":[0,0,2,0.02,3,49,2,0,0,0,0,2],"Tender coconut water":[1.1,2.6,24,0.3,25,250,105,0.1,0,2.4,0,3],"Banana":[2.6,12,5,0.3,27,358,1,0.15,3,8.7,0,20],"Apple":[2.4,10,6,0.1,5,107,1,0,3,4.6,0,3],"Orange / mosambi":[2.4,9,40,0.1,10,181,0,0.07,11,53,0,30],"Papaya":[1.7,8,20,0.25,21,182,8,0.08,47,61,0,37],"Guava":[5.4,9,18,0.26,22,417,2,0.23,31,228,0,49],"Watermelon":[0.4,6,7,0.24,10,112,1,0.1,28,8,0,3],"Pomegranate":[4,14,10,0.3,12,236,3,0.35,0,10,0,38],"Grapes":[0.9,16,10,0.36,7,191,2,0.07,3,3.2,0,2],"Pineapple":[1.4,10,13,0.3,12,109,1,0.1,3,48,0,18],"Mango":[1.6,14,11,0.16,10,168,1,0.09,54,36,0,43],"Sapota / chikoo":[5.3,14,21,0.8,12,193,12,0.1,3,15,0,14],"Dates":[8,63,39,1,43,656,2,0.3,0,0.4,0,19],"Mixed fruit bowl":[2,11,12,0.25,12,180,2,0.1,20,25,0,15],"Cucumber / salad":[0.8,2,18,0.3,13,160,4,0.2,25,5,0,15],"Carrot":[2.8,4.7,33,0.3,12,320,69,0.24,835,6,0,19],"Sweet corn (boiled)":[2.4,4.5,3,0.5,26,218,1,0.6,9,5,0,23],"Oats (dry)":[10,1,54,4.7,177,429,2,4,0,0,0,56],"Oats porridge with milk":[1.5,4,90,0.8,30,170,40,0.7,30,0.4,0.3,10],"Bread (brown)":[6,6,160,2.5,75,250,450,1.8,0,0,0,40],"Bread (white)":[2.7,5,150,3.6,23,120,490,0.7,0,0,0,110],"Peanut butter":[6,9,50,1.9,170,650,430,2.9,0,0,0,90],"Peanuts (roasted)":[8.5,4,55,2.3,175,660,6,3.3,0,0,0,145],"Almonds":[12.5,4.4,270,3.7,270,733,1,3.1,0,0,0,44],"Cashews":[3.3,6,37,6.7,292,660,12,5.8,0,0.5,0,25],"Walnuts":[6.7,2.6,98,2.9,158,441,2,3.1,1,1.3,0,98],"Makhana (roasted)":[14.5,0,60,1.4,67,500,1,1.4,0,0,0,14],"Roasted chana":[17,10,58,5,140,850,20,3,1,0,0,150],"Marie biscuit":[2,20,30,2,20,130,350,0.6,0,0,0,10],"Murukku":[3,1,30,2.5,40,180,600,1,0,0,0,20],"Samosa":[3,2,25,1.5,20,200,420,0.5,10,3,0,20],"Bajji / bonda":[2.5,2,30,1.8,25,200,420,0.6,15,3,0,30],"Veg puff":[1.5,3,20,1.5,15,120,450,0.4,30,2,0,15],"Gulab jamun":[0.5,40,80,0.8,10,100,60,0.3,30,0,0.1,5],"Kesari":[0.5,30,15,0.6,10,60,50,0.3,40,0,0,5],"Chocolate":[7,48,73,8,146,559,24,2.3,2,0,0.3,12],"Ice cream":[0.7,21,128,0.1,14,199,80,0.7,118,0.6,0.4,5],"Fried rice":[1,1,15,0.6,15,90,450,0.5,30,2,0.05,10],"Veg noodles":[1.5,2,15,1,15,100,500,0.4,30,3,0,15],"Pizza":[2.3,3.6,190,2.5,24,170,600,1.3,70,1,0.5,40],"Burger":[1.5,5,70,2,22,220,500,2,10,1,0.8,30],"Fresh juice (no sugar)":[0.2,9,10,0.2,10,180,2,0.05,10,40,0,25],"Sugar":[0,100,1,0,0,2,1,0,0,0,0,0],"Ghee":[0,0,4,0,0,5,2,0,840,0,0,0],"Cooking oil":[0,0,0,0,0,0,0,0,0,0,0,0]};
+const MICRO = {"Sambar rice (sambar sadam)":[1.8,1.2,20,0.8,20,120,250,0.6,30,3,0,18,0],"Rasam rice":[0.6,0.8,12,0.4,14,80,280,0.5,10,4,0,6,0],"Tamarind rice (puliyodarai)":[1.5,2.5,25,1.2,20,110,350,0.6,5,1,0,8,0],"Tomato rice":[1,2,15,0.6,15,120,320,0.5,30,5,0,8,0],"Coconut rice":[1.5,0.8,10,0.6,20,90,250,0.6,0,0.5,0,5,0],"Bisi bele bath":[2.5,1.5,30,1.2,25,180,350,0.7,60,4,0,30,0],"Vegetable pulao":[1.2,1,15,0.6,15,100,300,0.5,60,3,0,8,0],"Ghee rice":[0.4,0.2,8,0.3,10,40,200,0.5,60,0,0,3,20],"Sakkarai pongal (sweet)":[1,20,20,1.5,20,100,30,0.5,40,0,0,8,18],"Rava kesari":[0.6,28,15,0.6,10,60,40,0.3,50,0,0,5,25],"Set dosa":[1.2,0.6,18,0.8,18,70,280,0.5,0,0,0,12,0],"Ghee roast dosa":[1.2,0.5,18,1,20,80,300,0.5,60,0,0,12,22],"Kal dosa":[1.4,0.5,20,1,20,80,280,0.5,0,0,0,14,0],"Adai":[3.5,1,40,2,40,250,280,1,10,2,0,60,0],"Rava idli":[1,1,30,0.8,15,80,330,0.4,20,2,0,10,0],"Mini idli with sambar":[1.8,1,22,0.9,20,120,300,0.5,20,2,0,20,0],"Kuzhi paniyaram":[1.2,1,20,0.8,18,80,250,0.5,5,1,0,12,0],"Wheat dosa":[3,1,20,2,40,150,250,1,0,0,0,25,0],"Semiya upma":[1.5,1.5,15,0.8,15,90,320,0.4,30,3,0,10,0],"Kothu parotta":[1.5,1.5,30,1.5,20,150,480,0.8,40,4,0.2,15,45],"Idli podi with oil":[8,2,150,6,120,500,600,2.5,10,0,0,80,0],"Coconut chutney":[5,2,15,1,30,250,280,0.5,0,2,0,15,0],"Tomato chutney":[1.5,4,15,0.6,12,250,350,0.2,40,12,0,12,0],"Mint / coriander chutney":[3,2,60,2.5,30,300,300,0.4,150,20,0,40,0],"Peanut chutney":[4,3,40,1.5,90,350,300,1.5,0,1,0,60,0],"Kara kuzhambu":[1.8,3,25,1,15,200,450,0.3,30,5,0,15,0],"Vatha kuzhambu":[1.5,3,25,1,15,180,500,0.3,10,2,0,10,0],"Mor kuzhambu":[0.8,2.5,70,0.3,10,150,300,0.4,20,3,0.15,8,4],"Keerai poriyal (greens)":[3,1,150,3,60,400,200,0.6,400,20,0,100,0],"Beans poriyal":[3,2.5,40,1,25,200,220,0.3,35,10,0,30,0],"Cabbage poriyal":[2.5,3,40,0.6,15,180,220,0.2,5,25,0,35,0],"Potato fry / roast":[2,1,10,0.6,20,350,300,0.3,0,8,0,15,0],"Egg curry":[1,2,40,1.2,12,180,350,0.8,100,3,0.6,30,125],"Chicken chettinad":[1,1.5,20,1.2,22,250,400,1.5,30,2,0.3,8,55],"Mutton biryani":[1,1,20,1.5,20,160,420,1.8,20,1,0.6,10,40],"Egg biryani":[1,1,25,1,18,140,400,0.8,50,1,0.4,15,60],"Fish (grilled / tawa)":[0.2,0,30,0.8,30,350,300,0.6,30,0,2,10,55],"Paruppu vadai (masala vada)":[6,1.5,40,3,50,300,400,1.2,10,2,0,90,0],"Payasam (semiya)":[0.5,18,100,0.4,12,140,50,0.4,40,0.5,0.3,5,15],"Banana chips":[4,4,10,1.2,75,500,250,0.4,5,6,0,14,0],"Mixture / namkeen":[5,3,40,3,70,350,700,1.5,5,1,0,40,0],"Sundal (chana, tempered)":[7,2,50,2.5,45,280,250,1.5,5,2,0,170,0],"Tea with milk (no sugar)":[0,2.4,50,0.1,6,80,20,0.2,15,0,0.2,3,4],"Filter coffee (milk, no sugar)":[0,2.8,60,0.1,12,110,20,0.2,15,0,0.2,3,5],"Black tea (no sugar)":[0,0,1,0.02,3,40,2,0,0,0,0,5,0],"Milk (full cream)":[0,4.8,120,0.1,11,150,45,0.4,50,0.5,0.4,5,14],"Rose milk":[0,12,100,0.1,10,130,40,0.4,40,0.4,0.3,4,10],"Lassi (sweet)":[0,13,100,0.1,10,130,45,0.4,30,0.4,0.3,5,10],"Ragi koozh / malt":[1.5,1,70,0.8,25,80,150,0.3,0,0,0,5,0],"Sugar (in tea / coffee)":[0,100,1,0,0,2,1,0,0,0,0,0,0],"Idli":[1.5,0.5,20,0.8,20,80,260,0.5,0,0,0,15,0],"Plain dosa":[1.5,0.5,20,1.2,25,90,300,0.6,0,0,0,15,0],"Masala dosa":[2,1.5,25,1.3,25,200,350,0.6,10,6,0,18,0],"Rava dosa":[1,0.5,20,1,15,70,320,0.4,0,0,0,10,0],"Onion uttapam":[1.8,1.5,25,1.1,22,120,300,0.5,5,3,0,15,0],"Ven pongal":[1.5,0.5,20,1,25,90,280,0.6,20,0,0.05,15,0],"Rava upma":[1.5,1,15,1,20,90,330,0.4,30,3,0,12,0],"Poori":[3,1,20,2,30,120,250,0.8,0,0,0,20,0],"Chapati / roti":[4,1,30,2.5,60,200,250,1.5,0,0,0,30,0],"Parotta":[2,1.5,20,1.5,20,100,450,0.6,30,0,0,20,0],"Appam":[1,3,15,0.6,15,70,150,0.4,0,0,0,8,0],"Idiyappam":[0.8,0.2,8,0.5,15,40,50,0.5,0,0,0,5,0],"Ragi dosa":[3,0.5,120,1.5,40,120,280,0.6,0,0,0,15,0],"Medu vada":[4,1,40,2.5,50,250,450,1,5,0,0,60,0],"Pesarattu":[4,1,30,2,45,280,250,0.9,10,2,0,90,0],"White rice (cooked)":[0.4,0.1,10,0.2,12,35,1,0.5,0,0,0,3,0],"Brown rice (cooked)":[1.8,0.4,10,0.4,43,43,5,0.6,0,0,0,4,0],"Curd rice":[0.4,2,70,0.2,12,80,250,0.5,15,0.5,0.15,5,8],"Lemon rice":[0.8,0.3,15,0.5,15,60,300,0.5,5,4,0,6,0],"Sambar":[2.5,2,30,1.2,20,200,350,0.4,60,6,0,35,0],"Rasam":[0.8,1.5,15,0.6,10,150,400,0.2,30,8,0,10,0],"Dal / paruppu (cooked)":[2.5,0.5,20,1.5,30,200,250,0.8,5,1,0,60,0],"Vegetable poriyal":[3,3,40,1,20,250,250,0.4,150,15,0,30,0],"Kootu":[3,2,40,1.2,25,220,250,0.6,80,8,0,40,0],"Aviyal":[2.5,2.5,30,0.8,20,230,230,0.4,100,10,0.05,25,2],"Chana masala":[5,2,45,2,35,280,350,1.2,20,4,0,80,0],"Rajma curry":[5,1.5,40,2,40,320,320,1,10,3,0,90,0],"Paneer curry":[1,3,250,0.5,15,150,350,1.5,150,4,0.4,15,35],"Paneer (raw)":[0,1.2,480,0.2,20,100,20,2.5,200,0,0.8,10,60],"Chicken curry":[0.8,1.5,15,0.9,20,200,350,1.2,30,2,0.3,8,45],"Chicken breast (grilled)":[0,0,15,1,29,256,74,1,9,0,0.3,4,85],"Chicken 65":[0.5,1,15,1,22,220,500,1.2,20,1,0.3,6,70],"Chicken biryani":[1,1,20,1,20,150,400,0.9,20,1,0.2,10,35],"Veg biryani":[1.5,1.5,20,0.8,20,120,380,0.5,40,3,0,10,0],"Mutton curry":[0.5,1,15,2,20,250,350,3.5,10,2,1.5,6,65],"Fish curry":[0.5,1,40,1,25,300,350,0.5,30,3,1.5,10,40],"Fish fry":[0.5,0.5,30,1,30,350,450,0.6,30,0,2,10,60],"Prawn curry":[0.5,1,60,1.5,30,200,450,1.3,40,3,1,15,110],"Boiled egg":[0,1.1,50,1.2,10,126,124,1.1,149,0,1.1,44,373],"Egg white (boiled)":[0,0.7,7,0.1,11,163,166,0,0,0,0.1,4,0],"Omelette (1 egg)":[0,1,55,1.3,12,140,300,1.1,160,0,1,40,310],"Boiled chickpeas / sundal":[7,2,50,2.5,45,280,250,1.5,1,1,0,170,0],"Moong sprouts":[1.8,4,13,0.9,21,149,6,0.4,1,13,0,61,0],"Soya chunks (dry)":[13,7,350,20,280,2000,10,4.5,0,0,0,300,0],"Whey protein":[0,5,450,1,120,500,200,3,0,0,1.5,0,15],"Curd / yogurt":[0,4.7,121,0.1,12,155,46,0.6,30,0.5,0.4,7,13],"Greek yogurt (plain)":[0,3.6,110,0.1,11,141,36,0.5,1,0,0.75,7,5],"Milk (toned)":[0,4.8,120,0.1,11,150,45,0.4,45,0.5,0.4,5,8],"Buttermilk":[0,2.5,60,0.05,6,80,150,0.2,10,0.3,0.2,3,2],"Tea with milk & sugar":[0,6.5,40,0.1,5,60,15,0.1,10,0,0.1,2,3],"Filter coffee (milk & sugar)":[0,7.5,50,0.1,10,90,15,0.1,12,0,0.15,2,4],"Black coffee / green tea":[0,0,2,0.02,3,49,2,0,0,0,0,2,0],"Tender coconut water":[1.1,2.6,24,0.3,25,250,105,0.1,0,2.4,0,3,0],"Banana":[2.6,12,5,0.3,27,358,1,0.15,3,8.7,0,20,0],"Apple":[2.4,10,6,0.1,5,107,1,0,3,4.6,0,3,0],"Orange / mosambi":[2.4,9,40,0.1,10,181,0,0.07,11,53,0,30,0],"Papaya":[1.7,8,20,0.25,21,182,8,0.08,47,61,0,37,0],"Guava":[5.4,9,18,0.26,22,417,2,0.23,31,228,0,49,0],"Watermelon":[0.4,6,7,0.24,10,112,1,0.1,28,8,0,3,0],"Pomegranate":[4,14,10,0.3,12,236,3,0.35,0,10,0,38,0],"Grapes":[0.9,16,10,0.36,7,191,2,0.07,3,3.2,0,2,0],"Pineapple":[1.4,10,13,0.3,12,109,1,0.1,3,48,0,18,0],"Mango":[1.6,14,11,0.16,10,168,1,0.09,54,36,0,43,0],"Sapota / chikoo":[5.3,14,21,0.8,12,193,12,0.1,3,15,0,14,0],"Dates":[8,63,39,1,43,656,2,0.3,0,0.4,0,19,0],"Mixed fruit bowl":[2,11,12,0.25,12,180,2,0.1,20,25,0,15,0],"Cucumber / salad":[0.8,2,18,0.3,13,160,4,0.2,25,5,0,15,0],"Carrot":[2.8,4.7,33,0.3,12,320,69,0.24,835,6,0,19,0],"Sweet corn (boiled)":[2.4,4.5,3,0.5,26,218,1,0.6,9,5,0,23,0],"Oats (dry)":[10,1,54,4.7,177,429,2,4,0,0,0,56,0],"Oats porridge with milk":[1.5,4,90,0.8,30,170,40,0.7,30,0.4,0.3,10,5],"Bread (brown)":[6,6,160,2.5,75,250,450,1.8,0,0,0,40,0],"Bread (white)":[2.7,5,150,3.6,23,120,490,0.7,0,0,0,110,0],"Peanut butter":[6,9,50,1.9,170,650,430,2.9,0,0,0,90,0],"Peanuts (roasted)":[8.5,4,55,2.3,175,660,6,3.3,0,0,0,145,0],"Almonds":[12.5,4.4,270,3.7,270,733,1,3.1,0,0,0,44,0],"Cashews":[3.3,6,37,6.7,292,660,12,5.8,0,0.5,0,25,0],"Walnuts":[6.7,2.6,98,2.9,158,441,2,3.1,1,1.3,0,98,0],"Makhana (roasted)":[14.5,0,60,1.4,67,500,1,1.4,0,0,0,14,0],"Roasted chana":[17,10,58,5,140,850,20,3,1,0,0,150,0],"Marie biscuit":[2,20,30,2,20,130,350,0.6,0,0,0,10,2],"Murukku":[3,1,30,2.5,40,180,600,1,0,0,0,20,0],"Samosa":[3,2,25,1.5,20,200,420,0.5,10,3,0,20,0],"Bajji / bonda":[2.5,2,30,1.8,25,200,420,0.6,15,3,0,30,0],"Veg puff":[1.5,3,20,1.5,15,120,450,0.4,30,2,0,15,2],"Gulab jamun":[0.5,40,80,0.8,10,100,60,0.3,30,0,0.1,5,12],"Kesari":[0.5,30,15,0.6,10,60,50,0.3,40,0,0,5,25],"Chocolate":[7,48,73,8,146,559,24,2.3,2,0,0.3,12,8],"Ice cream":[0.7,21,128,0.1,14,199,80,0.7,118,0.6,0.4,5,45],"Fried rice":[1,1,15,0.6,15,90,450,0.5,30,2,0.05,10,10],"Veg noodles":[1.5,2,15,1,15,100,500,0.4,30,3,0,15,0],"Pizza":[2.3,3.6,190,2.5,24,170,600,1.3,70,1,0.5,40,18],"Burger":[1.5,5,70,2,22,220,500,2,10,1,0.8,30,30],"Fresh juice (no sugar)":[0.2,9,10,0.2,10,180,2,0.05,10,40,0,25,0],"Sugar":[0,100,1,0,0,2,1,0,0,0,0,0,0],"Ghee":[0,0,4,0,0,5,2,0,840,0,0,0,256],"Cooking oil":[0,0,0,0,0,0,0,0,0,0,0,0,0]};
 function findFood(name) {
   const n = String(name || '').toLowerCase().trim(); if (!n) return null;
   return FOOD.find(f => f.n.toLowerCase() === n)
@@ -331,6 +331,7 @@ function microOfMeal(m) {
 function mealMacros(m) {
   const kcal = Number(m.kcal) || 0, P = Number(m.protein) || 0, C = Number(m.carbs) || 0, F = Number(m.fat) || 0;
   const mi = microOfMeal(m), S = mi ? Number(mi.sugar) || 0 : null, Fb = mi ? Number(mi.fiber) || 0 : null;
+  const Ch = mi && mi.chol != null ? Number(mi.chol) || 0 : null;
   const sh = g => kcal > 0 ? g / kcal : 0; // share of calories
   const pc = sh(P * 4), cc = sh(C * 4), fc = sh(F * 9);
   const small = kcal < 60;
@@ -339,10 +340,11 @@ function mealMacros(m) {
     c: !small && cc > 0.6 ? 'bad' : cc <= 0.4 ? 'good' : '',
     s: S == null ? '' : S > 10 || (!small && sh(S * 4) > 0.15) ? 'bad' : S <= 2 ? 'good' : '',
     f: !small && fc > 0.4 && pc < 0.25 ? 'bad' : fc <= 0.25 ? 'good' : '',
-    b: Fb == null ? '' : Fb >= 3 || (kcal > 0 && Fb / kcal * 100 >= 2) ? 'good' : !small && Fb < 1 && cc > 0.5 ? 'bad' : ''
+    b: Fb == null ? '' : Fb >= 3 || (kcal > 0 && Fb / kcal * 100 >= 2) ? 'good' : !small && Fb < 1 && cc > 0.5 ? 'bad' : '',
+    h: Ch == null ? '' : Ch >= 100 ? 'bad' : Ch <= 20 ? 'good' : ''
   };
-  const chip = (k, label, v) => `<span class="mc ${cls[k]}"><small>${label}</small><b>${v == null ? '—' : r0(v) + ' g'}</b></span>`;
-  return `<span class="mcs">${chip('p', 'Protein', P)}${chip('c', 'Carbs', C)}${chip('s', 'Sugar', S)}${chip('f', 'Fat', F)}${chip('b', 'Fibre', Fb)}</span>`;
+  const chip = (k, label, v, u) => `<span class="mc ${cls[k]}"><small>${label}</small><b>${v == null ? '—' : r0(v) + ' ' + (u || 'g')}</b></span>`;
+  return `<span class="mcs">${chip('p', 'Protein', P)}${chip('c', 'Carbs', C)}${chip('s', 'Sugar', S)}${chip('f', 'Fat', F)}${chip('b', 'Fibre', Fb)}${chip('h', 'Chol', Ch, 'mg')}</span>`;
 }
 function dayNutrition(date) {
   const meals = (S.data.days[date] || {}).meals || [];
@@ -375,9 +377,10 @@ function nutritionNeeds(date) {
   const fat = Math.round(kcal * 0.25 / 9);
   const carbs = Math.max(100, Math.round((kcal - protein * 4 - fat * 9) / 4));
   const sugar = Math.round(kcal * (f.diabetes ? 0.05 : 0.10) / 4);
+  const chol = (f.chol || f.heart) ? 200 : 300;   // mg a day — tighter if cholesterol or heart trouble
   const exMin = strMin + cardioMin;
   const water = Math.round((w * 35 + exMin / 30 * 500) / 100) / 10;
-  return { kcal, protein, carbs, fat, sugar, fiber: 30, water, gpk, kind, strMin, cardioMin, exMin, diabetes: f.diabetes };
+  return { kcal, protein, carbs, fat, sugar, chol, fiber: 30, water, gpk, kind, strMin, cardioMin, exMin, diabetes: f.diabetes, cholTight: !!(f.chol || f.heart) };
 }
 function pctBar(val, need, isLimit) {
   const pct = need > 0 ? val / need * 100 : 0;
@@ -966,7 +969,6 @@ async function loadData() {
     else userRef(s.uid).set({ lastActive: todayStr(), email: s.email }, { merge: true }).catch(() => {});
     const hadOutbox = applyOutbox();
     S.tab = 'home'; S.date = todayStr();
-    if (!S.data.profile && !Object.keys(S.data.days).length) { S.screen = 'link'; render(); return; }
     S.screen = S.data.profile ? 'main' : 'onboard';
     render();
     if (S.data.profile) maybeHashWeight();
@@ -996,14 +998,6 @@ async function copyLegacy(oldU, uid, checkPw) {
   await fbWriteAll(uid, old.profile || null, old.days || {}, { legacy: u, linkedAt: new Date().toISOString() });
   return Object.keys(old.days || {}).length;
 }
-async function doLink(btn) {
-  const f = formVals('#linkForm');
-  if (!f.oldUser || !f.oldPass) throw fail('Enter your old username and password.');
-  busy(btn, 'Bringing your data across…');
-  const n = await copyLegacy(f.oldUser, S.session.uid, f.oldPass);
-  toast(`Done — ${n} days of your data are back`, 'good');
-  await loadData();
-}
 function logout() {
   if ((S.dirtyDays.size || S.profileDirty) && !confirm('Some changes are not saved yet. Log out anyway?')) return;
   forgetUser();
@@ -1023,7 +1017,7 @@ function viewAuth() {
   return `<div class="auth">
     <img class="logo" src="icons/logo.png" alt="">
     <h1>Minimal Health Tracker</h1>
-    <p class="sub">Your weight-loss tracker · v91</p>
+    <p class="sub">Your weight-loss tracker · v92</p>
     ${m !== 'forgot' ? `<div class="seg">
       <button data-act="authMode" data-v="login" class="${m === 'login' ? 'on' : ''}">Log in</button>
       <button data-act="authMode" data-v="create" class="${m === 'create' ? 'on' : ''}">Create account</button>
@@ -1043,7 +1037,7 @@ function viewAuth() {
         <div class="field"><label>Type the password again<input name="password2" type="password" autocomplete="new-password"></label></div>
         <button class="btn primary block" data-act="create">Create account</button>
       </form>
-      <p class="explain" style="margin:10px 0 0">We'll email you a link to verify. Used the app before? Create your account with your email here — after verifying, you can bring your old data across.</p>`
+      <p class="explain" style="margin:10px 0 0">We'll email you a link to verify. That's all — open the link and you're in.</p>`
     : `
       <h3 style="margin-bottom:6px">Forgot password</h3>
       <form id="forgotForm" onsubmit="return false">
@@ -1053,7 +1047,7 @@ function viewAuth() {
       <p class="explain" style="margin:10px 0 0">Open the email, set a new password, then come back and log in.</p>
       <p style="text-align:center;margin:10px 0 0"><button class="muted" style="font-size:14px;text-decoration:underline" data-act="authMode" data-v="login">Back to log in</button></p>`}
     </div>
-    ${m === 'login' ? `<div class="note info" style="margin-top:12px">📢 <b>App update:</b> login is now by email. If you used the app before, tap <b>Create account</b> with your email, verify it, and your old data comes back.</div>` : ''}
+    ${m === 'login' ? `<div class="note info" style="margin-top:12px">📢 <b>App update:</b> login is now by email. If you used the app before, tap <b>Create account</b>, verify your email, and you're in — no old username or password needed.</div>` : ''}
   </div>`;
 }
 function viewVerify() {
@@ -1074,25 +1068,6 @@ function viewVerify() {
     </div>
   </div>`;
 }
-function viewLink() {
-  return `<div class="auth">
-    <img class="logo" src="icons/logo.png" alt="">
-    <h1>Welcome!</h1>
-    <p class="sub">Signed in as <b>${esc(S.session ? S.session.email : '')}</b></p>
-    <div class="card">
-      <h3>Used the app before?</h3>
-      <p class="explain" style="margin:0 0 10px">Enter your <b>old username and password</b> once — all your old meals, workouts and weights come back.</p>
-      <form id="linkForm" onsubmit="return false" autocomplete="off">
-        <div class="field"><label>Old username<input name="oldUser" autocapitalize="none" autocorrect="off"></label></div>
-        <div class="field"><label>Old password<input name="oldPass" type="password"></label></div>
-        <button class="btn primary block" data-act="linkOld">Bring my data across</button>
-      </form>
-      <p class="explain" style="margin:10px 0 0">Forgot the old password? Ask the app admin — they can bring it across for you.</p>
-    </div>
-    <div class="card"><h3>New here?</h3><button class="btn block" data-act="startFresh">Start fresh</button></div>
-  </div>`;
-}
-
 function viewSetup() {
   const sr = siteRepo();
   return `<div class="auth">
@@ -1303,7 +1278,7 @@ function todayTable(date) {
     let cls, word;
     if (limit) { cls = bal >= 0 ? 'good' : 'bad'; word = bal >= 0 ? 'left' : 'over'; }
     else { cls = bal <= 0 ? 'good' : pct >= 40 ? 'warnc' : 'bad'; word = bal <= 0 ? 'done ✓' : 'short'; }
-    return `<tr><td>${label}</td><td>${limit && (label === 'Sugar' || label === 'Sodium') ? '≤ ' : ''}${fmt(need)} <small class="muted">${u}</small></td><td>${fmt(ate)} <small class="muted">${u}</small></td>
+    return `<tr><td>${label}</td><td>${limit && (label === 'Sugar' || label === 'Sodium' || label === 'Cholesterol') ? '≤ ' : ''}${fmt(need)} <small class="muted">${u}</small></td><td>${fmt(ate)} <small class="muted">${u}</small></td>
       <td class="${cls}"><b>${bal <= 0 && !limit ? '' : fmt(Math.abs(bal))}</b>${bal <= 0 && !limit ? '' : '<br>'}<small>${word}</small></td><td>${pctBar(ate, need, limit)}</td></tr>`;
   };
   return `<div class="card" style="padding:10px">
@@ -1317,6 +1292,7 @@ function todayTable(date) {
         ${row('Sugar', nd.sugar, dn.sugar, 'g', true)}
         ${row('Fat', nd.fat, dn.fat, 'g', true)}
         ${row('Fibre', nd.fiber, dn.fiber, 'g', false)}
+        ${row('Cholesterol', nd.chol, dn.chol, 'mg', true)}
         ${head('Vitamins')}
         ${row('Vit A', rda.vitA, dn.vitA, 'µg', false)}
         ${row('Vit C', rda.vitC, dn.vitC, 'mg', false)}
@@ -1331,7 +1307,7 @@ function todayTable(date) {
         ${row('Sodium', rda.sodium, dn.sodium, 'mg', true)}
       </tbody>
     </table>
-    <p class="explain">Calories, carbs, sugar, fat and sodium: above 100% turns <b class="bad">red</b>. Protein, fibre, vitamins and minerals: try to reach 100%. Calorie target = what your body uses (${r0(st.base)}) + exercise (${r0(st.exNet + st.stepsK)}) − ${r0(dailyTarget().need)} kcal cut for your goal.</p>
+    <p class="explain">Cholesterol comes only from animal food &mdash; egg yolk, meat, fish, prawn, ghee, butter, full-cream milk, paneer, cheese. Your limit is ${nd.chol} mg a day${nd.cholTight ? ' (tighter because of your health notes)' : ''}; it is the food cholesterol that pushes the <b>bad (LDL)</b> number up, together with fried and fatty food. Calories, carbs, sugar, fat, cholesterol and sodium: above 100% turns <b class="bad">red</b>. Protein, fibre, vitamins and minerals: try to reach 100%. Calorie target = what your body uses (${r0(st.base)}) + exercise (${r0(st.exNet + st.stepsK)}) − ${r0(dailyTarget().need)} kcal cut for your goal.</p>
   </div>`;
 }
 
@@ -1974,11 +1950,23 @@ function sugarLevel(r) {
   if (k === 'Fasting' || k === 'Before food') return v < 100 ? ['Normal', 'good'] : v < 126 ? ['Slightly high', 'warnc'] : ['High', 'bad'];
   return v < 140 ? ['Normal', 'good'] : v < 200 ? ['Slightly high', 'warnc'] : ['High', 'bad'];
 }
+function pulseLevel(r) { const v = r.val; return v >= 100 ? ['High', 'bad'] : v >= 90 ? ['A bit high', 'warnc'] : v < 50 ? ['Low', 'bad'] : ['Normal', 'good']; }
+function hdlLevel(r) {        // good cholesterol — higher is better
+  const v = r.val, floor = P().sex === 'female' ? 50 : 40;
+  return v >= 60 ? ['Very good', 'good'] : v >= floor ? ['Normal', 'good'] : v >= floor - 5 ? ['A bit low', 'warnc'] : ['Low', 'bad'];
+}
+function ldlLevel(r) {        // bad cholesterol — lower is better
+  const v = r.val;
+  return v < 100 ? ['Best', 'good'] : v < 130 ? ['Near best', 'good'] : v < 160 ? ['Borderline high', 'warnc'] : v < 190 ? ['High', 'bad'] : ['Very high', 'bad'];
+}
 function spo2Level(r) { return r.val >= 95 ? ['Normal', 'good'] : r.val >= 91 ? ['A bit low', 'warnc'] : ['Low', 'bad']; }
 function tempLevel(r) { const f = r.val; return f >= 100.4 ? ['Fever', 'bad'] : f >= 99.1 ? ['Slightly high', 'warnc'] : f < 95 ? ['Low', 'bad'] : ['Normal', 'good']; }
 const READINGS = {
   bp: { icon: '🩺', label: 'BP', show: r => `${r.sys}/${r.dia}`, sub: r => r.pulse ? 'pulse ' + r.pulse : '', level: bpLevel },
+  pulse: { icon: '💓', label: 'Pulse', show: r => `${r.val} bpm`, sub: () => 'resting', level: pulseLevel },
   sugar: { icon: '🩸', label: 'Sugar', show: r => `${r.val} mg/dL`, sub: r => r.kind === 'Fasting' ? 'Before food' : r.kind, level: sugarLevel },
+  hdl: { icon: '🫀', label: 'HDL', show: r => `${r.val} mg/dL`, sub: () => 'good cholesterol', level: hdlLevel },
+  ldl: { icon: '🫀', label: 'LDL', show: r => `${r.val} mg/dL`, sub: () => 'bad cholesterol', level: ldlLevel },
   spo2: { icon: '🫁', label: 'SpO₂', show: r => `${r.val}%`, sub: r => r.pulse ? 'pulse ' + r.pulse : '', level: spo2Level },
   temp: { icon: '🌡️', label: 'Temp', show: r => `${r.val}°F`, sub: () => '', level: tempLevel },
 };
@@ -1993,9 +1981,10 @@ function healthCard(date, d) {
     return `<div class="li"><span>${R.icon} ${tm(r)} <small>${esc(R.sub(r))}</small></span><span class="r" style="display:flex;align-items:center;gap:6px"><span style="text-align:right;line-height:1.2"><b class="${c}">${R.show(r)}</b><br><small class="${c}">${l}</small></span><button class="x" data-act="delReading" data-k="${k}" data-id="${r.id}" aria-label="Delete">✕</button></span></div>`; }).join('')).join('');
   const lasts = Object.keys(READINGS).map(k => { const L = lastReading(k, date); if (!L) return ''; const R = READINGS[k], [, c] = R.level(L.r);
     return `<div class="kv" style="font-size:13px"><span class="muted">Last ${R.label}</span><span><b class="${c}">${R.show(L.r)}</b> <small class="muted">${niceDate(L.date, { day: 'numeric', month: 'short' })}${L.r.at ? ' · ' + tm(L.r) : ''}</small></span></div>`; }).join('');
-  return `<div class="card"><h3>BP, sugar, SpO₂ &amp; temperature</h3>
-    <div class="photo-btns"><button class="btn" data-act="openReading" data-k="bp">🩺 Add BP</button><button class="btn" data-act="openReading" data-k="sugar">🩸 Add sugar</button>
-      <button class="btn" data-act="openReading" data-k="spo2">🫁 Add SpO₂</button><button class="btn" data-act="openReading" data-k="temp">🌡️ Add temp</button></div>
+  return `<div class="card"><h3>BP, pulse, sugar, SpO₂, cholesterol &amp; temperature</h3>
+    <div class="photo-btns"><button class="btn" data-act="openReading" data-k="bp">🩺 Add BP</button><button class="btn" data-act="openReading" data-k="pulse">💓 Add pulse</button>
+      <button class="btn" data-act="openReading" data-k="sugar">🩸 Add sugar</button><button class="btn" data-act="openReading" data-k="spo2">🫁 Add SpO₂</button>
+      <button class="btn" data-act="openReading" data-k="chol">🫀 Add cholesterol</button><button class="btn" data-act="openReading" data-k="temp">🌡️ Add temp</button></div>
     ${rows ? `<div style="margin-top:6px">${rows}</div>` : '<p class="explain" style="margin:8px 0 0">No readings for this day yet.</p>'}
     ${lasts ? `<div style="margin-top:10px;padding-top:6px;border-top:1px solid var(--line)">${lasts}</div>` : ''}
   </div>`;
@@ -2003,8 +1992,8 @@ function healthCard(date, d) {
 function sheetReading() {
   const sh = S.sheet, now = sh.at, k = sh.k;
   const big = 'style="font-size:26px;font-weight:800;height:60px;text-align:center"';
-  const title = { bp: '🩺 Add BP', sugar: '🩸 Add blood sugar', spo2: '🫁 Add SpO₂ (oxygen)', temp: '🌡️ Add temperature' }[k];
-  const L = lastReading(k, fmtD(now) + 'z');
+  const title = { bp: '🩺 Add BP', pulse: '💓 Add pulse rate', sugar: '🩸 Add blood sugar', spo2: '🫁 Add SpO₂ (oxygen)', chol: '🫀 Add cholesterol', temp: '🌡️ Add temperature' }[k];
+  const L = lastReading(k === 'chol' ? 'ldl' : k, fmtD(now) + 'z');
   const body = k === 'bp' ? `<div class="grid3" style="margin-top:14px;text-align:left">
           <label>Upper (SYS)<input id="rdA" type="number" inputmode="numeric" placeholder="120" ${big}></label>
           <label>Lower (DIA)<input id="rdB" type="number" inputmode="numeric" placeholder="80" ${big}></label>
@@ -2014,6 +2003,12 @@ function sheetReading() {
           <label>Sugar (mg/dL)<input id="rdA" type="number" inputmode="decimal" placeholder="e.g. 110" ${big}></label>
           <label>When<select id="rdK" style="height:60px">${['Before food', 'After food', 'Random'].map(x => `<option ${x === 'Before food' ? 'selected' : ''}>${x}</option>`).join('')}</select></label></div>
         <p class="explain" style="margin:8px 0 0">Normal: before food below 100 · 2 hours after food below 140.</p>`
+    : k === 'pulse' ? `<div style="margin-top:14px;text-align:left"><label>Pulse (beats a minute)<input id="rdA" type="number" inputmode="numeric" placeholder="72" ${big}></label></div>
+        <p class="explain" style="margin:8px 0 0">Sit quietly for five minutes first. A resting pulse of 60–100 is normal; fit people are often lower.</p>`
+    : k === 'chol' ? `<div class="grid2" style="margin-top:14px;text-align:left">
+          <label>Good (HDL)<input id="rdA" type="number" inputmode="numeric" placeholder="50" ${big}></label>
+          <label>Bad (LDL)<input id="rdB" type="number" inputmode="numeric" placeholder="100" ${big}></label></div>
+        <p class="explain" style="margin:8px 0 0">From your blood test, in mg/dL. Fill either one or both. <b>HDL</b> is the good one — higher is better (${P().sex === 'female' ? '50' : '40'}+). <b>LDL</b> is the bad one — lower is better (under 100).</p>`
     : k === 'spo2' ? `<div class="grid2" style="margin-top:14px;text-align:left">
           <label>SpO₂ (%)<input id="rdA" type="number" inputmode="numeric" placeholder="98" ${big}></label>
           <label>Pulse<input id="rdC" type="number" inputmode="numeric" placeholder="–" ${big}></label></div>
@@ -2025,7 +2020,7 @@ function sheetReading() {
       <div style="font-size:17px;font-weight:700">${now.toLocaleDateString('en-IN', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}</div>
       <div class="muted" style="font-size:15px;margin-top:2px">${now.toLocaleTimeString('en-IN', { hour: 'numeric', minute: '2-digit' })}</div>
       ${body}
-      ${L ? `<p class="explain" style="margin:8px 0 0">Last time: <b>${READINGS[k].show(L.r)}</b> on ${niceDate(L.date, { day: 'numeric', month: 'short' })}${L.r.at ? ' · ' + new Date(L.r.at).toLocaleTimeString('en-IN', { hour: 'numeric', minute: '2-digit' }) : ''}</p>` : ''}
+      ${L ? `<p class="explain" style="margin:8px 0 0">Last time: <b>${READINGS[k === 'chol' ? 'ldl' : k].show(L.r)}</b> on ${niceDate(L.date, { day: 'numeric', month: 'short' })}${L.r.at ? ' · ' + new Date(L.r.at).toLocaleTimeString('en-IN', { hour: 'numeric', minute: '2-digit' }) : ''}</p>` : ''}
     </div>
     <button class="btn primary block" data-act="saveReading">Save</button>`;
 }
@@ -2101,6 +2096,20 @@ function intakeSummary(date) {
   </div>`;
 }
 
+function cholLine(date) {
+  const nd = nutritionNeeds(date), dn = dayNutrition(date), ate = dn.tot.chol || 0, lim = nd.chol;
+  const pct = lim > 0 ? ate / lim * 100 : 0, over = ate > lim;
+  const cls = over ? 'bad' : pct >= 70 ? 'warnc' : 'good';
+  return `<div style="margin:0 0 10px;padding:10px 12px;border:1px solid var(--line);border-radius:12px;background:var(--input)">
+    <div class="kv" style="font-size:14px"><span>🫀 Cholesterol eaten <small class="muted">(the bad-cholesterol kind)</small></span>
+      <span><b class="${cls}">${r0(ate)} mg</b> <small class="muted">of ${lim} mg</small></span></div>
+    <div class="bar" style="height:5px;margin-top:6px"><i style="width:${Math.min(100, pct)}%;background:var(--${over ? 'bad' : pct >= 70 ? 'warn' : 'accent'})"></i></div>
+    <p class="explain" style="margin:6px 0 0">${!dn.count ? 'Nothing logged yet today.'
+      : over ? `${r0(ate - lim)} mg over today's limit — go easy on egg yolk, red meat, prawn, ghee and full-cream dairy.`
+      : `${r0(lim - ate)} mg left today.`}${dn.unknown ? ` ${dn.unknown} item${dn.unknown > 1 ? 's are' : ' is'} not in the food table, so the real figure may be higher.` : ''}</p>
+  </div>`;
+}
+
 function viewFood() {
   const date = S.date, d = dayOf(date), st = dayStats(date);
   const waterTarget = Math.round(st.w * 35 / 250) * 250;
@@ -2108,6 +2117,7 @@ function viewFood() {
     ${dateBar()}
     ${intakeSummary(date)}
     <div class="card"><h3>Meals <small class="muted">${r0(st.protein)} g protein · ${r0(st.carbs)} g carbs · ${r0(st.fat)} g fat</small></h3>
+      ${cholLine(date)}
       <p class="explain" style="margin:-2px 0 4px"><b class="good">Green</b> = good for your goal · <b class="bad">Red</b> = too much / too little in this food</p>
       ${[...SLOTS, ...((d.meals || []).some(m => m.slot === 'protein' && m.source !== 'whey') ? [{ id: 'protein', label: 'Protein', icon: '💪' }] : [])].map(s => {
         const items = (d.meals || []).filter(m => s.id === 'whey' ? (m.slot === 'whey' || m.source === 'whey') : m.slot === s.id && m.source !== 'whey');
@@ -2232,7 +2242,7 @@ function viewProfile() {
       <button class="btn blue block" data-act="exportXlsx">⬇️ Export to Excel</button>
     </div>
     <button class="btn danger block" data-act="logout" style="margin-top:6px">Log out</button>
-    <p class="explain" style="text-align:center;margin-top:14px">Minimal Health Tracker v91 · estimates only, not medical advice</p>
+    <p class="explain" style="text-align:center;margin-top:14px">Minimal Health Tracker v92 · estimates only, not medical advice</p>
   </main>`;
 }
 
@@ -2308,13 +2318,21 @@ function itemSugar(it) {
   if (it.microPer && it.microPer.sugar != null) return it.microPer.sugar * it.grams;
   const f = findFood(it.name); return f && MICRO[f.n] ? MICRO[f.n][1] * it.grams / 100 : null;
 }
+function itemChol(it) {
+  if (it.microPer && it.microPer.chol != null) return it.microPer.chol * it.grams;
+  const f = findFood(it.name); return f && MICRO[f.n] ? MICRO[f.n][12] * it.grams / 100 : null;
+}
 function checkTotals(items) {
-  const t = { kcal: 0, protein: 0, carbs: 0, fat: 0, sugar: 0 }; let sugarKnown = false;
-  items.forEach(it => { ['kcal', 'protein', 'carbs', 'fat'].forEach(k => t[k] += Number(it[k]) || 0); const s = itemSugar(it); if (s != null) { t.sugar += s; sugarKnown = true; } });
+  const t = { kcal: 0, protein: 0, carbs: 0, fat: 0, sugar: 0, chol: 0 }; let sugarKnown = false, cholKnown = false;
+  items.forEach(it => { ['kcal', 'protein', 'carbs', 'fat'].forEach(k => t[k] += Number(it[k]) || 0);
+    const s = itemSugar(it); if (s != null) { t.sugar += s; sugarKnown = true; }
+    const c = itemChol(it); if (c != null) { t.chol += c; cholKnown = true; } });
+  const lim = nutritionNeeds(S.date).chol;
   const box = (l, v, u, c) => `<div class="stat"><small>${l}</small><b class="${c || ''}">${v}</b><span>${u}</span></div>`;
   return `<div class="card" style="margin:6px 0 0;padding:12px"><b style="font-size:15px">Total for this food</b>
     <div class="grid3" style="margin-top:8px">${box('Calories', r0(t.kcal), 'kcal')}${box('Protein', r0(t.protein), 'g', 'good')}${box('Carbs', r0(t.carbs), 'g')}</div>
-    <div class="grid2" style="margin-top:10px">${box('Sugar', sugarKnown ? r0(t.sugar) : '—', 'g', t.sugar > 15 ? 'bad' : '')}${box('Fat', r0(t.fat), 'g')}</div></div>`;
+    <div class="grid3" style="margin-top:10px">${box('Sugar', sugarKnown ? r0(t.sugar) : '—', 'g', t.sugar > 15 ? 'bad' : '')}${box('Fat', r0(t.fat), 'g')}${box('Cholesterol', cholKnown ? r0(t.chol) : '—', 'mg', t.chol >= lim / 2 ? 'bad' : t.chol <= 20 ? 'good' : '')}</div>
+    ${cholKnown && t.chol > 0 ? `<p class="explain" style="margin:8px 0 0">That is ${r0(t.chol / lim * 100)}% of your ${lim} mg cholesterol for the day.</p>` : ''}</div>`;
 }
 function refreshItems() { const w = $('#itemsWrap'); if (w) w.innerHTML = itemsBlock(); }
 function searchResults(q) {
@@ -2386,10 +2404,11 @@ async function analyzeFood(dataUrls) {
   const prompt = `You are a nutrition assistant. Identify every separate food item on this plate or in this photo. The person lives in Chennai, India, so South Indian and Indian dishes (idli, dosa, sambar, chutney, rice, curries, chapati, poriyal etc.) are common, but identify whatever is actually there.
 For each item estimate the weight in grams as served (use the plate, bowl, cutlery, hand or packaging as size references) and its nutrition for that weight.
 Reply with ONLY a JSON object, no other text, exactly in this shape:
-{"items":[{"name":"Idli","type":"meal","grams":120,"kcal":175,"protein":5.4,"carbs":36,"fat":0.5,"fiber":1.8,"sugar":0.6,"calcium":24,"iron":1,"magnesium":24,"potassium":96,"sodium":310,"zinc":0.6,"vitA":0,"vitC":0,"vitB12":0,"folate":18}],"note":"One short sentence on anything you were unsure about."}
+{"items":[{"name":"Idli","type":"meal","grams":120,"kcal":175,"protein":5.4,"carbs":36,"fat":0.5,"fiber":1.8,"sugar":0.6,"calcium":24,"iron":1,"magnesium":24,"potassium":96,"sodium":310,"zinc":0.6,"vitA":0,"vitC":0,"vitB12":0,"folate":18,"chol":0}],"note":"One short sentence on anything you were unsure about."}
 Drinks: for tea, coffee, milk, juice, lassi or any drink, give the drink itself WITHOUT any added sugar as one item (e.g. "Filter coffee (milk, no sugar)"), and if sugar may be in it (normal for Indian tea/coffee) add a SEPARATE item named "Sugar (in tea / coffee)" with its grams (1 tsp ≈ 5 g ≈ 19 kcal), so the person can delete it if they took it without sugar.
 Also add "type" to every item, one of: "meal", "fruit", "drink", "snack", "egg", "sprouts", "whey", "sweet".
-Units for the item's full weight: grams for fiber and sugar; mg for calcium, iron, magnesium, potassium, sodium, zinc, vitC; micrograms for vitA (RAE), vitB12 and folate.
+Units for the item's full weight: grams for fiber and sugar; mg for calcium, iron, magnesium, potassium, sodium, zinc, vitC and chol; micrograms for vitA (RAE), vitB12 and folate.
+"chol" is dietary cholesterol in mg. Only animal food has any: egg yolk, meat, chicken, fish, prawn, ghee, butter, cream, full-fat milk, curd, paneer and cheese. Every purely plant food — rice, dosa, idli, sambar, dal, vegetables, fruit, nuts, oil — is 0.
 If no food is visible, return {"items":[],"note":"No food found"}.`;
   const text = await askVision(dataUrls.map(u => u.split(',')[1]), dataUrls.length > 1 ? 'You get 2 photos of the SAME meal (e.g. a top view and a close-up or a label). Use both for accuracy and do not count the same food twice.\n' + prompt : prompt);
   const m = text.match(/\{[\s\S]*\}/);
@@ -2622,7 +2641,6 @@ function render() {
   const app = $('#app');
   if (S.screen === 'auth') app.innerHTML = viewAuth();
   else if (S.screen === 'verify') app.innerHTML = viewVerify();
-  else if (S.screen === 'link') app.innerHTML = viewLink();
   else if (S.screen === 'setup') app.innerHTML = viewSetup();
   else if (S.screen === 'loading') app.innerHTML = viewLoading();
   else if (S.screen === 'error') app.innerHTML = viewError();
@@ -2644,8 +2662,6 @@ const ACT = {
   showAdv() { S.showAdvanced = true; render(); },
   async login(el) { try { await doLogin(el); } finally { unbusy(el); } },
   async forgot(el) { try { await doForgot(el); } finally { unbusy(el); } },
-  async linkOld(el) { try { await doLink(el); } finally { unbusy(el); } },
-  startFresh() { S.screen = 'onboard'; render(); },
   async checkVerified(el) {
     busy(el, 'Checking…');
     try {
@@ -2869,6 +2885,18 @@ const ACT = {
       const b = num(($('#rdB') || {}).value), c = num(($('#rdC') || {}).value);
       if (!(a > 60 && a < 260) || !(b > 30 && b < 160)) throw fail('Enter upper and lower BP numbers, e.g. 120 and 80.');
       add('bp', { sys: Math.round(a), dia: Math.round(b), pulse: c ? Math.round(c) : null }); toast(`Saved BP ${Math.round(a)}/${Math.round(b)}`, 'good');
+    } else if (sh.k === 'pulse') {
+      if (!(a >= 30 && a <= 220)) throw fail('Enter your pulse in beats a minute, e.g. 72.');
+      add('pulse', { val: Math.round(a) }); toast(`Saved pulse ${Math.round(a)} bpm`, 'good');
+    } else if (sh.k === 'chol') {
+      const b = num(($('#rdB') || {}).value);
+      if (a == null && b == null) throw fail('Enter the good (HDL) or the bad (LDL) number, or both.');
+      if (a != null && !(a >= 10 && a <= 150)) throw fail('HDL is usually between 20 and 100 mg/dL.');
+      if (b != null && !(b >= 20 && b <= 400)) throw fail('LDL is usually between 50 and 250 mg/dL.');
+      const said = [];
+      if (a != null) { add('hdl', { val: Math.round(a) }); said.push('HDL ' + Math.round(a)); }
+      if (b != null) { add('ldl', { val: Math.round(b) }); said.push('LDL ' + Math.round(b)); }
+      toast('Saved ' + said.join(' · ') + ' mg/dL', 'good');
     } else if (sh.k === 'sugar') {
       if (!(a >= 20 && a <= 600)) throw fail('Enter your sugar in mg/dL, e.g. 110.');
       add('sugar', { val: Math.round(a), kind: ($('#rdK') || {}).value || 'Before food' }); toast(`Saved sugar ${Math.round(a)} mg/dL`, 'good');
@@ -3257,7 +3285,7 @@ async function boot() {
 boot();
 
 // expose for testing
-window.__fittrack = { sheetMedPick, viewAuth, viewLink, viewVerify, viewAdmin, sheetCal, dateBar, sheetReading, healthCard, suggestSlot, sheetWheyQ, sheetSteps, quickCard, sheetAddWeight, calcCard, openScaleSheet, analyseScaleRun, sheetScale, maybeHashWeight, sheetConfirm, viewBurn, addPhotosToSheet, openWorkoutSheet, sheetWorkout, runAnalysis, sheetFood, viewHome, viewFood, viewToday, viewMeds, wheyCard, ACT, profileForm, startWorkoutPhoto, sheetWorkout, FOOD, nutritionCard, needsCard, todayTable, viewSuggest, viewHome, viewFood, viewBurn, sheetWorkout, bmiOf, bmiCat, fatPct, bmr, treadKcal, bikeKcal, wkSuggest, S, plan, dayStats };
+window.__fittrack = { sheetMedPick, viewAuth, viewVerify, viewAdmin, sheetCal, dateBar, sheetReading, healthCard, suggestSlot, sheetWheyQ, sheetSteps, quickCard, sheetAddWeight, calcCard, openScaleSheet, analyseScaleRun, sheetScale, maybeHashWeight, sheetConfirm, viewBurn, addPhotosToSheet, openWorkoutSheet, sheetWorkout, runAnalysis, sheetFood, viewHome, viewFood, viewToday, viewMeds, wheyCard, ACT, profileForm, startWorkoutPhoto, sheetWorkout, FOOD, nutritionCard, needsCard, todayTable, viewSuggest, viewHome, viewFood, viewBurn, sheetWorkout, bmiOf, bmiCat, fatPct, bmr, treadKcal, bikeKcal, wkSuggest, S, plan, dayStats };
 })();
 </script>
 </body>
