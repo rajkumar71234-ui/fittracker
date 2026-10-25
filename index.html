@@ -344,7 +344,7 @@ function mealMacros(m) {
     h: Ch == null ? '' : Ch >= 100 ? 'bad' : Ch <= 20 ? 'good' : ''
   };
   const chip = (k, label, v, u) => `<span class="mc ${cls[k]}"><small>${label}</small><b>${v == null ? '—' : r0(v) + ' ' + (u || 'g')}</b></span>`;
-  return `<span class="mcs">${chip('p', 'Protein', P)}${chip('c', 'Carbs', C)}${chip('s', 'Sugar', S)}${chip('f', 'Fat', F)}${chip('b', 'Fibre', Fb)}${chip('h', 'Chol', Ch, 'mg')}</span>`;
+  return `<span class="mcs">${chip('p', 'Protein', P)}${chip('c', 'Carbs', C)}${chip('s', 'Sugar', S)}${chip('f', 'Fat', F)}${chip('h', 'Chol', Ch, 'mg')}${chip('b', 'Fibre', Fb)}</span>`;
 }
 function dayNutrition(date) {
   const meals = (S.data.days[date] || {}).meals || [];
@@ -997,7 +997,7 @@ function viewAuth() {
   return `<div class="auth">
     <img class="logo" src="icons/logo.png" alt="">
     <h1>Minimal Health Tracker</h1>
-    <p class="sub">Your weight-loss tracker · v93</p>
+    <p class="sub">Your weight-loss tracker · v94</p>
     ${m !== 'forgot' ? `<div class="seg">
       <button data-act="authMode" data-v="login" class="${m === 'login' ? 'on' : ''}">Log in</button>
       <button data-act="authMode" data-v="create" class="${m === 'create' ? 'on' : ''}">Create account</button>
@@ -1644,6 +1644,21 @@ function wheyCard(date) {
   </div>`;
 }
 
+function cholStrip(date, nd) {
+  const ateC = dayNutrition(date).tot.chol || 0, tg = nd.chol, left = tg - ateC, over = left < 0;
+  const box = (l, v, u, c, foot) => `<div class="stat" style="text-align:center;padding:10px 4px"><small style="white-space:nowrap">${l}</small><b class="${c || ''}" style="white-space:nowrap;margin:2px 0">${v}<small style="display:inline;font-size:13px;font-weight:600"> ${u}</small></b><span style="white-space:nowrap">${foot}</span></div>`;
+  return `<div style="margin-top:12px;padding-top:10px;border-top:1px solid var(--line)">
+    <div style="display:flex;align-items:baseline;justify-content:space-between;gap:10px">
+      <b style="font-size:15px">🫀 Cholesterol</b>
+      <small class="muted" style="font-size:12.5px">the bad-cholesterol kind</small>
+    </div>
+    <div class="grid3" style="margin-top:8px;align-items:stretch">
+      ${box('Target', r0(tg), 'mg', '', 'a day')}
+      ${box('Ate', r0(ateC), 'mg', over ? 'bad' : 'good', 'from food')}
+      ${box(over ? 'Over' : 'Left', (over ? '+' : '') + r0(Math.abs(left)), 'mg', over ? 'bad' : 'good', over ? 'too much' : 'still ok')}
+    </div>
+  </div>`;
+}
 function calcCard(st, ate, logged, date) {
   const need = st.base, burn = st.exNet + st.stepsK;
   const diff = need - ate;                  // + = still under, − = extra eaten
@@ -1669,6 +1684,7 @@ function calcCard(st, ate, logged, date) {
     ${row('+', 'Burned', [`Exercise ${fmt(st.exNet)}`, `Steps ${fmt(st.stepsK)}${st.d && st.d.steps ? ` (${Number(st.d.steps).toLocaleString('en-IN')} steps)` : ''}`], bDone.toLocaleString('en-IN'), 'good', false,
       [`Target ${fmt(burnTg)}`, `<span class="${bGap >= 0 ? 'good' : 'bad'}">${bGap >= 0 ? 'done ✓' + (bGap > 0 ? ' +' + fmt(bGap) : '') : fmt(-bGap) + ' to go'}</span>`])}
     ${row('=', def >= 0 ? 'Deficit' : 'Surplus', def >= 0 ? 'this turns into weight loss' : 'this turns into weight gain', sign(def) + r0(Math.abs(def)).toLocaleString('en-IN'), def >= 0 ? 'good' : 'bad', true)}
+    ${cholStrip(date, nd)}
     ${logged ? `<div class="grid3" style="margin-top:12px;align-items:stretch">
       ${proj(date === todayStr() ? 'Today' : 'This day', g, true)}
       ${proj('1 week', g * 7)}
@@ -2173,8 +2189,9 @@ function weightChart(p, pl) {
   const proj = pl.projByDeficit != null && pl.sinceStart >= 0 && pl.sinceStart < pl.N ? [{ x: pl.todayX, y: pl.curW }, { x: N, y: pl.projByDeficit }] : null;
   const rng = S.wRange || 'full', tx = Math.max(0, Math.min(N, pl.todayX || 0));
   let xMin = 0, xMax = N;
-  if (rng === 'week') { xMin = Math.floor(tx / 7) * 7; xMax = Math.min(N, xMin + 7); }
-  if (rng === 'month') { xMin = Math.floor(tx / 30) * 30; xMax = Math.min(N, xMin + 30); }
+  if (rng === 'week') { xMax = tx; xMin = Math.max(0, xMax - 7); }      // the last 7 days up to today
+  if (rng === 'month') { xMax = tx; xMin = Math.max(0, xMax - 30); }    // the last 30 days up to today
+  if (rng !== 'full' && xMax - xMin < 2) xMax = Math.min(N, xMin + 2);  // day one still needs an axis
   if (xMax <= xMin) xMax = xMin + 1;
   const at = (pts, x) => { for (let i = 1; i < pts.length; i++) if (x <= pts[i].x) { const a = pts[i - 1], b = pts[i]; return b.x === a.x ? b.y : a.y + (b.y - a.y) * (x - a.x) / (b.x - a.x); } return pts[pts.length - 1].y; };
   const inR = q => q.x >= xMin && q.x <= xMax;
@@ -2198,7 +2215,7 @@ function weightChart(p, pl) {
     [xMin, Math.round((xMin + xMax) / 2), xMax].forEach((x, i) => { g += `<text x="${X(x)}" y="${H - 6}" text-anchor="${['start', 'middle', 'end'][i]}">${niceDate(addDays(p.startDate, x), { day: 'numeric', month: 'short' })}</text>`; });
   }
   const actual = pl.pts.filter(q => q.x <= N && inR(q));
-  const tabs = [['week', 'This week'], ['month', 'This month'], ['full', 'Full']].map(([k, l]) => `<button class="${rng === k ? 'on' : ''}" data-act="wRange" data-v="${k}">${l}</button>`).join('');
+  const tabs = [['week', 'Last 7 days'], ['month', 'Last 30 days'], ['full', 'Full']].map(([k, l]) => `<button class="${rng === k ? 'on' : ''}" data-act="wRange" data-v="${k}">${l}</button>`).join('');
   return `<div class="seg" style="margin:0 0 10px">${tabs}</div>
   <svg class="chart" viewBox="0 0 ${W} ${H}" role="img" aria-label="Weight chart">
     <defs><clipPath id="wclip"><rect x="${L}" y="0" width="${W - L - R}" height="${H - B}"/></clipPath></defs>
@@ -2222,7 +2239,7 @@ function viewProfile() {
       <button class="btn blue block" data-act="exportXlsx">⬇️ Export to Excel</button>
     </div>
     <button class="btn danger block" data-act="logout" style="margin-top:6px">Log out</button>
-    <p class="explain" style="text-align:center;margin-top:14px">Minimal Health Tracker v93 · estimates only, not medical advice</p>
+    <p class="explain" style="text-align:center;margin-top:14px">Minimal Health Tracker v94 · estimates only, not medical advice</p>
   </main>`;
 }
 
