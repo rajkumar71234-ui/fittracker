@@ -1016,7 +1016,7 @@ async function loadData() {
     S.tab = 'home'; S.date = todayStr();
     S.screen = S.data.profile ? 'main' : 'onboard';
     render();
-    if (S.data.profile) maybeHashWeight();
+    if (S.data.profile) { maybeHashWeight(); try { migrateWheyMeals(); } catch (e) { console.error(e); } }
     if (hadOutbox) syncNow(); else setSync('ok');
   } catch (e) {
     console.error(e);
@@ -1042,7 +1042,7 @@ function viewAuth() {
   return `<div class="auth">
     <img class="logo" src="icons/logo.png" alt="">
     <h1>Minimal Health Tracker</h1>
-    <p class="sub">Your weight-loss tracker · v116</p>
+    <p class="sub">Your weight-loss tracker · v117</p>
     ${m !== 'forgot' ? `<div class="seg">
       <button data-act="authMode" data-v="login" class="${m === 'login' ? 'on' : ''}">Log in</button>
       <button data-act="authMode" data-v="create" class="${m === 'create' ? 'on' : ''}">Create account</button>
@@ -1700,8 +1700,30 @@ function wheyMicro(grams) { const o = {}; Object.keys(WHEY_MICRO100).forEach(k =
 function wheyDefaults() {
   const w = (P() || {}).whey || {};
   // anyone still carrying the app's own earlier defaults gets the tub label instead
-  if (w.p === 24 && w.k === 120 && w.g === 30) return { p: WHEY_LABEL.p, k: WHEY_LABEL.k, g: WHEY_LABEL.g };
+  if (Math.round(w.k) === 120 && Math.round(w.g) === 30) return { p: WHEY_LABEL.p, k: WHEY_LABEL.k, g: WHEY_LABEL.g };
   return { p: w.p ?? WHEY_LABEL.p, k: w.k ?? WHEY_LABEL.k, g: w.g ?? WHEY_LABEL.g };
+}
+/* Scoops logged before the tub label was read in were saved against the app's own
+   guess of a 30 g / 120 kcal scoop. The powder was always the same, so those entries
+   under-record it. Rebuild any that still carry that old shape; anything the user
+   typed his own numbers for will not match and is left alone. */
+function migrateWheyMeals() {
+  const days = (S.data && S.data.days) || {}; let fixed = 0;
+  Object.keys(days).forEach(ds => {
+    (days[ds].meals || []).forEach(m => {
+      if (m.source !== 'whey' && m.slot !== 'whey') return;
+      const n = Number(m.scoops) || 0; if (!n) return;
+      const gPer = (Number(m.grams) || 0) / n, kPer = (Number(m.kcal) || 0) / n;
+      if (Math.round(gPer) !== 30 || Math.round(kPer) !== 120) return;   // not the old default
+      const L = WHEY_LABEL;
+      m.grams = r1(n * L.g); m.kcal = r0(n * L.k); m.protein = r1(n * L.p);
+      m.carbs = r2(n * L.c); m.fat = r2(n * L.f);
+      m.micro = wheyMicro(n * L.g);
+      fixed++; S.dirtyDays.add(ds);
+    });
+  });
+  if (fixed) { scheduleSave(400); toast(`Updated ${fixed} old whey entr${fixed === 1 ? 'y' : 'ies'} to your tub label`, 'good'); }
+  return fixed;
 }
 function wheyCard(date) {
   const d = dayOf(date), wd = wheyDefaults();
@@ -2447,7 +2469,7 @@ function viewProfile() {
       <button class="btn blue block" data-act="exportXlsx">⬇️ Export to Excel</button>
     </div>
     <button class="btn danger block" data-act="logout" style="margin-top:6px">Log out</button>
-    <p class="explain" style="text-align:center;margin-top:14px">Minimal Health Tracker v116 · estimates only, not medical advice</p>
+    <p class="explain" style="text-align:center;margin-top:14px">Minimal Health Tracker v117 · estimates only, not medical advice</p>
   </main>`;
 }
 
@@ -3625,7 +3647,7 @@ async function boot() {
 boot();
 
 // expose for testing
-window.__fittrack = { sheetMedPick, viewAuth, viewVerify, viewAdmin, sheetCal, dateBar, sheetReading, healthCard, suggestSlot, sheetWheyQ, sheetSnackQ, snackTotals, sheetSteps, quickCard, sheetAddWeight, calcCard, openScaleSheet, analyseScaleRun, sheetScale, maybeHashWeight, sheetConfirm, viewBurn, addPhotosToSheet, openWorkoutSheet, sheetWorkout, runAnalysis, sheetFood, viewHome, viewFood, viewToday, viewMeds, wheyCard, ACT, profileForm, startWorkoutPhoto, sheetWorkout, FOOD, nutritionCard, needsCard, todayTable, viewSuggest, viewHome, viewFood, viewBurn, sheetWorkout, bmiOf, bmiCat, fatPct, bmr, treadKcal, bikeKcal, wkSuggest, S, plan, dayStats };
+window.__fittrack = { sheetMedPick, viewAuth, viewVerify, viewAdmin, sheetCal, dateBar, sheetReading, healthCard, suggestSlot, sheetWheyQ, sheetSnackQ, snackTotals, migrateWheyMeals, wheyDefaults, sheetSteps, quickCard, sheetAddWeight, calcCard, openScaleSheet, analyseScaleRun, sheetScale, maybeHashWeight, sheetConfirm, viewBurn, addPhotosToSheet, openWorkoutSheet, sheetWorkout, runAnalysis, sheetFood, viewHome, viewFood, viewToday, viewMeds, wheyCard, ACT, profileForm, startWorkoutPhoto, sheetWorkout, FOOD, nutritionCard, needsCard, todayTable, viewSuggest, viewHome, viewFood, viewBurn, sheetWorkout, bmiOf, bmiCat, fatPct, bmr, treadKcal, bikeKcal, wkSuggest, S, plan, dayStats };
 })();
 </script>
 </body>
