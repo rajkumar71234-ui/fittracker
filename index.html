@@ -366,7 +366,7 @@ function mealMacros(m) {
     uf: Uf == null ? '' : (F > 0 && Uf / F >= 0.6) ? 'good' : ''
   };
   const chip = (k, label, v, u, pre) => `<span class="mc ${cls[k]}"><small>${label}</small><b>${v == null ? '—' : (pre || '') + ((u || 'g') === 'g' && v < 10 ? r1(v) : r0(v)) + ' ' + (u || 'g')}</b></span>`;
-  return `<span class="mcs">${chip('p', 'Protein', P)}${chip('c', 'Carbs', C)}${chip('s', 'Sugar', S)}${chip('f', 'Fat', F)}${chip('sf', 'Bad fat', Sf, null, est)}${chip('uf', 'Good fat', Uf, null, est)}${chip('h', 'Chol', Ch, 'mg')}${chip('b', 'Fibre', Fb)}</span>`;
+  return `<span class="mcs">${chip('p', 'Protein', P)}${chip('c', 'Carbs', C)}${chip('s', 'Sugar', S)}${chip('f', 'Fat', F)}${chip('sf', 'Sat fat', Sf, null, est)}${chip('uf', 'Unsat fat', Uf, null, est)}${chip('h', 'Chol', Ch, 'mg')}${chip('b', 'Fibre', Fb)}</span>`;
 }
 function dayNutrition(date) {
   const meals = (S.data.days[date] || {}).meals || [];
@@ -1031,7 +1031,7 @@ function viewAuth() {
   return `<div class="auth">
     <img class="logo" src="icons/logo.png" alt="">
     <h1>Minimal Health Tracker</h1>
-    <p class="sub">Your weight-loss tracker · v108</p>
+    <p class="sub">Your weight-loss tracker · v109</p>
     ${m !== 'forgot' ? `<div class="seg">
       <button data-act="authMode" data-v="login" class="${m === 'login' ? 'on' : ''}">Log in</button>
       <button data-act="authMode" data-v="create" class="${m === 'create' ? 'on' : ''}">Create account</button>
@@ -2390,7 +2390,7 @@ function viewProfile() {
       <button class="btn blue block" data-act="exportXlsx">⬇️ Export to Excel</button>
     </div>
     <button class="btn danger block" data-act="logout" style="margin-top:6px">Log out</button>
-    <p class="explain" style="text-align:center;margin-top:14px">Minimal Health Tracker v108 · estimates only, not medical advice</p>
+    <p class="explain" style="text-align:center;margin-top:14px">Minimal Health Tracker v109 · estimates only, not medical advice</p>
   </main>`;
 }
 
