@@ -1039,7 +1039,7 @@ function viewAuth() {
   return `<div class="auth">
     <img class="logo" src="icons/logo.png" alt="">
     <h1>Minimal Health Tracker</h1>
-    <p class="sub">Your weight-loss tracker · v113</p>
+    <p class="sub">Your weight-loss tracker · v114</p>
     ${m !== 'forgot' ? `<div class="seg">
       <button data-act="authMode" data-v="login" class="${m === 'login' ? 'on' : ''}">Log in</button>
       <button data-act="authMode" data-v="create" class="${m === 'create' ? 'on' : ''}">Create account</button>
@@ -2097,7 +2097,7 @@ function sheetWheyQ() {
         <button class="round" data-act="wheyQStep" data-v="${egg ? 1 : 0.5}" aria-label="More">+</button>
       </div>
       <p style="margin:8px 0 0;font-size:17px;font-weight:700">${r1(n * P1)} g protein · ${r0(n * K1)} kcal · ${r1(n * F1)} g fat</p>
-      <p class="explain" style="margin:4px 0 0">1 ${unit[0]} = ${P1} g protein · ${K1} kcal · ${F1} g fat${egg ? '' : ` · ${r0(WHEY_MICRO100.chol * wd.g / 100)} mg cholesterol`}</p>
+      <p class="explain" style="margin:4px 0 0">1 ${unit[0]} = ${P1} g protein · ${K1} kcal · ${F1} g fat${egg ? '' : ` (${r1(WHEY_MICRO100.satfat * wd.g / 100)} g saturated) · ${r0(WHEY_MICRO100.chol * wd.g / 100)} mg cholesterol · ${r0(WHEY_MICRO100.sodium * wd.g / 100)} mg sodium`}</p>
       ${done ? `<p class="explain" style="margin:6px 0 0"><b class="good">Already logged today:</b> ${r0(done)} g protein from ${egg ? 'eggs' : 'whey'}. Saving now adds to that.</p>` : ''}
     </div>
     <button class="btn primary block" data-act="saveWheyQ">Save ${n} ${u}</button>
@@ -2417,7 +2417,7 @@ function viewProfile() {
       <button class="btn blue block" data-act="exportXlsx">⬇️ Export to Excel</button>
     </div>
     <button class="btn danger block" data-act="logout" style="margin-top:6px">Log out</button>
-    <p class="explain" style="text-align:center;margin-top:14px">Minimal Health Tracker v113 · estimates only, not medical advice</p>
+    <p class="explain" style="text-align:center;margin-top:14px">Minimal Health Tracker v114 · estimates only, not medical advice</p>
   </main>`;
 }
 
