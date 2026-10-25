@@ -302,7 +302,7 @@ const FOOD = [
   ['Carrot',41,0.9,10,0.2,80,'1 medium'],['Sweet corn (boiled)',96,3.4,21,1.5,100,'1 cup'],['Oats (dry)',389,17,66,7,40,'½ cup'],
   ['Oats porridge with milk',95,4,13,3,250,'1 bowl'],['Bread (brown)',247,13,41,3.4,30,'1 slice'],['Bread (white)',265,9,49,3.2,30,'1 slice'],
   ['Peanut butter',588,25,20,50,16,'1 tbsp'],['Peanuts (roasted)',567,26,16,49,30,'handful'],['Almonds',579,21,22,50,15,'10 pcs'],
-  ['Cashews',553,18,30,44,15,'10 pcs'],['Walnuts',654,15,14,65,15,'4 halves'],['Makhana (roasted)',350,9.7,77,0.1,25,'1 cup'],
+  ['Cashews',553,18,30,44,15,'10 pcs'],['Walnuts',654,15,14,65,15,'4 halves'],['Pumpkin seeds',559,30.2,10.7,49.1,10,'1 spoon'],['Sesame balls (ellu urundai)',489,10,55.8,27.3,20,'1 ball'],['Makhana (roasted)',350,9.7,77,0.1,25,'1 cup'],
   ['Roasted chana',370,22,58,5,30,'handful'],['Marie biscuit',440,7,76,11,7,'1 pc'],['Murukku',520,8,55,30,30,'2 pcs'],
   ['Samosa',290,5,32,16,70,'1 pc'],['Bajji / bonda',300,6,30,17,40,'1 pc'],['Veg puff',330,6,35,18,80,'1 pc'],
   ['Gulab jamun',375,6,52,16,40,'1 pc'],['Kesari',330,3,50,13,100,'1 cup'],['Chocolate',535,7.6,60,30,20,'2 squares'],
@@ -313,7 +313,7 @@ const FOOD = [
 
 const MICRO_KEYS = ['fiber', 'sugar', 'calcium', 'iron', 'magnesium', 'potassium', 'sodium', 'zinc', 'vitA', 'vitC', 'vitB12', 'folate', 'chol', 'satfat'];
 // per 100 g (approximate, IFCT/USDA-style values)
-const MICRO = {"Sambar rice (sambar sadam)":[1.8,1.2,20,0.8,20,120,250,0.6,30,3,0,18,0,0.88],"Rasam rice":[0.6,0.8,12,0.4,14,80,280,0.5,10,4,0,6,0,0.4],"Tamarind rice (puliyodarai)":[1.5,2.5,25,1.2,20,110,350,0.6,5,1,0,8,0,1.21],"Tomato rice":[1,2,15,0.6,15,120,320,0.5,30,5,0,8,0,0.99],"Coconut rice":[1.5,0.8,10,0.6,20,90,250,0.6,0,0.5,0,5,0,6.96],"Bisi bele bath":[2.5,1.5,30,1.2,25,180,350,0.7,60,4,0,30,0,0.99],"Vegetable pulao":[1.2,1,15,0.6,15,100,300,0.5,60,3,0,8,0,0.88],"Ghee rice":[0.4,0.2,8,0.3,10,40,200,0.5,60,0,0,3,20,4.68],"Sakkarai pongal (sweet)":[1,20,20,1.5,20,100,30,0.5,40,0,0,8,18,3.75],"Rava kesari":[0.6,28,15,0.6,10,60,40,0.3,50,0,0,5,25,6.6],"Set dosa":[1.2,0.6,18,0.8,18,70,280,0.5,0,0,0,12,0,0.66],"Ghee roast dosa":[1.2,0.5,18,1,20,80,300,0.5,60,0,0,12,22,5.0],"Kal dosa":[1.4,0.5,20,1,20,80,280,0.5,0,0,0,14,0,0.77],"Adai":[3.5,1,40,2,40,250,280,1,10,2,0,60,0,1.32],"Rava idli":[1,1,30,0.8,15,80,330,0.4,20,2,0,10,0,1.32],"Mini idli with sambar":[1.8,1,22,0.9,20,120,300,0.5,20,2,0,20,0,0.33],"Kuzhi paniyaram":[1.2,1,20,0.8,18,80,250,0.5,5,1,0,12,0,1.32],"Wheat dosa":[3,1,20,2,40,150,250,1,0,0,0,25,0,0.99],"Semiya upma":[1.5,1.5,15,0.8,15,90,320,0.4,30,3,0,10,0,1.1],"Kothu parotta":[1.5,1.5,30,1.5,20,150,480,0.8,40,4,0.2,15,45,3.5],"Idli podi with oil":[8,2,150,6,120,500,600,2.5,10,0,0,80,0,4.4],"Coconut chutney":[5,2,15,1,30,250,280,0.5,0,2,0,15,0,15.13],"Tomato chutney":[1.5,4,15,0.6,12,250,350,0.2,40,12,0,12,0,1.21],"Mint / coriander chutney":[3,2,60,2.5,30,300,300,0.4,150,20,0,40,0,0.88],"Peanut chutney":[4,3,40,1.5,90,350,300,1.5,0,1,0,60,0,3.84],"Kara kuzhambu":[1.8,3,25,1,15,200,450,0.3,30,5,0,15,0,1.21],"Vatha kuzhambu":[1.5,3,25,1,15,180,500,0.3,10,2,0,10,0,1.21],"Mor kuzhambu":[0.8,2.5,70,0.3,10,150,300,0.4,20,3,0.15,8,4,1.8],"Keerai poriyal (greens)":[3,1,150,3,60,400,200,0.6,400,20,0,100,0,0.99],"Beans poriyal":[3,2.5,40,1,25,200,220,0.3,35,10,0,30,0,1.1],"Cabbage poriyal":[2.5,3,40,0.6,15,180,220,0.2,5,25,0,35,0,0.99],"Potato fry / roast":[2,1,10,0.6,20,350,300,0.3,0,8,0,15,0,1.54],"Egg curry":[1,2,40,1.2,12,180,350,0.8,100,3,0.6,30,125,3.3],"Chicken chettinad":[1,1.5,20,1.2,22,250,400,1.5,30,2,0.3,8,55,4.2],"Mutton biryani":[1,1,20,1.5,20,160,420,1.8,20,1,0.6,10,40,3.4],"Egg biryani":[1,1,25,1,18,140,400,0.8,50,1,0.4,15,60,1.95],"Fish (grilled / tawa)":[0.2,0,30,0.8,30,350,300,0.6,30,0,2,10,55,1.88],"Paruppu vadai (masala vada)":[6,1.5,40,3,50,300,400,1.2,10,2,0,90,0,3.3],"Payasam (semiya)":[0.5,18,100,0.4,12,140,50,0.4,40,0.5,0.3,5,15,2.75],"Banana chips":[4,4,10,1.2,75,500,250,0.4,5,6,0,14,0,27.2],"Mixture / namkeen":[5,3,40,3,70,350,700,1.5,5,1,0,40,0,7.04],"Sundal (chana, tempered)":[7,2,50,2.5,45,280,250,1.5,5,2,0,170,0,0.88],"Tea with milk (no sugar)":[0,2.4,50,0.1,6,80,20,0.2,15,0,0.2,3,4,0.84],"Filter coffee (milk, no sugar)":[0,2.8,60,0.1,12,110,20,0.2,15,0,0.2,3,5,1.2],"Black tea (no sugar)":[0,0,1,0.02,3,40,2,0,0,0,0,5,0,0.0],"Milk (full cream)":[0,4.8,120,0.1,11,150,45,0.4,50,0.5,0.4,5,14,2.36],"Rose milk":[0,12,100,0.1,10,130,40,0.4,40,0.4,0.3,4,10,1.5],"Lassi (sweet)":[0,13,100,0.1,10,130,45,0.4,30,0.4,0.3,5,10,1.8],"Ragi koozh / malt":[1.5,1,70,0.8,25,80,150,0.3,0,0,0,5,0,0.13],"Sugar (in tea / coffee)":[0,100,1,0,0,2,1,0,0,0,0,0,0,0.0],"Idli":[1.5,0.5,20,0.8,20,80,260,0.5,0,0,0,15,0,0.09],"Plain dosa":[1.5,0.5,20,1.2,25,90,300,0.6,0,0,0,15,0,1.14],"Masala dosa":[2,1.5,25,1.3,25,200,350,0.6,10,6,0,18,0,1.65],"Rava dosa":[1,0.5,20,1,15,70,320,0.4,0,0,0,10,0,1.76],"Onion uttapam":[1.8,1.5,25,1.1,22,120,300,0.5,5,3,0,15,0,1.21],"Ven pongal":[1.5,0.5,20,1,25,90,280,0.6,20,0,0.05,15,0,2.1],"Rava upma":[1.5,1,15,1,20,90,330,0.4,30,3,0,12,0,1.21],"Poori":[3,1,20,2,30,120,250,0.8,0,0,0,20,0,3.74],"Chapati / roti":[4,1,30,2.5,60,200,250,1.5,0,0,0,30,0,1.54],"Parotta":[2,1.5,20,1.5,20,100,450,0.6,30,0,0,20,0,4.55],"Appam":[1,3,15,0.6,15,70,150,0.4,0,0,0,8,0,0.33],"Idiyappam":[0.8,0.2,8,0.5,15,40,50,0.5,0,0,0,5,0,0.11],"Ragi dosa":[3,0.5,120,1.5,40,120,280,0.6,0,0,0,15,0,0.77],"Medu vada":[4,1,40,2.5,50,250,450,1,5,0,0,60,0,3.3],"Pesarattu":[4,1,30,2,45,280,250,0.9,10,2,0,90,0,0.99],"White rice (cooked)":[0.4,0.1,10,0.2,12,35,1,0.5,0,0,0,3,0,0.07],"Brown rice (cooked)":[1.8,0.4,10,0.4,43,43,5,0.6,0,0,0,4,0,0.2],"Curd rice":[0.4,2,70,0.2,12,80,250,0.5,15,0.5,0.15,5,8,1.93],"Lemon rice":[0.8,0.3,15,0.5,15,60,300,0.5,5,4,0,6,0,0.99],"Sambar":[2.5,2,30,1.2,20,200,350,0.4,60,6,0,35,0,0.4],"Rasam":[0.8,1.5,15,0.6,10,150,400,0.2,30,8,0,10,0,0.18],"Dal / paruppu (cooked)":[2.5,0.5,20,1.5,30,200,250,0.8,5,1,0,60,0,0.44],"Vegetable poriyal":[3,3,40,1,20,250,250,0.4,150,15,0,30,0,1.1],"Kootu":[3,2,40,1.2,25,220,250,0.6,80,8,0,40,0,1.6],"Aviyal":[2.5,2.5,30,0.8,20,230,230,0.4,100,10,0.05,25,2,4.5],"Chana masala":[5,2,45,2,35,280,350,1.2,20,4,0,80,0,1.21],"Rajma curry":[5,1.5,40,2,40,320,320,1,10,3,0,90,0,0.99],"Paneer curry":[1,3,250,0.5,15,150,350,1.5,150,4,0.4,15,35,7.5],"Paneer (raw)":[0,1.2,480,0.2,20,100,20,2.5,200,0,0.8,10,60,12.4],"Chicken curry":[0.8,1.5,15,0.9,20,200,350,1.2,30,2,0.3,8,45,2.52],"Chicken breast (grilled)":[0,0,15,1,29,256,74,1,9,0,0.3,4,85,1.08],"Chicken 65":[0.5,1,15,1,22,220,500,1.2,20,1,0.3,6,70,3.75],"Chicken biryani":[1,1,20,1,20,150,400,0.9,20,1,0.2,10,35,1.82],"Veg biryani":[1.5,1.5,20,0.8,20,120,380,0.5,40,3,0,10,0,1.1],"Mutton curry":[0.5,1,15,2,20,250,350,3.5,10,2,1.5,6,65,5.88],"Fish curry":[0.5,1,40,1,25,300,350,0.5,30,3,1.5,10,40,1.5],"Fish fry":[0.5,0.5,30,1,30,350,450,0.6,30,0,2,10,60,2.0],"Prawn curry":[0.5,1,60,1.5,30,200,450,1.3,40,3,1,15,110,1.38],"Boiled egg":[0,1.1,50,1.2,10,126,124,1.1,149,0,1.1,44,373,3.41],"Egg white (boiled)":[0,0.7,7,0.1,11,163,166,0,0,0,0.1,4,0,0.0],"Omelette (1 egg)":[0,1,55,1.3,12,140,300,1.1,160,0,1,40,310,3.6],"Boiled chickpeas / sundal":[7,2,50,2.5,45,280,250,1.5,1,1,0,170,0,0.66],"Moong sprouts":[1.8,4,13,0.9,21,149,6,0.4,1,13,0,61,0,0.04],"Soya chunks (dry)":[13,7,350,20,280,2000,10,4.5,0,0,0,300,0,0.11],"Whey protein":[4.13,1.55,450,1,120,500,414,3,0,0,1.5,0,83,3.13],"Curd / yogurt":[0,4.7,121,0.1,12,155,46,0.6,30,0.5,0.4,7,13,2.05],"Greek yogurt (plain)":[0,3.6,110,0.1,11,141,36,0.5,1,0,0.75,7,5,1.18],"Milk (toned)":[0,4.8,120,0.1,11,150,45,0.4,45,0.5,0.4,5,8,1.86],"Buttermilk":[0,2.5,60,0.05,6,80,150,0.2,10,0.3,0.2,3,2,0.36],"Tea with milk & sugar":[0,6.5,40,0.1,5,60,15,0.1,10,0,0.1,2,3,0.78],"Filter coffee (milk & sugar)":[0,7.5,50,0.1,10,90,15,0.1,12,0,0.15,2,4,0.96],"Black coffee / green tea":[0,0,2,0.02,3,49,2,0,0,0,0,2,0,0.0],"Tender coconut water":[1.1,2.6,24,0.3,25,250,105,0.1,0,2.4,0,3,0,0.04],"Banana":[2.6,12,5,0.3,27,358,1,0.15,3,8.7,0,20,0,0.07],"Apple":[2.4,10,6,0.1,5,107,1,0,3,4.6,0,3,0,0.04],"Orange / mosambi":[2.4,9,40,0.1,10,181,0,0.07,11,53,0,30,0,0.02],"Papaya":[1.7,8,20,0.25,21,182,8,0.08,47,61,0,37,0,0.07],"Guava":[5.4,9,18,0.26,22,417,2,0.23,31,228,0,49,0,0.22],"Watermelon":[0.4,6,7,0.24,10,112,1,0.1,28,8,0,3,0,0.04],"Pomegranate":[4,14,10,0.3,12,236,3,0.35,0,10,0,38,0,0.26],"Grapes":[0.9,16,10,0.36,7,191,2,0.07,3,3.2,0,2,0,0.04],"Pineapple":[1.4,10,13,0.3,12,109,1,0.1,3,48,0,18,0,0.02],"Mango":[1.6,14,11,0.16,10,168,1,0.09,54,36,0,43,0,0.09],"Sapota / chikoo":[5.3,14,21,0.8,12,193,12,0.1,3,15,0,14,0,0.24],"Dates":[8,63,39,1,43,656,2,0.3,0,0.4,0,19,0,0.09],"Mixed fruit bowl":[2,11,12,0.25,12,180,2,0.1,20,25,0,15,0,0.07],"Cucumber / salad":[0.8,2,18,0.3,13,160,4,0.2,25,5,0,15,0,0.02],"Carrot":[2.8,4.7,33,0.3,12,320,69,0.24,835,6,0,19,0,0.04],"Sweet corn (boiled)":[2.4,4.5,3,0.5,26,218,1,0.6,9,5,0,23,0,0.33],"Oats (dry)":[10,1,54,4.7,177,429,2,4,0,0,0,56,0,1.54],"Oats porridge with milk":[1.5,4,90,0.8,30,170,40,0.7,30,0.4,0.3,10,5,1.35],"Bread (brown)":[6,6,160,2.5,75,250,450,1.8,0,0,0,40,0,0.75],"Bread (white)":[2.7,5,150,3.6,23,120,490,0.7,0,0,0,110,0,0.7],"Peanut butter":[6,9,50,1.9,170,650,430,2.9,0,0,0,90,0,8.0],"Peanuts (roasted)":[8.5,4,55,2.3,175,660,6,3.3,0,0,0,145,0,6.86],"Almonds":[12.5,4.4,270,3.7,270,733,1,3.1,0,0,0,44,0,4.0],"Cashews":[3.3,6,37,6.7,292,660,12,5.8,0,0.5,0,25,0,8.8],"Walnuts":[6.7,2.6,98,2.9,158,441,2,3.1,1,1.3,0,98,0,6.5],"Makhana (roasted)":[14.5,0,60,1.4,67,500,1,1.4,0,0,0,14,0,0.01],"Roasted chana":[17,10,58,5,140,850,20,3,1,0,0,150,0,1.1],"Marie biscuit":[2,20,30,2,20,130,350,0.6,0,0,0,10,2,4.95],"Murukku":[3,1,30,2.5,40,180,600,1,0,0,0,20,0,6.6],"Samosa":[3,2,25,1.5,20,200,420,0.5,10,3,0,20,0,3.52],"Bajji / bonda":[2.5,2,30,1.8,25,200,420,0.6,15,3,0,30,0,3.74],"Veg puff":[1.5,3,20,1.5,15,120,450,0.4,30,2,0,15,2,8.1],"Gulab jamun":[0.5,40,80,0.8,10,100,60,0.3,30,0,0.1,5,12,7.2],"Kesari":[0.5,30,15,0.6,10,60,50,0.3,40,0,0,5,25,7.15],"Chocolate":[7,48,73,8,146,559,24,2.3,2,0,0.3,12,8,18.0],"Ice cream":[0.7,21,128,0.1,14,199,80,0.7,118,0.6,0.4,5,45,6.82],"Fried rice":[1,1,15,0.6,15,90,450,0.5,30,2,0.05,10,10,1.21],"Veg noodles":[1.5,2,15,1,15,100,500,0.4,30,3,0,15,0,1.1],"Pizza":[2.3,3.6,190,2.5,24,170,600,1.3,70,1,0.5,40,18,4.5],"Burger":[1.5,5,70,2,22,220,500,2,10,1,0.8,30,30,3.6],"Fresh juice (no sugar)":[0.2,9,10,0.2,10,180,2,0.05,10,40,0,25,0,0.02],"Sugar":[0,100,1,0,0,2,1,0,0,0,0,0,0,0.0],"Ghee":[0,0,4,0,0,5,2,0,840,0,0,0,256,65.0],"Cooking oil":[0,0,0,0,0,0,0,0,0,0,0,0,0,13.0]};
+const MICRO = {"Sambar rice (sambar sadam)":[1.8,1.2,20,0.8,20,120,250,0.6,30,3,0,18,0,0.88],"Rasam rice":[0.6,0.8,12,0.4,14,80,280,0.5,10,4,0,6,0,0.4],"Tamarind rice (puliyodarai)":[1.5,2.5,25,1.2,20,110,350,0.6,5,1,0,8,0,1.21],"Tomato rice":[1,2,15,0.6,15,120,320,0.5,30,5,0,8,0,0.99],"Coconut rice":[1.5,0.8,10,0.6,20,90,250,0.6,0,0.5,0,5,0,6.96],"Bisi bele bath":[2.5,1.5,30,1.2,25,180,350,0.7,60,4,0,30,0,0.99],"Vegetable pulao":[1.2,1,15,0.6,15,100,300,0.5,60,3,0,8,0,0.88],"Ghee rice":[0.4,0.2,8,0.3,10,40,200,0.5,60,0,0,3,20,4.68],"Sakkarai pongal (sweet)":[1,20,20,1.5,20,100,30,0.5,40,0,0,8,18,3.75],"Rava kesari":[0.6,28,15,0.6,10,60,40,0.3,50,0,0,5,25,6.6],"Set dosa":[1.2,0.6,18,0.8,18,70,280,0.5,0,0,0,12,0,0.66],"Ghee roast dosa":[1.2,0.5,18,1,20,80,300,0.5,60,0,0,12,22,5.0],"Kal dosa":[1.4,0.5,20,1,20,80,280,0.5,0,0,0,14,0,0.77],"Adai":[3.5,1,40,2,40,250,280,1,10,2,0,60,0,1.32],"Rava idli":[1,1,30,0.8,15,80,330,0.4,20,2,0,10,0,1.32],"Mini idli with sambar":[1.8,1,22,0.9,20,120,300,0.5,20,2,0,20,0,0.33],"Kuzhi paniyaram":[1.2,1,20,0.8,18,80,250,0.5,5,1,0,12,0,1.32],"Wheat dosa":[3,1,20,2,40,150,250,1,0,0,0,25,0,0.99],"Semiya upma":[1.5,1.5,15,0.8,15,90,320,0.4,30,3,0,10,0,1.1],"Kothu parotta":[1.5,1.5,30,1.5,20,150,480,0.8,40,4,0.2,15,45,3.5],"Idli podi with oil":[8,2,150,6,120,500,600,2.5,10,0,0,80,0,4.4],"Coconut chutney":[5,2,15,1,30,250,280,0.5,0,2,0,15,0,15.13],"Tomato chutney":[1.5,4,15,0.6,12,250,350,0.2,40,12,0,12,0,1.21],"Mint / coriander chutney":[3,2,60,2.5,30,300,300,0.4,150,20,0,40,0,0.88],"Peanut chutney":[4,3,40,1.5,90,350,300,1.5,0,1,0,60,0,3.84],"Kara kuzhambu":[1.8,3,25,1,15,200,450,0.3,30,5,0,15,0,1.21],"Vatha kuzhambu":[1.5,3,25,1,15,180,500,0.3,10,2,0,10,0,1.21],"Mor kuzhambu":[0.8,2.5,70,0.3,10,150,300,0.4,20,3,0.15,8,4,1.8],"Keerai poriyal (greens)":[3,1,150,3,60,400,200,0.6,400,20,0,100,0,0.99],"Beans poriyal":[3,2.5,40,1,25,200,220,0.3,35,10,0,30,0,1.1],"Cabbage poriyal":[2.5,3,40,0.6,15,180,220,0.2,5,25,0,35,0,0.99],"Potato fry / roast":[2,1,10,0.6,20,350,300,0.3,0,8,0,15,0,1.54],"Egg curry":[1,2,40,1.2,12,180,350,0.8,100,3,0.6,30,125,3.3],"Chicken chettinad":[1,1.5,20,1.2,22,250,400,1.5,30,2,0.3,8,55,4.2],"Mutton biryani":[1,1,20,1.5,20,160,420,1.8,20,1,0.6,10,40,3.4],"Egg biryani":[1,1,25,1,18,140,400,0.8,50,1,0.4,15,60,1.95],"Fish (grilled / tawa)":[0.2,0,30,0.8,30,350,300,0.6,30,0,2,10,55,1.88],"Paruppu vadai (masala vada)":[6,1.5,40,3,50,300,400,1.2,10,2,0,90,0,3.3],"Payasam (semiya)":[0.5,18,100,0.4,12,140,50,0.4,40,0.5,0.3,5,15,2.75],"Banana chips":[4,4,10,1.2,75,500,250,0.4,5,6,0,14,0,27.2],"Mixture / namkeen":[5,3,40,3,70,350,700,1.5,5,1,0,40,0,7.04],"Sundal (chana, tempered)":[7,2,50,2.5,45,280,250,1.5,5,2,0,170,0,0.88],"Tea with milk (no sugar)":[0,2.4,50,0.1,6,80,20,0.2,15,0,0.2,3,4,0.84],"Filter coffee (milk, no sugar)":[0,2.8,60,0.1,12,110,20,0.2,15,0,0.2,3,5,1.2],"Black tea (no sugar)":[0,0,1,0.02,3,40,2,0,0,0,0,5,0,0.0],"Milk (full cream)":[0,4.8,120,0.1,11,150,45,0.4,50,0.5,0.4,5,14,2.36],"Rose milk":[0,12,100,0.1,10,130,40,0.4,40,0.4,0.3,4,10,1.5],"Lassi (sweet)":[0,13,100,0.1,10,130,45,0.4,30,0.4,0.3,5,10,1.8],"Ragi koozh / malt":[1.5,1,70,0.8,25,80,150,0.3,0,0,0,5,0,0.13],"Sugar (in tea / coffee)":[0,100,1,0,0,2,1,0,0,0,0,0,0,0.0],"Idli":[1.5,0.5,20,0.8,20,80,260,0.5,0,0,0,15,0,0.09],"Plain dosa":[1.5,0.5,20,1.2,25,90,300,0.6,0,0,0,15,0,1.14],"Masala dosa":[2,1.5,25,1.3,25,200,350,0.6,10,6,0,18,0,1.65],"Rava dosa":[1,0.5,20,1,15,70,320,0.4,0,0,0,10,0,1.76],"Onion uttapam":[1.8,1.5,25,1.1,22,120,300,0.5,5,3,0,15,0,1.21],"Ven pongal":[1.5,0.5,20,1,25,90,280,0.6,20,0,0.05,15,0,2.1],"Rava upma":[1.5,1,15,1,20,90,330,0.4,30,3,0,12,0,1.21],"Poori":[3,1,20,2,30,120,250,0.8,0,0,0,20,0,3.74],"Chapati / roti":[4,1,30,2.5,60,200,250,1.5,0,0,0,30,0,1.54],"Parotta":[2,1.5,20,1.5,20,100,450,0.6,30,0,0,20,0,4.55],"Appam":[1,3,15,0.6,15,70,150,0.4,0,0,0,8,0,0.33],"Idiyappam":[0.8,0.2,8,0.5,15,40,50,0.5,0,0,0,5,0,0.11],"Ragi dosa":[3,0.5,120,1.5,40,120,280,0.6,0,0,0,15,0,0.77],"Medu vada":[4,1,40,2.5,50,250,450,1,5,0,0,60,0,3.3],"Pesarattu":[4,1,30,2,45,280,250,0.9,10,2,0,90,0,0.99],"White rice (cooked)":[0.4,0.1,10,0.2,12,35,1,0.5,0,0,0,3,0,0.07],"Brown rice (cooked)":[1.8,0.4,10,0.4,43,43,5,0.6,0,0,0,4,0,0.2],"Curd rice":[0.4,2,70,0.2,12,80,250,0.5,15,0.5,0.15,5,8,1.93],"Lemon rice":[0.8,0.3,15,0.5,15,60,300,0.5,5,4,0,6,0,0.99],"Sambar":[2.5,2,30,1.2,20,200,350,0.4,60,6,0,35,0,0.4],"Rasam":[0.8,1.5,15,0.6,10,150,400,0.2,30,8,0,10,0,0.18],"Dal / paruppu (cooked)":[2.5,0.5,20,1.5,30,200,250,0.8,5,1,0,60,0,0.44],"Vegetable poriyal":[3,3,40,1,20,250,250,0.4,150,15,0,30,0,1.1],"Kootu":[3,2,40,1.2,25,220,250,0.6,80,8,0,40,0,1.6],"Aviyal":[2.5,2.5,30,0.8,20,230,230,0.4,100,10,0.05,25,2,4.5],"Chana masala":[5,2,45,2,35,280,350,1.2,20,4,0,80,0,1.21],"Rajma curry":[5,1.5,40,2,40,320,320,1,10,3,0,90,0,0.99],"Paneer curry":[1,3,250,0.5,15,150,350,1.5,150,4,0.4,15,35,7.5],"Paneer (raw)":[0,1.2,480,0.2,20,100,20,2.5,200,0,0.8,10,60,12.4],"Chicken curry":[0.8,1.5,15,0.9,20,200,350,1.2,30,2,0.3,8,45,2.52],"Chicken breast (grilled)":[0,0,15,1,29,256,74,1,9,0,0.3,4,85,1.08],"Chicken 65":[0.5,1,15,1,22,220,500,1.2,20,1,0.3,6,70,3.75],"Chicken biryani":[1,1,20,1,20,150,400,0.9,20,1,0.2,10,35,1.82],"Veg biryani":[1.5,1.5,20,0.8,20,120,380,0.5,40,3,0,10,0,1.1],"Mutton curry":[0.5,1,15,2,20,250,350,3.5,10,2,1.5,6,65,5.88],"Fish curry":[0.5,1,40,1,25,300,350,0.5,30,3,1.5,10,40,1.5],"Fish fry":[0.5,0.5,30,1,30,350,450,0.6,30,0,2,10,60,2.0],"Prawn curry":[0.5,1,60,1.5,30,200,450,1.3,40,3,1,15,110,1.38],"Boiled egg":[0,1.1,50,1.2,10,126,124,1.1,149,0,1.1,44,373,3.41],"Egg white (boiled)":[0,0.7,7,0.1,11,163,166,0,0,0,0.1,4,0,0.0],"Omelette (1 egg)":[0,1,55,1.3,12,140,300,1.1,160,0,1,40,310,3.6],"Boiled chickpeas / sundal":[7,2,50,2.5,45,280,250,1.5,1,1,0,170,0,0.66],"Moong sprouts":[1.8,4,13,0.9,21,149,6,0.4,1,13,0,61,0,0.04],"Soya chunks (dry)":[13,7,350,20,280,2000,10,4.5,0,0,0,300,0,0.11],"Whey protein":[4.13,1.55,450,1,120,500,414,3,0,0,1.5,0,83,3.13],"Curd / yogurt":[0,4.7,121,0.1,12,155,46,0.6,30,0.5,0.4,7,13,2.05],"Greek yogurt (plain)":[0,3.6,110,0.1,11,141,36,0.5,1,0,0.75,7,5,1.18],"Milk (toned)":[0,4.8,120,0.1,11,150,45,0.4,45,0.5,0.4,5,8,1.86],"Buttermilk":[0,2.5,60,0.05,6,80,150,0.2,10,0.3,0.2,3,2,0.36],"Tea with milk & sugar":[0,6.5,40,0.1,5,60,15,0.1,10,0,0.1,2,3,0.78],"Filter coffee (milk & sugar)":[0,7.5,50,0.1,10,90,15,0.1,12,0,0.15,2,4,0.96],"Black coffee / green tea":[0,0,2,0.02,3,49,2,0,0,0,0,2,0,0.0],"Tender coconut water":[1.1,2.6,24,0.3,25,250,105,0.1,0,2.4,0,3,0,0.04],"Banana":[2.6,12,5,0.3,27,358,1,0.15,3,8.7,0,20,0,0.07],"Apple":[2.4,10,6,0.1,5,107,1,0,3,4.6,0,3,0,0.04],"Orange / mosambi":[2.4,9,40,0.1,10,181,0,0.07,11,53,0,30,0,0.02],"Papaya":[1.7,8,20,0.25,21,182,8,0.08,47,61,0,37,0,0.07],"Guava":[5.4,9,18,0.26,22,417,2,0.23,31,228,0,49,0,0.22],"Watermelon":[0.4,6,7,0.24,10,112,1,0.1,28,8,0,3,0,0.04],"Pomegranate":[4,14,10,0.3,12,236,3,0.35,0,10,0,38,0,0.26],"Grapes":[0.9,16,10,0.36,7,191,2,0.07,3,3.2,0,2,0,0.04],"Pineapple":[1.4,10,13,0.3,12,109,1,0.1,3,48,0,18,0,0.02],"Mango":[1.6,14,11,0.16,10,168,1,0.09,54,36,0,43,0,0.09],"Sapota / chikoo":[5.3,14,21,0.8,12,193,12,0.1,3,15,0,14,0,0.24],"Dates":[8,63,39,1,43,656,2,0.3,0,0.4,0,19,0,0.09],"Mixed fruit bowl":[2,11,12,0.25,12,180,2,0.1,20,25,0,15,0,0.07],"Cucumber / salad":[0.8,2,18,0.3,13,160,4,0.2,25,5,0,15,0,0.02],"Carrot":[2.8,4.7,33,0.3,12,320,69,0.24,835,6,0,19,0,0.04],"Sweet corn (boiled)":[2.4,4.5,3,0.5,26,218,1,0.6,9,5,0,23,0,0.33],"Oats (dry)":[10,1,54,4.7,177,429,2,4,0,0,0,56,0,1.54],"Oats porridge with milk":[1.5,4,90,0.8,30,170,40,0.7,30,0.4,0.3,10,5,1.35],"Bread (brown)":[6,6,160,2.5,75,250,450,1.8,0,0,0,40,0,0.75],"Bread (white)":[2.7,5,150,3.6,23,120,490,0.7,0,0,0,110,0,0.7],"Peanut butter":[6,9,50,1.9,170,650,430,2.9,0,0,0,90,0,8.0],"Peanuts (roasted)":[8.5,4,55,2.3,175,660,6,3.3,0,0,0,145,0,6.86],"Almonds":[12.5,4.4,270,3.7,270,733,1,3.1,0,0,0,44,0,4.0],"Cashews":[3.3,6,37,6.7,292,660,12,5.8,0,0.5,0,25,0,8.8],"Walnuts":[6.7,2.6,98,2.9,158,441,2,3.1,1,1.3,0,98,0,6.5],"Pumpkin seeds":[6,1.4,46,8.8,592,809,7,7.8,1,0.3,0,58,0,8.7],"Sesame balls (ellu urundai)":[6.5,40.5,571,13,193,450,12,4.2,0,0,0,50,0,3.9],"Makhana (roasted)":[14.5,0,60,1.4,67,500,1,1.4,0,0,0,14,0,0.01],"Roasted chana":[17,10,58,5,140,850,20,3,1,0,0,150,0,1.1],"Marie biscuit":[2,20,30,2,20,130,350,0.6,0,0,0,10,2,4.95],"Murukku":[3,1,30,2.5,40,180,600,1,0,0,0,20,0,6.6],"Samosa":[3,2,25,1.5,20,200,420,0.5,10,3,0,20,0,3.52],"Bajji / bonda":[2.5,2,30,1.8,25,200,420,0.6,15,3,0,30,0,3.74],"Veg puff":[1.5,3,20,1.5,15,120,450,0.4,30,2,0,15,2,8.1],"Gulab jamun":[0.5,40,80,0.8,10,100,60,0.3,30,0,0.1,5,12,7.2],"Kesari":[0.5,30,15,0.6,10,60,50,0.3,40,0,0,5,25,7.15],"Chocolate":[7,48,73,8,146,559,24,2.3,2,0,0.3,12,8,18.0],"Ice cream":[0.7,21,128,0.1,14,199,80,0.7,118,0.6,0.4,5,45,6.82],"Fried rice":[1,1,15,0.6,15,90,450,0.5,30,2,0.05,10,10,1.21],"Veg noodles":[1.5,2,15,1,15,100,500,0.4,30,3,0,15,0,1.1],"Pizza":[2.3,3.6,190,2.5,24,170,600,1.3,70,1,0.5,40,18,4.5],"Burger":[1.5,5,70,2,22,220,500,2,10,1,0.8,30,30,3.6],"Fresh juice (no sugar)":[0.2,9,10,0.2,10,180,2,0.05,10,40,0,25,0,0.02],"Sugar":[0,100,1,0,0,2,1,0,0,0,0,0,0,0.0],"Ghee":[0,0,4,0,0,5,2,0,840,0,0,0,256,65.0],"Cooking oil":[0,0,0,0,0,0,0,0,0,0,0,0,0,13.0]};
 function findFood(name) {
   const n = String(name || '').toLowerCase().trim(); if (!n) return null;
   return FOOD.find(f => f.n.toLowerCase() === n)
@@ -1031,7 +1031,7 @@ function viewAuth() {
   return `<div class="auth">
     <img class="logo" src="icons/logo.png" alt="">
     <h1>Minimal Health Tracker</h1>
-    <p class="sub">Your weight-loss tracker · v107</p>
+    <p class="sub">Your weight-loss tracker · v108</p>
     ${m !== 'forgot' ? `<div class="seg">
       <button data-act="authMode" data-v="login" class="${m === 'login' ? 'on' : ''}">Log in</button>
       <button data-act="authMode" data-v="create" class="${m === 'create' ? 'on' : ''}">Create account</button>
@@ -1910,6 +1910,8 @@ function quickCard(t) {
           <button class="btn" data-act="openWheyQ">💪 Whey</button>
           <button class="btn" data-act="openEggQ">🥚 Egg</button>
           <button class="btn" data-act="openSproutQ">🌱 Sprouts</button>
+          <button class="btn" data-act="openSnackQ" data-w="pumpkin">🎃 Pumpkin seeds</button>
+          <button class="btn" data-act="openSnackQ" data-w="ellu">🟤 Sesame balls</button>
         </div>
       </div>
       <div class="q-sec">
@@ -1999,6 +2001,55 @@ function sheetSprouts() {
       <p class="explain" style="margin:8px 0 0">${SPR.moong.label} is ${SPR.moong.sub} · ${SPR.chana.label} is ${SPR.chana.sub}. Change these once and they are remembered.</p>
     </div>
     <button class="btn primary block" data-act="saveSprouts">Save ${n} ${u}</button>`;
+}
+const SNACKQ = {
+  pumpkin: {
+    icon: '\u{1F383}', title: 'Pumpkin seeds', unit: ['spoon', 'spoons'], step: 0.5, max: 10,
+    gKey: 'pumpkinG', gDef: 10, gLabel: 'Grams in one spoon',
+    per100: { k: 559, p: 30.2, c: 10.7, f: 49.1 },
+    micro100: { fiber: 6, sugar: 1.4, calcium: 46, iron: 8.8, magnesium: 592, potassium: 809, sodium: 7, zinc: 7.8, vitA: 1, vitC: 0.3, vitB12: 0, folate: 58, chol: 0, satfat: 8.7 },
+    hi: m => `${r0(m.magnesium)} mg magnesium · ${r1(m.zinc)} mg zinc`,
+    note: 'Hulled pumpkin seeds (pepitas). One level tablespoon is about 10 g. No cholesterol — it is a seed — and most of its fat is the good kind.',
+  },
+  ellu: {
+    icon: '\u{1F7E4}', title: 'Sesame balls', unit: ['ball', 'balls'], step: 1, max: 10,
+    gKey: 'elluG', gDef: 20, gLabel: 'Grams in one ball',
+    per100: { k: 489, p: 10, c: 55.8, f: 27.3 },
+    micro100: { fiber: 6.5, sugar: 40.5, calcium: 571, iron: 13, magnesium: 193, potassium: 450, sodium: 12, zinc: 4.2, vitA: 0, vitC: 0, vitB12: 0, folate: 50, chol: 0, satfat: 3.9 },
+    hi: m => `${r0(m.calcium)} mg calcium · ${r1(m.sugar)} g sugar`,
+    note: 'Ellu urundai — roasted sesame with palm jaggery, about 55:45 by weight. Great calcium and iron, but the jaggery is still sugar, so it counts against your sugar limit.',
+  },
+};
+function snackDefaults(key) { const c = SNACKQ[key], v = Number((P() || {})[c.gKey]); return v > 0 ? v : c.gDef; }
+function snackTotals(key, n, g) {
+  const c = SNACKQ[key], gr = (Number(g) || 0) * n, q = gr / 100;
+  const t = { grams: gr, kcal: c.per100.k * q, protein: c.per100.p * q, carbs: c.per100.c * q, fat: c.per100.f * q, micro: {} };
+  Object.keys(c.micro100).forEach(k => { t.micro[k] = c.micro100[k] * q; });
+  return t;
+}
+function sheetSnackQ() {
+  const sh = S.sheet, key = sh.what, c = SNACKQ[key], n = sh.n, ds = sh.date || todayStr();
+  const g = snackDefaults(key), d = S.data.days[ds] || {};
+  const t = snackTotals(key, n, g), one = snackTotals(key, 1, g);
+  const u = n == 1 ? c.unit[0] : c.unit[1];
+  const done = (d.meals || []).filter(m => m.source === key).reduce((a, m) => a + (Number(m.kcal) || 0), 0);
+  return `<div class="sheet-h"><h2>${c.icon} ${c.title}</h2><button class="x" data-act="closeSheet">✕</button></div>
+    <div class="card" style="text-align:center">
+      <p class="muted" style="margin:0 0 6px">How many ${c.unit[1]}?${ds !== todayStr() ? ` · ${niceDate(ds)}` : ''}</p>
+      <div class="water" style="margin:6px 0 4px">
+        <button class="round" data-act="snackStep" data-v="${-c.step}" aria-label="Less">−</button>
+        <div class="big"><b style="font-size:40px">${n}</b> <span class="muted">${u}</span></div>
+        <button class="round" data-act="snackStep" data-v="${c.step}" aria-label="More">+</button>
+      </div>
+      <p style="margin:8px 0 0;font-size:17px;font-weight:700">${r0(t.kcal)} kcal · ${r1(t.protein)} g protein · ${r1(t.fat)} g fat</p>
+      <p class="explain" style="margin:4px 0 0">1 ${c.unit[0]} = ${r0(one.grams)} g · ${r0(one.kcal)} kcal · ${c.hi(one.micro)}</p>
+      ${done ? `<p class="explain" style="margin:6px 0 0"><b class="good">Already logged today:</b> ${r0(done)} kcal from ${c.title.toLowerCase()}. Saving now adds to that.</p>` : ''}
+    </div>
+    <div class="card">
+      <label>${c.gLabel}<input id="snkG" type="number" step="any" inputmode="decimal" value="${g}"></label>
+      <p class="explain" style="margin:8px 0 0">${c.note} Change the grams once and it is remembered.</p>
+    </div>
+    <button class="btn primary block" data-act="saveSnackQ">Save ${n} ${u}</button>`;
 }
 const WHEY_P = 25; // g protein per scoop
 const EGG_P = 6.5, EGG_K = 78, EGG_G = 50; // one boiled egg (with yolk)
@@ -2339,7 +2390,7 @@ function viewProfile() {
       <button class="btn blue block" data-act="exportXlsx">⬇️ Export to Excel</button>
     </div>
     <button class="btn danger block" data-act="logout" style="margin-top:6px">Log out</button>
-    <p class="explain" style="text-align:center;margin-top:14px">Minimal Health Tracker v107 · estimates only, not medical advice</p>
+    <p class="explain" style="text-align:center;margin-top:14px">Minimal Health Tracker v108 · estimates only, not medical advice</p>
   </main>`;
 }
 
@@ -2370,7 +2421,7 @@ const COOK_FIXED = new Set([
   'Grapes', 'Pineapple', 'Mango', 'Sapota / chikoo', 'Dates', 'Mixed fruit bowl',
   'Cucumber / salad', 'Carrot', 'Sweet corn (boiled)',
   'Almonds', 'Cashews', 'Walnuts', 'Peanuts (roasted)', 'Peanut butter', 'Makhana (roasted)',
-  'Roasted chana', 'Banana chips', 'Mixture / namkeen', 'Murukku', 'Marie biscuit',
+  'Pumpkin seeds', 'Sesame balls (ellu urundai)', 'Roasted chana', 'Banana chips', 'Mixture / namkeen', 'Murukku', 'Marie biscuit',
   'Bread (brown)', 'Bread (white)', 'Chocolate', 'Ice cream',
   'Sugar', 'Sugar (in tea / coffee)', 'Ghee', 'Cooking oil',
 ]);
@@ -2809,7 +2860,7 @@ function onWorkoutInput(t) {
 function renderSheet() {
   const root = $('#sheet-root');
   if (!S.sheet) { root.innerHTML = ''; document.body.classList.remove('lock'); return; }
-  const inner = S.sheet.kind === 'food' ? sheetFood() : S.sheet.kind === 'confirm' ? sheetConfirm() : S.sheet.kind === 'scale' ? sheetScale() : S.sheet.kind === 'weight' ? sheetAddWeight() : S.sheet.kind === 'steps' ? sheetSteps() : S.sheet.kind === 'wheyq' ? sheetWheyQ() : S.sheet.kind === 'sprouts' ? sheetSprouts() : S.sheet.kind === 'medPick' ? sheetMedPick() : S.sheet.kind === 'cal' ? sheetCal() : S.sheet.kind === 'reading' ? sheetReading() : sheetWorkout();
+  const inner = S.sheet.kind === 'food' ? sheetFood() : S.sheet.kind === 'confirm' ? sheetConfirm() : S.sheet.kind === 'scale' ? sheetScale() : S.sheet.kind === 'weight' ? sheetAddWeight() : S.sheet.kind === 'steps' ? sheetSteps() : S.sheet.kind === 'wheyq' ? sheetWheyQ() : S.sheet.kind === 'sprouts' ? sheetSprouts() : S.sheet.kind === 'snackq' ? sheetSnackQ() : S.sheet.kind === 'medPick' ? sheetMedPick() : S.sheet.kind === 'cal' ? sheetCal() : S.sheet.kind === 'reading' ? sheetReading() : sheetWorkout();
   const existing = $('.sheet', root);
   if (existing) { const st = existing.scrollTop; existing.innerHTML = '<div class="grab"></div>' + inner; existing.scrollTop = st; }
   else root.innerHTML = `<div class="sheet-backdrop" data-act="closeSheet" data-backdrop="1"><div class="sheet"><div class="grab"></div>${inner}</div></div>`;
@@ -3118,6 +3169,31 @@ const ACT = {
     });
     S.sheet = null;
     toast(`Saved ${n} cup${n == 1 ? '' : 's'} = ${r0(tot.protein)} g protein`, 'good');
+    render();
+  },
+  openSnackQ(el) { S.sheet = { kind: 'snackq', what: el.dataset.w, n: 1, date: S.date || todayStr() }; renderSheet(); },
+  snackStep(el) {
+    const s = S.sheet, c = SNACKQ[s.what];
+    const v = s.n + Number(el.dataset.v);
+    s.n = Math.min(c.max, Math.max(c.step, Math.round(v * 2) / 2));
+    renderSheet();
+  },
+  saveSnackQ() {
+    const sh = S.sheet, key = sh.what, c = SNACKQ[key], n = sh.n, t = sh.date || todayStr();
+    const g = num(($('#snkG') || {}).value);
+    if (!(g > 0)) throw fail(`Put the grams for one ${c.unit[0]}.`);
+    if (g !== snackDefaults(key)) { S.data.profile[c.gKey] = g; S.profileDirty = true; }
+    const tot = snackTotals(key, n, g), mi = {};
+    Object.keys(tot.micro).forEach(k => { mi[k] = Math.round(tot.micro[k] * 10) / 10; });
+    const u = n == 1 ? c.unit[0] : c.unit[1];
+    mutateDay(t, d => {
+      d.meals = d.meals || [];
+      d.meals.push({ id: uid(), slot: 'snacks', name: `${c.title} (${n} ${u})`,
+        grams: r1(tot.grams), kcal: r0(tot.kcal), protein: r1(tot.protein), carbs: r1(tot.carbs), fat: r1(tot.fat),
+        micro: mi, source: key, at: new Date().toISOString() });
+    });
+    S.sheet = null;
+    toast(`Saved ${n} ${u} = ${r0(tot.kcal)} kcal`, 'good');
     render();
   },
   openQtyFor(el) { S.sheet = { kind: 'wheyq', what: el.dataset.w, n: 1, date: S.date }; renderSheet(); },
@@ -3491,7 +3567,7 @@ async function boot() {
 boot();
 
 // expose for testing
-window.__fittrack = { sheetMedPick, viewAuth, viewVerify, viewAdmin, sheetCal, dateBar, sheetReading, healthCard, suggestSlot, sheetWheyQ, sheetSteps, quickCard, sheetAddWeight, calcCard, openScaleSheet, analyseScaleRun, sheetScale, maybeHashWeight, sheetConfirm, viewBurn, addPhotosToSheet, openWorkoutSheet, sheetWorkout, runAnalysis, sheetFood, viewHome, viewFood, viewToday, viewMeds, wheyCard, ACT, profileForm, startWorkoutPhoto, sheetWorkout, FOOD, nutritionCard, needsCard, todayTable, viewSuggest, viewHome, viewFood, viewBurn, sheetWorkout, bmiOf, bmiCat, fatPct, bmr, treadKcal, bikeKcal, wkSuggest, S, plan, dayStats };
+window.__fittrack = { sheetMedPick, viewAuth, viewVerify, viewAdmin, sheetCal, dateBar, sheetReading, healthCard, suggestSlot, sheetWheyQ, sheetSnackQ, snackTotals, sheetSteps, quickCard, sheetAddWeight, calcCard, openScaleSheet, analyseScaleRun, sheetScale, maybeHashWeight, sheetConfirm, viewBurn, addPhotosToSheet, openWorkoutSheet, sheetWorkout, runAnalysis, sheetFood, viewHome, viewFood, viewToday, viewMeds, wheyCard, ACT, profileForm, startWorkoutPhoto, sheetWorkout, FOOD, nutritionCard, needsCard, todayTable, viewSuggest, viewHome, viewFood, viewBurn, sheetWorkout, bmiOf, bmiCat, fatPct, bmr, treadKcal, bikeKcal, wkSuggest, S, plan, dayStats };
 })();
 </script>
 </body>
