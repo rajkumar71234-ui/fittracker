@@ -1002,7 +1002,7 @@ function viewAuth() {
   return `<div class="auth">
     <img class="logo" src="icons/logo.png" alt="">
     <h1>Minimal Health Tracker</h1>
-    <p class="sub">Your weight-loss tracker · v100</p>
+    <p class="sub">Your weight-loss tracker · v101</p>
     ${m !== 'forgot' ? `<div class="seg">
       <button data-act="authMode" data-v="login" class="${m === 'login' ? 'on' : ''}">Log in</button>
       <button data-act="authMode" data-v="create" class="${m === 'create' ? 'on' : ''}">Create account</button>
@@ -1633,7 +1633,17 @@ function dateBar() {
    148.87 mg sodium. Per 100 g that is 400 kcal / 70 P / 18.08 C / 6.24 F.
    A user with a different tub can still type their own numbers. */
 const WHEY_C100 = 18.08, WHEY_F100 = 6.24;   // g per 100 g of powder
-function wheyDefaults() { const w = (P() || {}).whey || {}; return { p: w.p ?? 25, k: w.k ?? 144, g: w.g ?? 36 }; }
+/* the rest of the label, per 100 g: cholesterol 82.96 mg, saturated fat 3.15 g,
+   fibre 4.13 g, sugar 1.55 g, sodium 413.53 mg — one 36 g scoop is 29.87 mg
+   of cholesterol, which the app rounds to 30 mg. */
+const WHEY_MICRO100 = { chol: 82.96, satfat: 3.15, fiber: 4.13, sugar: 1.55, sodium: 413.53 };
+function wheyMicro(grams) { const o = {}; Object.keys(WHEY_MICRO100).forEach(k => { o[k] = r1(WHEY_MICRO100[k] * grams / 100); }); return o; }
+function wheyDefaults() {
+  const w = (P() || {}).whey || {};
+  // anyone still carrying the app's own earlier defaults gets the tub label instead
+  if (w.p === 24 && w.k === 120 && w.g === 30) return { p: 25, k: 144, g: 36 };
+  return { p: w.p ?? 25, k: w.k ?? 144, g: w.g ?? 36 };
+}
 function wheyCard(date) {
   const d = dayOf(date), wd = wheyDefaults();
   const m = (d.meals || []).find(x => x.source === 'whey');
@@ -1978,7 +1988,7 @@ function sheetWheyQ() {
         <button class="round" data-act="wheyQStep" data-v="${egg ? 1 : 0.5}" aria-label="More">+</button>
       </div>
       <p style="margin:8px 0 0;font-size:17px;font-weight:700">${r1(n * P1)} g protein · ${r0(n * K1)} kcal · ${r1(n * F1)} g fat</p>
-      <p class="explain" style="margin:4px 0 0">1 ${unit[0]} = ${P1} g protein · ${K1} kcal · ${F1} g fat${done ? ` · already: ${r0(done)} g protein` : ''}</p>
+      <p class="explain" style="margin:4px 0 0">1 ${unit[0]} = ${P1} g protein · ${K1} kcal · ${F1} g fat${egg ? '' : ` · ${r0(WHEY_MICRO100.chol * wd.g / 100)} mg cholesterol`}${done ? ` · already: ${r0(done)} g protein` : ''}</p>
     </div>
     <button class="btn primary block" data-act="saveWheyQ">Save ${n} ${u}</button>
     ${egg ? '' : `<button class="btn block" style="margin-top:8px" data-act="addFood" data-slot="whey">Other protein drink</button>`}`;
@@ -2284,7 +2294,7 @@ function viewProfile() {
       <button class="btn blue block" data-act="exportXlsx">⬇️ Export to Excel</button>
     </div>
     <button class="btn danger block" data-act="logout" style="margin-top:6px">Log out</button>
-    <p class="explain" style="text-align:center;margin-top:14px">Minimal Health Tracker v100 · estimates only, not medical advice</p>
+    <p class="explain" style="text-align:center;margin-top:14px">Minimal Health Tracker v101 · estimates only, not medical advice</p>
   </main>`;
 }
 
@@ -2912,7 +2922,8 @@ const ACT = {
     mutateDay(S.date, d => {
       d.meals = d.meals.filter(x => x.source !== 'whey');
       if (scoops > 0) d.meals.push({ id: uid(), slot: 'whey', name: `Whey protein (${scoops} scoop${scoops == 1 ? '' : 's'})`, grams: r1(scoops * g), scoops,
-        kcal: r0(scoops * k), protein: r1(scoops * p), carbs: r1(scoops * g * WHEY_C100 / 100), fat: r1(scoops * g * WHEY_F100 / 100), source: 'whey', at: new Date().toISOString() });
+        kcal: r0(scoops * k), protein: r1(scoops * p), carbs: r1(scoops * g * WHEY_C100 / 100), fat: r1(scoops * g * WHEY_F100 / 100),
+        micro: wheyMicro(scoops * g), source: 'whey', at: new Date().toISOString() });
     });
     toast(scoops > 0 ? `Saved ${scoops} scoop${scoops == 1 ? '' : 's'} = ${r0(scoops * p)} g protein` : 'Whey removed', 'good'); render();
   },
@@ -3037,7 +3048,8 @@ const ACT = {
       ? (sh.eggType === 'white'
         ? { id: uid(), slot: 'egg', name: `Egg white, boiled (${n} egg${n == 1 ? '' : 's'})`, grams: n * EGGW_G, eggs: n, kcal: r0(n * EGGW_K), protein: r1(n * EGGW_P), carbs: r1(n * 0.24), fat: r1(n * 0.06), source: 'eggq', at: new Date().toISOString() }
         : { id: uid(), slot: 'egg', name: `Boiled egg (${n} egg${n == 1 ? '' : 's'})`, grams: n * EGG_G, eggs: n, kcal: r0(n * EGG_K), protein: r1(n * EGG_P), carbs: r1(n * 0.55), fat: r1(n * 5.3), source: 'eggq', at: new Date().toISOString() })
-      : { id: uid(), slot: 'whey', name: `Whey protein (${n} scoop${n == 1 ? '' : 's'})`, grams: r1(n * wd.g), scoops: n, kcal: r0(n * wd.k), protein: r1(n * WHEY_P), carbs: r1(n * wd.g * WHEY_C100 / 100), fat: r1(n * wd.g * WHEY_F100 / 100), source: 'wheyq', at: new Date().toISOString() };
+      : { id: uid(), slot: 'whey', name: `Whey protein (${n} scoop${n == 1 ? '' : 's'})`, grams: r1(n * wd.g), scoops: n, kcal: r0(n * wd.k), protein: r1(n * WHEY_P), carbs: r1(n * wd.g * WHEY_C100 / 100), fat: r1(n * wd.g * WHEY_F100 / 100),
+          micro: wheyMicro(n * wd.g), source: 'wheyq', at: new Date().toISOString() };
     mutateDay(t, d => { d.meals = d.meals || []; d.meals.push(rec); });
     S.sheet = null; toast(`Saved ${n} ${egg ? (n == 1 ? 'egg' : 'eggs') : (n == 1 ? 'scoop' : 'scoops')} = ${r1(rec.protein)} g protein`, 'good'); render();
   },
