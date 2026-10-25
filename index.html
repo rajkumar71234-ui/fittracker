@@ -320,11 +320,28 @@ function findFood(name) {
     || FOOD.find(f => n.includes(f.n.toLowerCase().split(' (')[0]))
     || FOOD.find(f => f.n.toLowerCase().split(' (')[0].split(' / ').some(part => part.length > 3 && n.includes(part)));
 }
+/* Food saved before the app knew about saturated fat, and anything the photo
+   model did not break down, has no satfat figure. Rather than show a blank we
+   work out a sensible share of the fat, and mark it as an estimate. Foods that
+   carry cholesterol are animal or dairy, and their fat is far more saturated. */
+function estSatShare(m, mi) {
+  const g = Number(m.grams) || 0;
+  const perG = (mi && mi.chol != null && g > 0) ? Number(mi.chol) / g : null;
+  if (perG == null) return 0.25;
+  if (perG >= 0.5) return 0.32;    // egg-heavy
+  if (perG >= 0.15) return 0.45;   // cream, butter, paneer, cheese
+  if (perG > 0) return 0.30;       // some meat or dairy in it
+  return 0.22;                     // plant food cooked in oil
+}
 function microOfMeal(m) {
-  if (m.micro) return m.micro;
-  const f = findFood(m.name); if (!f || !MICRO[f.n]) return null;
-  const q = (Number(m.grams) || 0) / 100, o = {};
-  MICRO_KEYS.forEach((k, i) => { o[k] = MICRO[f.n][i] * q; });
+  let o = null;
+  if (m.micro) o = Object.assign({}, m.micro);
+  else {
+    const f = findFood(m.name); if (!f || !MICRO[f.n]) return null;
+    const q = (Number(m.grams) || 0) / 100; o = {};
+    MICRO_KEYS.forEach((k, i) => { o[k] = MICRO[f.n][i] * q; });
+  }
+  if (o.satfat == null) { o.satfat = (Number(m.fat) || 0) * estSatShare(m, o); o.satEst = true; }
   return o;
 }
 // Per-food macro chips: green = good for fat loss, red = watch out
@@ -334,6 +351,7 @@ function mealMacros(m) {
   const Ch = mi && mi.chol != null ? Number(mi.chol) || 0 : null;
   const Sf = mi && mi.satfat != null ? Number(mi.satfat) || 0 : null;   // saturated — pushes LDL up
   const Uf = Sf == null ? null : Math.max(0, F - Sf);                   // the rest — mostly helpful fat
+  const est = !!(mi && mi.satEst) && F > 0 ? '~' : '';                  // worked out, not measured
   const sh = g => kcal > 0 ? g / kcal : 0; // share of calories
   const pc = sh(P * 4), cc = sh(C * 4), fc = sh(F * 9);
   const small = kcal < 60;
@@ -347,8 +365,8 @@ function mealMacros(m) {
     sf: Sf == null ? '' : Sf >= 6 || (F > 0 && Sf / F > 0.5) ? 'bad' : Sf <= 1.5 ? 'good' : '',
     uf: Uf == null ? '' : (F > 0 && Uf / F >= 0.6) ? 'good' : ''
   };
-  const chip = (k, label, v, u) => `<span class="mc ${cls[k]}"><small>${label}</small><b>${v == null ? '—' : ((u || 'g') === 'g' && v < 10 ? r1(v) : r0(v)) + ' ' + (u || 'g')}</b></span>`;
-  return `<span class="mcs">${chip('p', 'Protein', P)}${chip('c', 'Carbs', C)}${chip('s', 'Sugar', S)}${chip('f', 'Fat', F)}${chip('sf', 'Bad fat', Sf)}${chip('uf', 'Good fat', Uf)}${chip('h', 'Chol', Ch, 'mg')}${chip('b', 'Fibre', Fb)}</span>`;
+  const chip = (k, label, v, u, pre) => `<span class="mc ${cls[k]}"><small>${label}</small><b>${v == null ? '—' : (pre || '') + ((u || 'g') === 'g' && v < 10 ? r1(v) : r0(v)) + ' ' + (u || 'g')}</b></span>`;
+  return `<span class="mcs">${chip('p', 'Protein', P)}${chip('c', 'Carbs', C)}${chip('s', 'Sugar', S)}${chip('f', 'Fat', F)}${chip('sf', 'Bad fat', Sf, null, est)}${chip('uf', 'Good fat', Uf, null, est)}${chip('h', 'Chol', Ch, 'mg')}${chip('b', 'Fibre', Fb)}</span>`;
 }
 function dayNutrition(date) {
   const meals = (S.data.days[date] || {}).meals || [];
@@ -1002,7 +1020,7 @@ function viewAuth() {
   return `<div class="auth">
     <img class="logo" src="icons/logo.png" alt="">
     <h1>Minimal Health Tracker</h1>
-    <p class="sub">Your weight-loss tracker · v101</p>
+    <p class="sub">Your weight-loss tracker · v102</p>
     ${m !== 'forgot' ? `<div class="seg">
       <button data-act="authMode" data-v="login" class="${m === 'login' ? 'on' : ''}">Log in</button>
       <button data-act="authMode" data-v="create" class="${m === 'create' ? 'on' : ''}">Create account</button>
@@ -1294,7 +1312,7 @@ function todayTable(date) {
         ${row('Sodium', rda.sodium, dn.sodium, 'mg', true)}
       </tbody>
     </table>
-    <p class="explain"><b>Bad fat</b> is saturated fat &mdash; ghee, butter, coconut, full-cream dairy, fatty meat. It is what raises the bad (LDL) number most, more than cholesterol in food does. <b>Good fat</b> is the rest &mdash; the unsaturated fat in groundnut and sunflower oil, nuts, seeds and fish &mdash; and it works the other way. Cholesterol comes only from animal food &mdash; egg yolk, meat, fish, prawn, ghee, butter, full-cream milk, paneer, cheese. Your limit is ${nd.chol} mg a day${nd.cholTight ? ' (tighter because of your health notes)' : ''}; it is the food cholesterol that pushes the <b>bad (LDL)</b> number up, together with fried and fatty food. Calories, carbs, sugar, fat, cholesterol and sodium: above 100% turns <b class="bad">red</b>. Protein, fibre, vitamins and minerals: try to reach 100%. Calorie target = what your body uses (${r0(st.base)}) + exercise (${r0(st.exNet + st.stepsK)}) − ${r0(dailyTarget().need)} kcal cut for your goal.</p>
+    <p class="explain">A <b>~</b> in front of a fat figure means the split was worked out from the kind of food it is, not read off a label. <b>Bad fat</b> is saturated fat &mdash; ghee, butter, coconut, full-cream dairy, fatty meat. It is what raises the bad (LDL) number most, more than cholesterol in food does. <b>Good fat</b> is the rest &mdash; the unsaturated fat in groundnut and sunflower oil, nuts, seeds and fish &mdash; and it works the other way. Cholesterol comes only from animal food &mdash; egg yolk, meat, fish, prawn, ghee, butter, full-cream milk, paneer, cheese. Your limit is ${nd.chol} mg a day${nd.cholTight ? ' (tighter because of your health notes)' : ''}; it is the food cholesterol that pushes the <b>bad (LDL)</b> number up, together with fried and fatty food. Calories, carbs, sugar, fat, cholesterol and sodium: above 100% turns <b class="bad">red</b>. Protein, fibre, vitamins and minerals: try to reach 100%. Calorie target = what your body uses (${r0(st.base)}) + exercise (${r0(st.exNet + st.stepsK)}) − ${r0(dailyTarget().need)} kcal cut for your goal.</p>
   </div>`;
 }
 
@@ -2294,7 +2312,7 @@ function viewProfile() {
       <button class="btn blue block" data-act="exportXlsx">⬇️ Export to Excel</button>
     </div>
     <button class="btn danger block" data-act="logout" style="margin-top:6px">Log out</button>
-    <p class="explain" style="text-align:center;margin-top:14px">Minimal Health Tracker v101 · estimates only, not medical advice</p>
+    <p class="explain" style="text-align:center;margin-top:14px">Minimal Health Tracker v102 · estimates only, not medical advice</p>
   </main>`;
 }
 
@@ -2345,13 +2363,13 @@ function mkItem(o) {
   const it = { name: o.name || '', grams: g, kcal: Number(o.kcal) || 0, protein: Number(o.protein) || 0, carbs: Number(o.carbs) || 0, fat: Number(o.fat) || 0, source: o.source || 'manual' };
   it.per = { kcal: it.kcal / g, protein: it.protein / g, carbs: it.carbs / g, fat: it.fat / g };
   const src = o.micro || o;
-  if (MICRO_KEYS.some(k => src[k] != null && src[k] !== '')) { it.microPer = {}; MICRO_KEYS.forEach(k => { it.microPer[k] = (Number(src[k]) || 0) / g; }); }
+  if (MICRO_KEYS.some(k => src[k] != null && src[k] !== '')) { it.microPer = {}; MICRO_KEYS.forEach(k => { if (src[k] != null && src[k] !== '') it.microPer[k] = (Number(src[k]) || 0) / g; }); }
   else if (findFood(it.name) && MICRO[findFood(it.name).n]) { it.microPer = {}; MICRO_KEYS.forEach((k, i) => { it.microPer[k] = MICRO[findFood(it.name).n][i] / 100; }); }
   it.basePer = Object.assign({}, it.per);
   if (it.microPer) it.baseMicroPer = Object.assign({}, it.microPer);
   return it;
 }
-function microFor(it) { if (!it.microPer) return undefined; const o = {}; MICRO_KEYS.forEach(k => { o[k] = r1(it.microPer[k] * it.grams); }); return o; }
+function microFor(it) { if (!it.microPer) return undefined; const o = {}; MICRO_KEYS.forEach(k => { if (it.microPer[k] != null) o[k] = r1(it.microPer[k] * it.grams); }); return o; }
 function slotLabel(id) { return (SLOTS.find(s => s.id === id) || {}).label || id; }
 
 function sheetFood() {
