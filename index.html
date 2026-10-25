@@ -997,7 +997,7 @@ function viewAuth() {
   return `<div class="auth">
     <img class="logo" src="icons/logo.png" alt="">
     <h1>Minimal Health Tracker</h1>
-    <p class="sub">Your weight-loss tracker · v94</p>
+    <p class="sub">Your weight-loss tracker · v95</p>
     ${m !== 'forgot' ? `<div class="seg">
       <button data-act="authMode" data-v="login" class="${m === 'login' ? 'on' : ''}">Log in</button>
       <button data-act="authMode" data-v="create" class="${m === 'create' ? 'on' : ''}">Create account</button>
@@ -2239,19 +2239,60 @@ function viewProfile() {
       <button class="btn blue block" data-act="exportXlsx">⬇️ Export to Excel</button>
     </div>
     <button class="btn danger block" data-act="logout" style="margin-top:6px">Log out</button>
-    <p class="explain" style="text-align:center;margin-top:14px">Minimal Health Tracker v94 · estimates only, not medical advice</p>
+    <p class="explain" style="text-align:center;margin-top:14px">Minimal Health Tracker v95 · estimates only, not medical advice</p>
   </main>`;
 }
 
 /* ================================================================
    SHEETS — FOOD
    ================================================================ */
+/* How the food was cooked. The numbers you start with are a middle estimate;
+   a careful home kitchen uses clearly less oil than a hotel or restaurant,
+   and a hotel adds ghee, butter and salt. Only the fat, the calories that
+   come with it, the cholesterol and the salt move — protein and carbs do not. */
+const COOK = {
+  home:  { icon: '🏠', label: 'Home made', note: 'less oil', fat: 0.75, chol: 0.9, sodium: 0.8 },
+  hotel: { icon: '🏨', label: 'Hotel food', note: 'more oil, ghee & salt', fat: 1.4, chol: 1.25, sodium: 1.5 },
+};
+function applyCook(sh) {
+  const c = COOK[sh.cook] || null;
+  (sh.items || []).forEach(it => {
+    if (!it.basePer) return;
+    it.per = Object.assign({}, it.basePer);
+    if (c) {
+      it.per.fat = it.basePer.fat * c.fat;
+      it.per.kcal = it.basePer.kcal + (it.per.fat - it.basePer.fat) * 9;
+    }
+    if (it.baseMicroPer) {
+      it.microPer = Object.assign({}, it.baseMicroPer);
+      if (c) {
+        if (it.baseMicroPer.chol != null) it.microPer.chol = it.baseMicroPer.chol * c.chol;
+        if (it.baseMicroPer.sodium != null) it.microPer.sodium = it.baseMicroPer.sodium * c.sodium;
+      }
+    }
+    ['kcal', 'protein', 'carbs', 'fat'].forEach(k => { it[k] = it.per[k] * it.grams; });
+  });
+}
+function cookPicker(sh) {
+  const on = sh.cook;
+  const btn = k => { const c = COOK[k];
+    return `<button class="${on === k ? 'on' : ''}" data-act="cookStyle" data-v="${k}" style="white-space:normal;line-height:1.25;padding:9px 6px">${c.icon} ${c.label}<br><small style="font-weight:600;font-size:11.5px;opacity:.85;color:inherit">${c.note}</small></button>`; };
+  return `<div style="margin:0 0 12px">
+    <div class="seg" style="margin-bottom:0">${btn('home')}${btn('hotel')}</div>
+    <p class="explain" style="margin:6px 0 0">${on
+      ? `Counted as <b>${COOK[on].label.toLowerCase()}</b> &mdash; fat ${on === 'home' ? 'down 25%' : 'up 40%'}, with the calories, cholesterol and salt moved to match. Tap it again to go back to the plain estimate.`
+      : 'Cooked at home with less oil, or eaten outside? Tap one and the calories, fat, cholesterol and salt are adjusted before you save.'}</p>
+  </div>`;
+}
 function mkItem(o) {
   const g = Math.max(0, Number(o.grams) || 0) || 100;
   const it = { name: o.name || '', grams: g, kcal: Number(o.kcal) || 0, protein: Number(o.protein) || 0, carbs: Number(o.carbs) || 0, fat: Number(o.fat) || 0, source: o.source || 'manual' };
   it.per = { kcal: it.kcal / g, protein: it.protein / g, carbs: it.carbs / g, fat: it.fat / g };
   const src = o.micro || o;
   if (MICRO_KEYS.some(k => src[k] != null && src[k] !== '')) { it.microPer = {}; MICRO_KEYS.forEach(k => { it.microPer[k] = (Number(src[k]) || 0) / g; }); }
+  else if (findFood(it.name) && MICRO[findFood(it.name).n]) { it.microPer = {}; MICRO_KEYS.forEach((k, i) => { it.microPer[k] = MICRO[findFood(it.name).n][i] / 100; }); }
+  it.basePer = Object.assign({}, it.per);
+  if (it.microPer) it.baseMicroPer = Object.assign({}, it.microPer);
   return it;
 }
 function microFor(it) { if (!it.microPer) return undefined; const o = {}; MICRO_KEYS.forEach(k => { o[k] = r1(it.microPer[k] * it.grams); }); return o; }
@@ -2293,6 +2334,7 @@ function itemsBlock() {
   const edit = sh.mode === 'edit';
   if (!items.length) return sh.mode === 'manual' ? `<button class="btn block" data-act="itemAdd">+ Add an item</button>` : '';
   return `${sh.mode === 'photo' ? '<p class="muted" style="font-size:14px;margin:0 0 8px">Check each item. Fix the name or weight if it\'s wrong — calories update automatically.</p>' : ''}
+    ${cookPicker(sh)}
     ${items.map((it, i) => `<div class="item-edit">
       <div class="row"><input class="grow" style="margin:0" data-it="${i}" data-k="name" value="${esc(it.name)}" placeholder="Food name">${edit ? '' : `<button class="x" data-act="itemDel" data-i="${i}" aria-label="Remove">✕</button>`}</div>
       <div class="mini${it.source !== 'manual' ? ' two' : ''}">
@@ -2350,7 +2392,14 @@ function onItemInput(t) {
     });
   } else {
     it[k] = v || 0;
-    if (it.grams > 0) it.per[k] = it[k] / it.grams;
+    if (it.grams > 0) {
+      it.per[k] = it[k] / it.grams;
+      if (it.basePer) {                      // typing a number re-bases it, so the toggle keeps the edit
+        const c = COOK[S.sheet.cook];
+        it.basePer[k] = (c && k === 'fat') ? it.per[k] / c.fat : it.per[k];
+        if (c && (k === 'fat' || k === 'kcal')) it.basePer.kcal = it.per.kcal - (it.per.fat - it.basePer.fat) * 9;
+      }
+    }
   }
   const mc = $('#it' + i + 'mc'); if (mc) mc.innerHTML = itemChips(it);
   const tot = $('#itemsTotal'); if (tot) tot.textContent = r0(S.sheet.items.reduce((a, x) => a + (x.kcal || 0), 0));
@@ -2687,6 +2736,13 @@ const ACT = {
     render(); toTop();
   },
   adminBack() { if (S.ownData) S.data = S.ownData; S.ownData = null; S.viewing = null; S.tab = 'admin'; S.screen = 'main'; render(); toTop(); },
+  cookStyle(el) {
+    const sh = S.sheet, v = el.dataset.v;
+    sh.cook = sh.cook === v ? null : v;
+    applyCook(sh);
+    refreshItems();
+    const t = $('#itemsTotal'); if (t) t.textContent = r0(sh.items.reduce((a, x) => a + (x.kcal || 0), 0));
+  },
   async adminExcel(el) { busy(el, 'Preparing Excel…'); try { await adminExport(); } finally { unbusy(el); } },
   async create(el) { try { await doCreate(el); } finally { unbusy(el); } },
   async setup(el) { try { await doSetup(el); } finally { unbusy(el); } },
