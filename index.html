@@ -302,7 +302,7 @@ const FOOD = [
   ['Carrot',41,0.9,10,0.2,80,'1 medium'],['Sweet corn (boiled)',96,3.4,21,1.5,100,'1 cup'],['Oats (dry)',389,17,66,7,40,'½ cup'],
   ['Oats porridge with milk',95,4,13,3,250,'1 bowl'],['Bread (brown)',247,13,41,3.4,30,'1 slice'],['Bread (white)',265,9,49,3.2,30,'1 slice'],
   ['Peanut butter',588,25,20,50,16,'1 tbsp'],['Peanuts (roasted)',567,26,16,49,30,'handful'],['Almonds',579,21,22,50,15,'10 pcs'],
-  ['Cashews',553,18,30,44,15,'10 pcs'],['Walnuts',654,15,14,65,15,'4 halves'],['Pumpkin seeds',559,30.2,10.7,49.1,10,'1 spoon'],['Sesame balls (ellu urundai)',489,10,55.8,27.3,20,'1 ball'],['Makhana (roasted)',350,9.7,77,0.1,25,'1 cup'],
+  ['Cashews',553,18,30,44,15,'10 pcs'],['Walnuts',654,15,14,65,15,'4 halves'],['Pumpkin seeds',559,30.2,10.7,49.1,5,'1 spoon'],['Sesame balls (ellu urundai)',489,10,55.8,27.3,20,'1 ball'],['Makhana (roasted)',350,9.7,77,0.1,25,'1 cup'],
   ['Roasted chana',370,22,58,5,30,'handful'],['Marie biscuit',440,7,76,11,7,'1 pc'],['Murukku',520,8,55,30,30,'2 pcs'],
   ['Samosa',290,5,32,16,70,'1 pc'],['Bajji / bonda',300,6,30,17,40,'1 pc'],['Veg puff',330,6,35,18,80,'1 pc'],
   ['Gulab jamun',375,6,52,16,40,'1 pc'],['Kesari',330,3,50,13,100,'1 cup'],['Chocolate',535,7.6,60,30,20,'2 squares'],
@@ -1031,7 +1031,7 @@ function viewAuth() {
   return `<div class="auth">
     <img class="logo" src="icons/logo.png" alt="">
     <h1>Minimal Health Tracker</h1>
-    <p class="sub">Your weight-loss tracker · v109</p>
+    <p class="sub">Your weight-loss tracker · v110</p>
     ${m !== 'forgot' ? `<div class="seg">
       <button data-act="authMode" data-v="login" class="${m === 'login' ? 'on' : ''}">Log in</button>
       <button data-act="authMode" data-v="create" class="${m === 'create' ? 'on' : ''}">Create account</button>
@@ -2005,11 +2005,11 @@ function sheetSprouts() {
 const SNACKQ = {
   pumpkin: {
     icon: '\u{1F383}', title: 'Pumpkin seeds', unit: ['spoon', 'spoons'], step: 0.5, max: 10,
-    gKey: 'pumpkinG', gDef: 10, gLabel: 'Grams in one spoon',
+    gKey: 'pumpkinG', gDef: 5, gLabel: 'Grams in one spoon',
     per100: { k: 559, p: 30.2, c: 10.7, f: 49.1 },
     micro100: { fiber: 6, sugar: 1.4, calcium: 46, iron: 8.8, magnesium: 592, potassium: 809, sodium: 7, zinc: 7.8, vitA: 1, vitC: 0.3, vitB12: 0, folate: 58, chol: 0, satfat: 8.7 },
     hi: m => `${r0(m.magnesium)} mg magnesium · ${r1(m.zinc)} mg zinc`,
-    note: 'Hulled pumpkin seeds (pepitas). One level tablespoon is about 10 g. No cholesterol — it is a seed — and most of its fat is the good kind.',
+    note: 'Hulled pumpkin seeds (pepitas). One spoon is about 5 g. No cholesterol — it is a seed — and most of its fat is the good kind.',
   },
   ellu: {
     icon: '\u{1F7E4}', title: 'Sesame balls', unit: ['ball', 'balls'], step: 1, max: 10,
@@ -2020,7 +2020,11 @@ const SNACKQ = {
     note: 'Ellu urundai — roasted sesame with palm jaggery, about 55:45 by weight. Great calcium and iron, but the jaggery is still sugar, so it counts against your sugar limit.',
   },
 };
-function snackDefaults(key) { const c = SNACKQ[key], v = Number((P() || {})[c.gKey]); return v > 0 ? v : c.gDef; }
+function snackDefaults(key) {
+  const c = SNACKQ[key], v = Number((P() || {})[c.gKey]);
+  if (key === 'pumpkin' && v === 10) return c.gDef;   // 10 g was the old shipped default
+  return v > 0 ? v : c.gDef;
+}
 function snackTotals(key, n, g) {
   const c = SNACKQ[key], gr = (Number(g) || 0) * n, q = gr / 100;
   const t = { grams: gr, kcal: c.per100.k * q, protein: c.per100.p * q, carbs: c.per100.c * q, fat: c.per100.f * q, micro: {} };
@@ -2390,7 +2394,7 @@ function viewProfile() {
       <button class="btn blue block" data-act="exportXlsx">⬇️ Export to Excel</button>
     </div>
     <button class="btn danger block" data-act="logout" style="margin-top:6px">Log out</button>
-    <p class="explain" style="text-align:center;margin-top:14px">Minimal Health Tracker v109 · estimates only, not medical advice</p>
+    <p class="explain" style="text-align:center;margin-top:14px">Minimal Health Tracker v110 · estimates only, not medical advice</p>
   </main>`;
 }
 
