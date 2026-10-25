@@ -1031,7 +1031,7 @@ function viewAuth() {
   return `<div class="auth">
     <img class="logo" src="icons/logo.png" alt="">
     <h1>Minimal Health Tracker</h1>
-    <p class="sub">Your weight-loss tracker · v105</p>
+    <p class="sub">Your weight-loss tracker · v106</p>
     ${m !== 'forgot' ? `<div class="seg">
       <button data-act="authMode" data-v="login" class="${m === 'login' ? 'on' : ''}">Log in</button>
       <button data-act="authMode" data-v="create" class="${m === 'create' ? 'on' : ''}">Create account</button>
@@ -2327,7 +2327,7 @@ function viewProfile() {
       <button class="btn blue block" data-act="exportXlsx">⬇️ Export to Excel</button>
     </div>
     <button class="btn danger block" data-act="logout" style="margin-top:6px">Log out</button>
-    <p class="explain" style="text-align:center;margin-top:14px">Minimal Health Tracker v105 · estimates only, not medical advice</p>
+    <p class="explain" style="text-align:center;margin-top:14px">Minimal Health Tracker v106 · estimates only, not medical advice</p>
   </main>`;
 }
 
@@ -2342,10 +2342,45 @@ const COOK = {
   home:  { icon: '🏠', label: 'Home made', note: 'less oil', fat: 0.75, chol: 0.9, sodium: 0.8 },
   hotel: { icon: '🏨', label: 'Hotel food', note: 'more oil, ghee & salt', fat: 1.4, chol: 1.25, sodium: 1.5 },
 };
+/* Who cooked it only matters when somebody adds oil, ghee or salt at the
+   stove. A boiled egg, a glass of milk, a banana or a scoop of whey is the
+   same food in any kitchen, so those are left exactly as they are. */
+const COOK_FIXED = new Set([
+  'Boiled egg', 'Egg white (boiled)', 'Paneer (raw)', 'Whey protein',
+  'Milk (full cream)', 'Milk (toned)', 'Buttermilk', 'Curd / yogurt', 'Greek yogurt (plain)',
+  'Rose milk', 'Lassi (sweet)', 'Ragi koozh / malt',
+  'Tea with milk (no sugar)', 'Filter coffee (milk, no sugar)', 'Black tea (no sugar)',
+  'Tea with milk & sugar', 'Filter coffee (milk & sugar)', 'Black coffee / green tea',
+  'Tender coconut water', 'Fresh juice (no sugar)',
+  'White rice (cooked)', 'Brown rice (cooked)', 'Idli', 'Rava idli', 'Idiyappam',
+  'Moong sprouts', 'Boiled chickpeas / sundal', 'Soya chunks (dry)', 'Oats (dry)',
+  'Banana', 'Apple', 'Orange / mosambi', 'Papaya', 'Guava', 'Watermelon', 'Pomegranate',
+  'Grapes', 'Pineapple', 'Mango', 'Sapota / chikoo', 'Dates', 'Mixed fruit bowl',
+  'Cucumber / salad', 'Carrot', 'Sweet corn (boiled)',
+  'Almonds', 'Cashews', 'Walnuts', 'Peanuts (roasted)', 'Peanut butter', 'Makhana (roasted)',
+  'Roasted chana', 'Banana chips', 'Mixture / namkeen', 'Murukku', 'Marie biscuit',
+  'Bread (brown)', 'Bread (white)', 'Chocolate', 'Ice cream',
+  'Sugar', 'Sugar (in tea / coffee)', 'Ghee', 'Cooking oil',
+]);
+const COOK_FIXED_RE = /(boiled egg|egg white|milk|curd|yogurt|yoghurt|buttermilk|lassi|tea\b|coffee|juice|coconut water|sprout|salad|almond|cashew|walnut|peanut|pistachio|makhana|dates|banana|apple|orange|papaya|guava|watermelon|pomegranate|grapes|pineapple|mango|chikoo|sapota|bread|biscuit|chocolate|ice cream|whey|protein shake|plain rice|boiled rice|brown rice|white rice|idli|idiyappam)/i;
+const COOKED_RE = /(curry|masala|gravy|kuzhambu|kulambu|fry|fried|roast|tikka|kofta|manchurian|biryani|pulao|poriyal|kootu|sabzi|sabji|butter |korma|chettinad|65\b)/i;
+function cookVaries(it) {
+  const n = String(it.name || '');
+  if (COOKED_RE.test(n)) return true;                 // somebody cooked this with oil
+  const f = findFood(n);
+  if (f) return !COOK_FIXED.has(f.n);                 // the table knows this food
+  return !COOK_FIXED_RE.test(n);                      // otherwise go by the name
+}
 function applyCook(sh) {
   const c = COOK[sh.cook] || null;
   (sh.items || []).forEach(it => {
     if (!it.basePer) return;
+    if (c && !cookVaries(it)) {                       // same food either way — leave it alone
+      it.per = Object.assign({}, it.basePer);
+      if (it.baseMicroPer) it.microPer = Object.assign({}, it.baseMicroPer);
+      ['kcal', 'protein', 'carbs', 'fat'].forEach(k => { it[k] = it.per[k] * it.grams; });
+      return;
+    }
     it.per = Object.assign({}, it.basePer);
     if (c) {
       it.per.fat = it.basePer.fat * c.fat;
@@ -2369,7 +2404,7 @@ function cookPicker(sh) {
   return `<div style="margin:0 0 12px">
     <div class="seg" style="margin-bottom:0">${btn('home')}${btn('hotel')}</div>
     <p class="explain" style="margin:6px 0 0">${on
-      ? `Counted as <b>${COOK[on].label.toLowerCase()}</b> &mdash; fat ${on === 'home' ? 'down 25%' : 'up 40%'}, with the calories, cholesterol and salt moved to match. Tap it again to go back to the plain estimate.`
+      ? `Counted as <b>${COOK[on].label.toLowerCase()}</b> &mdash; fat ${on === 'home' ? 'down 25%' : 'up 40%'}, with the calories, cholesterol and salt moved to match. ${(sh.items || []).some(it => !cookVaries(it)) ? 'Food nobody adds oil to &mdash; a boiled egg, milk, fruit, nuts, whey &mdash; is left exactly as it is. ' : ''}Tap it again to go back to the plain estimate.`
       : 'Cooked at home with less oil, or eaten outside? Tap one and the calories, fat, cholesterol and salt are adjusted before you save.'}</p>
   </div>`;
 }
