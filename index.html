@@ -392,6 +392,7 @@ function microRDA(p) { // ICMR-NIN 2020 adult RDA (approx.)
     vitA: m ? 1000 : 840, vitC: m ? 80 : 65, vitB12: 2.5, folate: m ? 300 : 220 };
 }
 const STRENGTH_GROUPS = new Set(['Strength machines', 'Free weights & bodyweight']);
+const SATFAT_CAP = 12;   // g a day — hard ceiling, whatever the calorie target works out to
 function nutritionNeeds(date) {
   const p = P(), st = dayStats(date), tg = dailyTarget(), f = healthFlags(p), w = st.w;
   const ws = st.d.workouts || [];
@@ -414,7 +415,7 @@ function nutritionNeeds(date) {
   const tight = !!(f.chol || f.heart || ldlHigh);
   const tightWhy = ldlHigh ? `your last LDL reading of ${r0(ldl)}` : f.heart ? 'your heart note' : f.chol ? 'your cholesterol note' : '';
   const chol = tight ? 200 : 300;   // mg a day
-  const satfat = Math.round(kcal * (tight ? 0.06 : 0.10) / 9);   // g a day
+  const satfat = Math.min(SATFAT_CAP, Math.round(kcal * (tight ? 0.06 : 0.10) / 9));   // g a day, never above the cap
   const transfat = Math.round(kcal * 0.01 / 9 * 10) / 10;   // g a day — WHO: under 1% of calories
   const exMin = strMin + cardioMin;
   const water = Math.round((w * 35 + exMin / 30 * 500) / 100) / 10;
@@ -1046,7 +1047,7 @@ function viewAuth() {
   return `<div class="auth">
     <img class="logo" src="icons/logo.png" alt="">
     <h1>Minimal Health Tracker</h1>
-    <p class="sub">Your weight-loss tracker · v119</p>
+    <p class="sub">Your weight-loss tracker · v120</p>
     ${m !== 'forgot' ? `<div class="seg">
       <button data-act="authMode" data-v="login" class="${m === 'login' ? 'on' : ''}">Log in</button>
       <button data-act="authMode" data-v="create" class="${m === 'create' ? 'on' : ''}">Create account</button>
@@ -1395,7 +1396,7 @@ function todayTable(date) {
       </tbody>
     </table>
     <p class="explain" style="margin-top:6px"><b>Tap any name</b> to see which foods it came from, and tap it again to close.</p>
-    <p class="explain">A <b>~</b> in front of a fat figure means the split was worked out from the kind of food it is, not read off a label. <b>Saturated fat</b> comes from ghee, butter, coconut, full-cream dairy and fatty meat. Of everything you eat, it is what pushes your blood LDL up the most &mdash; more than cholesterol in food does. <b>Unsaturated fat</b> is the rest of the fat &mdash; groundnut and sunflower oil, nuts, seeds and fish &mdash; and it works the other way. Cholesterol comes only from animal food &mdash; egg yolk, meat, fish, prawn, ghee, butter, full-cream milk, paneer, cheese. Your limit is ${nd.chol} mg a day${nd.cholTight ? ` and your saturated-fat limit is ${nd.satfat} g (6% of calories), both tightened because of ${nd.tightWhy}` : ' and your saturated-fat limit is ' + nd.satfat + ' g (10% of calories)'}; food cholesterol nudges your blood LDL up too, but less than saturated fat does. <b>Trans fat</b> is the worst of the three for your heart &mdash; it pushes LDL up and HDL down at the same time. It is 0 in fresh and home-cooked food, and shows up in vanaspati bakery items, shop-fried snacks and a little naturally in ghee and dairy. Keep it under ${nd.transfat} g a day; less is always better. <b>LDL and HDL are not in food at all</b> &mdash; they are carriers in your blood that only a blood test measures, and you log them in the vitals card. Calories, carbs, sugar, fat, cholesterol and sodium: above 100% turns <b class="bad">red</b>. Protein, fibre, vitamins and minerals: try to reach 100%. Calorie target = what your body uses (${r0(st.base)}) + exercise (${r0(st.exNet + st.stepsK)}) − ${r0(dailyTarget().need)} kcal cut for your goal.</p>
+    <p class="explain">A <b>~</b> in front of a fat figure means the split was worked out from the kind of food it is, not read off a label. <b>Saturated fat</b> comes from ghee, butter, coconut, full-cream dairy and fatty meat. Of everything you eat, it is what pushes your blood LDL up the most &mdash; more than cholesterol in food does. <b>Unsaturated fat</b> is the rest of the fat &mdash; groundnut and sunflower oil, nuts, seeds and fish &mdash; and it works the other way. Cholesterol comes only from animal food &mdash; egg yolk, meat, fish, prawn, ghee, butter, full-cream milk, paneer, cheese. Your limit is ${nd.chol} mg a day${nd.cholTight ? ` and your saturated-fat limit is ${nd.satfat} g, tightened because of ${nd.tightWhy}` : ' and your saturated-fat limit is ' + nd.satfat + ' g a day'}; food cholesterol nudges your blood LDL up too, but less than saturated fat does. <b>Trans fat</b> is the worst of the three for your heart &mdash; it pushes LDL up and HDL down at the same time. It is 0 in fresh and home-cooked food, and shows up in vanaspati bakery items, shop-fried snacks and a little naturally in ghee and dairy. Keep it under ${nd.transfat} g a day; less is always better. <b>LDL and HDL are not in food at all</b> &mdash; they are carriers in your blood that only a blood test measures, and you log them in the vitals card. Calories, carbs, sugar, fat, cholesterol and sodium: above 100% turns <b class="bad">red</b>. Protein, fibre, vitamins and minerals: try to reach 100%. Calorie target = what your body uses (${r0(st.base)}) + exercise (${r0(st.exNet + st.stepsK)}) − ${r0(dailyTarget().need)} kcal cut for your goal.</p>
   </div>`;
 }
 
@@ -2391,7 +2392,7 @@ function cholLine(date) {
     ${bar('🧈', 'Saturated fat', '(in food \u2014 grams)', sf, sl, 'g', true)}
     ${tf > 0.05 ? bar('\u{1F35F}', 'Trans fat', '(worst one for your heart)', tf, nd.transfat, 'g', true) : ''}
     <p class="explain" style="margin:-2px 0 0">${msg}${dn.unknown ? ` ${dn.unknown} item${dn.unknown > 1 ? 's are' : ' is'} not in the food table, so the real figures may be higher.` : ''}</p>
-    <p class="explain" style="margin:6px 0 0">${nd.cholTight ? `Your saturated-fat target is the tighter one, 6% of calories, because of <b>${nd.tightWhy}</b>. ` : 'These are the general targets \u2014 10% of calories as saturated fat. Log an LDL reading in the vitals card and they tighten automatically if it is 130 or above. '}This is food you ate. <b>LDL</b> and <b>HDL</b> are a different thing — they are in your blood, not in food, and only a blood test shows them (log those in the vitals card). Eating less saturated fat is the main way to bring your LDL down. Cholesterol and the rest are in the full table on the Today page.</p>
+    <p class="explain" style="margin:6px 0 0">${nd.cholTight ? `Your saturated-fat target is the tighter one \u2014 6% of calories, capped at ${SATFAT_CAP} g \u2014 because of <b>${nd.tightWhy}</b>. ` : `Your saturated-fat ceiling is ${SATFAT_CAP} g a day. Log an LDL reading in the vitals card and it tightens further on its own if the reading is 130 or above. `}This is food you ate. <b>LDL</b> and <b>HDL</b> are a different thing — they are in your blood, not in food, and only a blood test shows them (log those in the vitals card). Eating less saturated fat is the main way to bring your LDL down. Cholesterol and the rest are in the full table on the Today page.</p>
   </div>`;
 }
 
@@ -2528,7 +2529,7 @@ function viewProfile() {
       <button class="btn blue block" data-act="exportXlsx">⬇️ Export to Excel</button>
     </div>
     <button class="btn danger block" data-act="logout" style="margin-top:6px">Log out</button>
-    <p class="explain" style="text-align:center;margin-top:14px">Minimal Health Tracker v119 · estimates only, not medical advice</p>
+    <p class="explain" style="text-align:center;margin-top:14px">Minimal Health Tracker v120 · estimates only, not medical advice</p>
   </main>`;
 }
 
