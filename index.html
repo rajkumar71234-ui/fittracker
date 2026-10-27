@@ -1047,7 +1047,7 @@ function viewAuth() {
   return `<div class="auth">
     <img class="logo" src="icons/logo.png" alt="">
     <h1>Minimal Health Tracker</h1>
-    <p class="sub">Your weight-loss tracker · v123</p>
+    <p class="sub">Your weight-loss tracker · v124</p>
     ${m !== 'forgot' ? `<div class="seg">
       <button data-act="authMode" data-v="login" class="${m === 'login' ? 'on' : ''}">Log in</button>
       <button data-act="authMode" data-v="create" class="${m === 'create' ? 'on' : ''}">Create account</button>
@@ -2137,6 +2137,7 @@ const SNACKQ = {
   chicken: {
     icon: '\u{1F357}', title: 'Chicken breast', unit: ['plate', 'plates'], step: 1, max: 4, n0: 1,
     gKey: 'chickenG', gDef: 300, gLabel: 'Grams of chicken breast', slot: 'dinner',
+    slots: ['breakfast', 'lunch', 'dinner'],
     // per 100 g of chicken, with the oil, shallots, chilli and salt scaled along with it
     per100: { k: 155.57, p: 23.04, c: 3.37, f: 5.11 },
     micro100: { fiber: 0.81, sugar: 1.41, calcium: 11.62, iron: 0.65, magnesium: 32.02, potassium: 409.81,
@@ -2166,7 +2167,7 @@ function snackTotals(key, n, g) {
 }
 function sheetSnackQ() {
   const sh = S.sheet, key = sh.what, c = SNACKQ[key], n = sh.n, ds = sh.date || todayStr();
-  const g = snackDefaults(key), d = S.data.days[ds] || {};
+  const g = snackDefaults(key), d = S.data.days[ds] || {}, slot = sh.slot || c.slot || 'snacks';
   const t = snackTotals(key, n, g), one = snackTotals(key, 1, g);
   const u = n == 1 ? c.unit[0] : c.unit[1];
   const done = (d.meals || []).filter(m => m.source === key).reduce((a, m) => a + (Number(m.kcal) || 0), 0);
@@ -2180,6 +2181,8 @@ function sheetSnackQ() {
       </div>
       <p style="margin:8px 0 0;font-size:17px;font-weight:700">${r0(t.kcal)} kcal · ${r1(t.protein)} g protein · ${r1(t.fat)} g fat</p>
       <p class="explain" style="margin:4px 0 0">1 ${c.unit[0]} = ${one.grams < 10 ? r1(one.grams) : r0(one.grams)} g · ${r0(one.kcal)} kcal · ${c.hi(one.micro, one)}</p>
+      ${c.slots ? `<div class="seg" style="margin:12px 0 0">${c.slots.map(id => { const sl = SLOTS.find(x => x.id === id) || { icon: '', label: id };
+        return `<button class="${slot === id ? 'on' : ''}" data-act="snackSlot" data-v="${id}">${sl.icon} ${sl.label}</button>`; }).join('')}</div>` : ''}
       ${done ? `<p class="explain" style="margin:6px 0 0"><b class="good">Already logged today:</b> ${r0(done)} kcal from ${c.title.toLowerCase()}. Saving now adds to that.</p>` : ''}
     </div>
     <div class="card">
@@ -2195,7 +2198,7 @@ function sheetWheyQ() {
   const sh = S.sheet, wd = wheyDefaults(), n = sh.n, egg = sh.what === 'egg', ds = sh.date || todayStr();
   const d = S.data.days[ds] || {};
   const unit = egg ? ['egg', 'eggs'] : ['scoop', 'scoops'], u = n == 1 ? unit[0] : unit[1];
-  const white = egg && sh.eggType === 'white';
+  const white = egg && (sh.eggType || 'white') === 'white';
   const P1 = egg ? (white ? EGGW_P : EGG_P) : WHEY_P, K1 = egg ? (white ? EGGW_K : EGG_K) : wd.k, F1 = egg ? (white ? 0.06 : 5.3) : r1(wd.g * WHEY_F100 / 100);
   const done = (d.meals || []).filter(m => m.slot === (egg ? 'egg' : 'whey')).reduce((a, m) => a + (Number(m.protein) || 0), 0);
   return `<div class="sheet-h"><h2>${egg ? '🥚 Egg' : '💪 Whey protein'}</h2><button class="x" data-act="closeSheet">✕</button></div>
@@ -2541,7 +2544,7 @@ function viewProfile() {
       <button class="btn blue block" data-act="exportXlsx">⬇️ Export to Excel</button>
     </div>
     <button class="btn danger block" data-act="logout" style="margin-top:6px">Log out</button>
-    <p class="explain" style="text-align:center;margin-top:14px">Minimal Health Tracker v123 · estimates only, not medical advice</p>
+    <p class="explain" style="text-align:center;margin-top:14px">Minimal Health Tracker v124 · estimates only, not medical advice</p>
   </main>`;
 }
 
@@ -3329,7 +3332,8 @@ const ACT = {
     if (S.openNut[k]) delete S.openNut[k]; else S.openNut[k] = 1;
     render();
   },
-  openSnackQ(el) { const k = el.dataset.w; S.sheet = { kind: 'snackq', what: k, n: SNACKQ[k].n0 || 1, date: S.date || todayStr() }; renderSheet(); },
+  openSnackQ(el) { const k = el.dataset.w, c = SNACKQ[k]; S.sheet = { kind: 'snackq', what: k, n: c.n0 || 1, slot: c.slot || 'snacks', date: S.date || todayStr() }; renderSheet(); },
+  snackSlot(el) { S.sheet.slot = el.dataset.v; renderSheet(); },
   snackStep(el) {
     const s = S.sheet, c = SNACKQ[s.what];
     const v = s.n + Number(el.dataset.v);
@@ -3346,7 +3350,7 @@ const ACT = {
     const u = n == 1 ? c.unit[0] : c.unit[1];
     mutateDay(t, d => {
       d.meals = d.meals || [];
-      d.meals.push({ id: uid(), slot: c.slot || 'snacks', name: `${c.title} (${n} ${u})`,
+      d.meals.push({ id: uid(), slot: sh.slot || c.slot || 'snacks', name: `${c.title} (${n} ${u})`,
         grams: r1(tot.grams), kcal: r0(tot.kcal), protein: r1(tot.protein), carbs: r1(tot.carbs), fat: r1(tot.fat),
         micro: mi, source: key, at: new Date().toISOString() });
     });
@@ -3359,7 +3363,7 @@ const ACT = {
   saveWheyQ() {
     const sh = S.sheet, n = sh.n, wd = wheyDefaults(), t = sh.date || todayStr(), egg = sh.what === 'egg';
     const rec = egg
-      ? (sh.eggType === 'white'
+      ? ((sh.eggType || 'white') === 'white'
         ? { id: uid(), slot: 'egg', name: `Egg white, boiled (${n} egg${n == 1 ? '' : 's'})`, grams: n * EGGW_G, eggs: n, kcal: r0(n * EGGW_K), protein: r1(n * EGGW_P), carbs: r1(n * 0.24), fat: r1(n * 0.06), source: 'eggq', at: new Date().toISOString() }
         : { id: uid(), slot: 'egg', name: `Boiled egg (${n} egg${n == 1 ? '' : 's'})`, grams: n * EGG_G, eggs: n, kcal: r0(n * EGG_K), protein: r1(n * EGG_P), carbs: r1(n * 0.55), fat: r1(n * 5.3), source: 'eggq', at: new Date().toISOString() })
       : { id: uid(), slot: 'whey', name: `Whey protein (${n} scoop${n == 1 ? '' : 's'})`, grams: r1(n * wd.g), scoops: n, kcal: r0(n * wd.k), protein: r1(n * WHEY_P), carbs: r2(n * wd.g * WHEY_C100 / 100), fat: r2(n * wd.g * WHEY_F100 / 100),
