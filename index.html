@@ -1047,7 +1047,7 @@ function viewAuth() {
   return `<div class="auth">
     <img class="logo" src="icons/logo.png" alt="">
     <h1>Minimal Health Tracker</h1>
-    <p class="sub">Your weight-loss tracker · v127</p>
+    <p class="sub">Your weight-loss tracker · v128</p>
     ${m !== 'forgot' ? `<div class="seg">
       <button data-act="authMode" data-v="login" class="${m === 'login' ? 'on' : ''}">Log in</button>
       <button data-act="authMode" data-v="create" class="${m === 'create' ? 'on' : ''}">Create account</button>
@@ -2565,7 +2565,7 @@ function viewProfile() {
       <button class="btn blue block" data-act="exportXlsx">⬇️ Export to Excel</button>
     </div>
     <button class="btn danger block" data-act="logout" style="margin-top:6px">Log out</button>
-    <p class="explain" style="text-align:center;margin-top:14px">Minimal Health Tracker v127 · estimates only, not medical advice</p>
+    <p class="explain" style="text-align:center;margin-top:14px">Minimal Health Tracker v128 · estimates only, not medical advice</p>
   </main>`;
 }
 
@@ -2882,7 +2882,7 @@ async function runAnalysis() {
   try {
     const r = await analyzeFood(sh.photos);
     if (S.sheet !== sh) return;
-    sh.items = r.items; sh.note = r.note;
+    sh.items = r.items; sh.note = r.note; applyCook(sh);
     if (sh.check) { sh.slot = suggestSlot(r.items); sh.slotWhy = true; }
     if (!r.items.length) sh.error = r.note || 'No food found in the photo.';
   } catch (e) { if (S.sheet === sh) sh.error = e.message; }
@@ -3141,7 +3141,7 @@ const ACT = {
   },
 
   addFood(el) {
-    S.sheet = { kind: 'food', slot: el.dataset.slot, mode: (S.session.geminiKey || S.session.apiKey) ? 'photo' : 'search', items: [], photos: [], busy: false, query: '', note: '', error: '' };
+    S.sheet = { kind: 'food', slot: el.dataset.slot, mode: (S.session.geminiKey || S.session.apiKey) ? 'photo' : 'search', items: [], photos: [], busy: false, query: '', note: '', error: '', cook: 'home' };
     renderSheet();
   },
   foodMode(el) {
@@ -3155,9 +3155,10 @@ const ACT = {
     const f = FOOD.find(x => x.n === el.dataset.n); if (!f) return;
     const g = f.s / 100;
     S.sheet.items.push(mkItem({ name: f.n, grams: f.s, kcal: f.k * g, protein: f.p * g, carbs: f.c * g, fat: f.f * g, source: 'list' }));
+    applyCook(S.sheet);
     refreshItems(); toast(`${f.n} added — adjust grams below`);
   },
-  itemAdd() { S.sheet.items.push(mkItem({ name: '', grams: 100, kcal: 0 })); refreshItems(); },
+  itemAdd() { S.sheet.items.push(mkItem({ name: '', grams: 100, kcal: 0 })); applyCook(S.sheet); refreshItems(); },
   itemDel(el) { S.sheet.items.splice(+el.dataset.i, 1); if (!S.sheet.items.length && S.sheet.mode === 'photo') { S.sheet.photos = []; S.sheet.note = ''; renderSheet(); } else refreshItems(); },
   retryPhoto() { runAnalysis(); },
   foodPhotoDel(el) { const sh = S.sheet; sh.photos.splice(+el.dataset.i, 1); sh.items = []; sh.note = ''; sh.error = ''; renderSheet(); },
@@ -3616,7 +3617,7 @@ document.addEventListener('change', async (e) => {
   if (t.classList.contains('food-check-input') && t.files && t.files[0]) {
     const files = [...t.files].slice(0, 2); t.value = '';
     const slot = slotByTime();
-    S.sheet = { kind: 'food', check: true, slot, mode: 'photo', items: [], photos: [], busy: false, note: '', error: '' };
+    S.sheet = { kind: 'food', check: true, slot, mode: 'photo', items: [], photos: [], busy: false, note: '', error: '', cook: 'home' };
     await addPhotosToSheet(files, 0); return;
   }
   if (t.classList.contains('med-photo-input') && t.files && t.files[0]) {
