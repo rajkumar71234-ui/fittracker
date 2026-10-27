@@ -1047,7 +1047,7 @@ function viewAuth() {
   return `<div class="auth">
     <img class="logo" src="icons/logo.png" alt="">
     <h1>Minimal Health Tracker</h1>
-    <p class="sub">Your weight-loss tracker · v128</p>
+    <p class="sub">Your weight-loss tracker · v129</p>
     ${m !== 'forgot' ? `<div class="seg">
       <button data-act="authMode" data-v="login" class="${m === 'login' ? 'on' : ''}">Log in</button>
       <button data-act="authMode" data-v="create" class="${m === 'create' ? 'on' : ''}">Create account</button>
@@ -2368,14 +2368,15 @@ function sheetMedPick() {
     <button class="btn primary block" data-act="medPickSave">Save · ${sh.time}</button>`;
 }
 function sheetAddWeight() {
-  const sh = S.sheet, now = sh.at, prev = weightOn(todayStr());
+  const sh = S.sheet, now = sh.at, ds = sh.date || todayStr(), prev = weightOn(ds);
+  const already = (S.data.days[ds] || {}).weight;
   return `<div class="sheet-h"><h2>⚖️ Add weight</h2><button class="x" data-act="closeSheet">✕</button></div>
     <div class="card" style="text-align:center">
       <div style="font-size:17px;font-weight:700">${now.toLocaleDateString('en-IN', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}</div>
-      <div class="muted" style="font-size:15px;margin-top:2px">${now.toLocaleTimeString('en-IN', { hour: 'numeric', minute: '2-digit' })}</div>
+      <div class="muted" style="font-size:15px;margin-top:2px">${sh.today ? now.toLocaleTimeString('en-IN', { hour: 'numeric', minute: '2-digit' }) : 'saving to this day'}</div>
       <label style="margin-top:16px;text-align:left">Your weight (kg)
         <input id="addWeightIn" type="number" step="0.1" inputmode="decimal" placeholder="${r1(prev)}" style="font-size:30px;font-weight:800;height:66px;text-align:center"></label>
-      <p class="explain" style="margin:8px 0 0">Last weight: ${r1(prev)} kg</p>
+      <p class="explain" style="margin:8px 0 0">Last weight: ${r1(prev)} kg${already ? ` · <b>${r1(already)} kg already saved for this day &mdash; this replaces it.</b>` : ''}</p>
     </div>
     <button class="btn primary block" data-act="saveAddWeight">Save weight</button>`;
 }
@@ -2565,7 +2566,7 @@ function viewProfile() {
       <button class="btn blue block" data-act="exportXlsx">⬇️ Export to Excel</button>
     </div>
     <button class="btn danger block" data-act="logout" style="margin-top:6px">Log out</button>
-    <p class="explain" style="text-align:center;margin-top:14px">Minimal Health Tracker v128 · estimates only, not medical advice</p>
+    <p class="explain" style="text-align:center;margin-top:14px">Minimal Health Tracker v129 · estimates only, not medical advice</p>
   </main>`;
 }
 
@@ -3433,13 +3434,15 @@ const ACT = {
     renderSheet();
   },
   openAddWeight() {
-    S.sheet = { kind: 'weight', at: new Date() }; renderSheet();
+    const ds = S.date || todayStr(), today = ds === todayStr();
+    // today keeps the real clock time; an earlier day is stamped at that day
+    S.sheet = { kind: 'weight', date: ds, today, at: today ? new Date() : parseD(ds) }; renderSheet();
     setTimeout(() => { const i = $('#addWeightIn'); if (i) i.focus(); }, 250);
   },
   saveAddWeight() {
     const w = num(($('#addWeightIn') || {}).value);
     if (w == null || w < 25 || w > 300) throw fail('Enter your weight in kg.');
-    const at = S.sheet.at, ds = fmtD(at);
+    const at = S.sheet.at, ds = S.sheet.date || fmtD(at);
     mutateDay(ds, d => { d.weight = r1(w); d.weightAt = at.toISOString(); });
     S.sheet = null; toast(`Saved ${r1(w)} kg`, 'good'); render();
   },
