@@ -307,7 +307,7 @@ const FOOD = [
   ['Carrot',41,0.9,10,0.2,80,'1 medium'],['Sweet corn (boiled)',96,3.4,21,1.5,100,'1 cup'],['Oats (dry)',389,17,66,7,40,'½ cup'],
   ['Oats porridge with milk',95,4,13,3,250,'1 bowl'],['Bread (brown)',247,13,41,3.4,30,'1 slice'],['Bread (white)',265,9,49,3.2,30,'1 slice'],
   ['Peanut butter',588,25,20,50,16,'1 tbsp'],['Peanuts (roasted)',567,26,16,49,30,'handful'],['Almonds',579,21,22,50,15,'10 pcs'],
-  ['Cashews',553,18,30,44,15,'10 pcs'],['Walnuts',654,15,14,65,15,'4 halves'],['Chicken breast (nalla ennai)',155.6,23,3.4,5.1,361,'1 plate'],['Red banana (sevvazhai)',90,1.3,23.5,0.3,100,'1 fruit'],['Pumpkin seeds',559,30.2,10.7,49.1,5,'1 spoon'],['Sesame balls (ellu urundai)',489,10,55.8,27.3,20,'1 ball'],['Makhana (roasted)',350,9.7,77,0.1,25,'1 cup'],
+  ['Cashews',553,18,30,44,15,'10 pcs'],['Walnuts',654,15,14,65,15,'4 halves'],['Chicken breast (nalla ennai)',155.6,23,3.4,5.1,361,'1 plate'],['Red banana (sevvazhai)',90,1.3,23.5,0.3,200,'1 fruit'],['Pumpkin seeds',559,30.2,10.7,49.1,5,'1 spoon'],['Sesame balls (ellu urundai)',489,10,55.8,27.3,20,'1 ball'],['Makhana (roasted)',350,9.7,77,0.1,25,'1 cup'],
   ['Roasted chana',370,22,58,5,30,'handful'],['Marie biscuit',440,7,76,11,7,'1 pc'],['Murukku',520,8,55,30,30,'2 pcs'],
   ['Samosa',290,5,32,16,70,'1 pc'],['Bajji / bonda',300,6,30,17,40,'1 pc'],['Veg puff',330,6,35,18,80,'1 pc'],
   ['Gulab jamun',375,6,52,16,40,'1 pc'],['Kesari',330,3,50,13,100,'1 cup'],['Chocolate',535,7.6,60,30,20,'2 squares'],
@@ -1047,7 +1047,7 @@ function viewAuth() {
   return `<div class="auth">
     <img class="logo" src="icons/logo.png" alt="">
     <h1>Minimal Health Tracker</h1>
-    <p class="sub">Your weight-loss tracker · v126</p>
+    <p class="sub">Your weight-loss tracker · v127</p>
     ${m !== 'forgot' ? `<div class="seg">
       <button data-act="authMode" data-v="login" class="${m === 'login' ? 'on' : ''}">Log in</button>
       <button data-act="authMode" data-v="create" class="${m === 'create' ? 'on' : ''}">Create account</button>
@@ -2158,12 +2158,12 @@ const SNACKQ = {
   },
   redbanana: {
     icon: '\u{1F34C}', title: 'Red banana', unit: ['banana', 'bananas'], step: 1, max: 6, n0: 1,
-    gKey: 'redbananaG', gDef: 100, gLabel: 'Grams in one banana (peeled)', slot: 'fruits',
+    gKey: 'redbananaG', gDef: 200, gLabel: 'Grams in one banana (peeled)', slot: 'fruits',
     per100: { k: 90, p: 1.3, c: 23.5, f: 0.3 },
     micro100: { fiber: 2.6, sugar: 12.5, calcium: 5, iron: 0.3, magnesium: 27, potassium: 358, sodium: 1,
       zinc: 0.15, vitA: 45, vitC: 10, vitB12: 0, folate: 20, chol: 0, satfat: 0.1, transfat: 0 },
     hi: m => `${r0(m.potassium)} mg potassium \u00b7 ${r1(m.fiber)} g fibre`,
-    note: 'Sevvazhai. A medium peeled red banana is about 100 g \u2014 smaller than a yellow one but sweeter, with more carotenoids and vitamin C.',
+    note: 'Sevvazhai. Counted at 200 g peeled. Sweeter than a yellow banana, with more carotenoids and vitamin C.',
   },
   almond: {
     icon: '\u{1F330}', title: 'Almonds', unit: ['almond', 'almonds'], step: 1, max: 40, n0: 5,
@@ -2177,6 +2177,7 @@ const SNACKQ = {
 function snackDefaults(key) {
   const c = SNACKQ[key], v = Number((P() || {})[c.gKey]);
   if (key === 'pumpkin' && v === 10) return c.gDef;   // 10 g was the old shipped default
+  if (key === 'redbanana' && v === 100) return c.gDef;   // 100 g was the old shipped default
   return v > 0 ? v : c.gDef;
 }
 function snackTotals(key, n, g) {
@@ -2564,7 +2565,7 @@ function viewProfile() {
       <button class="btn blue block" data-act="exportXlsx">⬇️ Export to Excel</button>
     </div>
     <button class="btn danger block" data-act="logout" style="margin-top:6px">Log out</button>
-    <p class="explain" style="text-align:center;margin-top:14px">Minimal Health Tracker v126 · estimates only, not medical advice</p>
+    <p class="explain" style="text-align:center;margin-top:14px">Minimal Health Tracker v127 · estimates only, not medical advice</p>
   </main>`;
 }
 
