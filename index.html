@@ -1047,7 +1047,7 @@ function viewAuth() {
   return `<div class="auth">
     <img class="logo" src="icons/logo.png" alt="">
     <h1>Minimal Health Tracker</h1>
-    <p class="sub">Your weight-loss tracker · v121</p>
+    <p class="sub">Your weight-loss tracker · v122</p>
     ${m !== 'forgot' ? `<div class="seg">
       <button data-act="authMode" data-v="login" class="${m === 'login' ? 'on' : ''}">Log in</button>
       <button data-act="authMode" data-v="create" class="${m === 'create' ? 'on' : ''}">Create account</button>
@@ -2470,6 +2470,7 @@ function viewBurn() {
         <label class="btn">🖼️ Gallery<input type="file" accept="image/*" multiple class="wk-photo-input" aria-label="Upload 1 or 2 photos of machine"></label>
         <button class="btn" data-act="openStepsFor" data-d="${date}">👟 Steps</button>
         <button class="btn" data-act="burnWorkout">🏃 Add exercise</button>
+        <button class="btn blue" data-act="openAddWeight">⚖️ ${d.weight ? 'Weight ' + r1(d.weight) + ' kg' : 'Add weight'}</button>
       </div>
       <p class="explain" style="margin:0 0 6px">Photo of the machine + its screen → Detect. Or tap + Add under a heading.</p>
       ${burnList(date, d, st)}
@@ -2540,7 +2541,7 @@ function viewProfile() {
       <button class="btn blue block" data-act="exportXlsx">⬇️ Export to Excel</button>
     </div>
     <button class="btn danger block" data-act="logout" style="margin-top:6px">Log out</button>
-    <p class="explain" style="text-align:center;margin-top:14px">Minimal Health Tracker v121 · estimates only, not medical advice</p>
+    <p class="explain" style="text-align:center;margin-top:14px">Minimal Health Tracker v122 · estimates only, not medical advice</p>
   </main>`;
 }
 
