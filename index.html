@@ -1047,7 +1047,7 @@ function viewAuth() {
   return `<div class="auth">
     <img class="logo" src="icons/logo.png" alt="">
     <h1>Minimal Health Tracker</h1>
-    <p class="sub">Your weight-loss tracker · v129</p>
+    <p class="sub">Your weight-loss tracker · v130</p>
     ${m !== 'forgot' ? `<div class="seg">
       <button data-act="authMode" data-v="login" class="${m === 'login' ? 'on' : ''}">Log in</button>
       <button data-act="authMode" data-v="create" class="${m === 'create' ? 'on' : ''}">Create account</button>
@@ -2080,7 +2080,12 @@ const SPR = {
   moong: { label: 'Green gram', sub: 'pacha payaru', k: 347, p: 24, c: 59, f: 1.2, fib: 16, na: 15, sat: 0.30 },
   chana: { label: 'White chickpeas', sub: 'kabuli / sundal kadalai', k: 378, p: 20.5, c: 63, f: 6, fib: 12.2, na: 24, sat: 0.10 },
 };
-function sproutDefaults() { const x = (P() || {}).sprouts || {}; return { m: x.m ?? 60, c: x.c ?? 40 }; }
+function sproutDefaults() {
+  const x = (P() || {}).sprouts || {};
+  // 30 g + 20 g was the app's own first guess at a cup; his is 60 + 40
+  if (Number(x.m) === 30 && Number(x.c) === 20) return { m: 60, c: 40 };
+  return { m: x.m ?? 60, c: x.c ?? 40 };
+}
 function sproutTotals(n, sd) {
   const t = { grams: 0, kcal: 0, protein: 0, carbs: 0, fat: 0, fiber: 0, sodium: 0, satfat: 0 };
   [['moong', sd.m], ['chana', sd.c]].forEach(([key, g]) => {
@@ -2566,7 +2571,7 @@ function viewProfile() {
       <button class="btn blue block" data-act="exportXlsx">⬇️ Export to Excel</button>
     </div>
     <button class="btn danger block" data-act="logout" style="margin-top:6px">Log out</button>
-    <p class="explain" style="text-align:center;margin-top:14px">Minimal Health Tracker v129 · estimates only, not medical advice</p>
+    <p class="explain" style="text-align:center;margin-top:14px">Minimal Health Tracker v130 · estimates only, not medical advice</p>
   </main>`;
 }
 
@@ -3754,7 +3759,7 @@ async function boot() {
 boot();
 
 // expose for testing
-window.__fittrack = { sheetMedPick, viewAuth, viewVerify, viewAdmin, sheetCal, dateBar, sheetReading, healthCard, suggestSlot, sheetWheyQ, sheetSnackQ, snackTotals, migrateWheyMeals, wheyDefaults, sheetSteps, quickCard, sheetAddWeight, calcCard, openScaleSheet, analyseScaleRun, sheetScale, maybeHashWeight, sheetConfirm, viewBurn, addPhotosToSheet, openWorkoutSheet, sheetWorkout, runAnalysis, sheetFood, viewHome, viewFood, viewToday, viewMeds, wheyCard, ACT, profileForm, startWorkoutPhoto, sheetWorkout, FOOD, nutritionCard, needsCard, todayTable, viewSuggest, viewHome, viewFood, viewBurn, sheetWorkout, bmiOf, bmiCat, fatPct, bmr, treadKcal, bikeKcal, wkSuggest, S, plan, dayStats };
+window.__fittrack = { sheetMedPick, viewAuth, viewVerify, viewAdmin, sheetCal, dateBar, sheetReading, healthCard, suggestSlot, sheetWheyQ, sheetSnackQ, snackTotals, migrateWheyMeals, wheyDefaults, sheetSprouts, sproutDefaults, sproutTotals, sheetSteps, quickCard, sheetAddWeight, calcCard, openScaleSheet, analyseScaleRun, sheetScale, maybeHashWeight, sheetConfirm, viewBurn, addPhotosToSheet, openWorkoutSheet, sheetWorkout, runAnalysis, sheetFood, viewHome, viewFood, viewToday, viewMeds, wheyCard, ACT, profileForm, startWorkoutPhoto, sheetWorkout, FOOD, nutritionCard, needsCard, todayTable, viewSuggest, viewHome, viewFood, viewBurn, sheetWorkout, bmiOf, bmiCat, fatPct, bmr, treadKcal, bikeKcal, wkSuggest, S, plan, dayStats };
 })();
 </script>
 </body>
