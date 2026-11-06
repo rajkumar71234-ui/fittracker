@@ -314,7 +314,192 @@ const FOOD = [
   ['Ice cream',207,3.5,24,11,100,'1 scoop'],['Fried rice',165,4,25,5.5,250,'1 plate'],['Veg noodles',150,4,22,5,250,'1 plate'],
   ['Pizza',266,11,33,10,100,'1 slice'],['Burger',250,12,30,9,150,'1 burger'],['Fresh juice (no sugar)',45,0.5,11,0.1,250,'1 glass'],
   ['Sugar',387,0,100,0,5,'1 tsp'],['Ghee',900,0,0,100,5,'1 tsp'],['Cooking oil',884,0,0,100,5,'1 tsp'],
+  // more foods (v131) — approximate values
+  ["Ragi idli", 130, 3.5, 26, 1, 45, "1 pc"],
+  ["Oats idli", 120, 4.5, 21, 2, 45, "1 pc"],
+  ["Millet (kambu) dosa", 150, 4, 25, 4, 80, "1 dosa"],
+  ["Neer dosa", 130, 2.2, 27, 1.2, 60, "1 dosa"],
+  ["Egg dosa", 190, 8, 22, 8, 120, "1 dosa"],
+  ["Paper roast dosa", 210, 3.5, 28, 9, 100, "1 dosa"],
+  ["Podi dosa", 205, 5, 27, 8.5, 100, "1 dosa"],
+  ["Puttu", 170, 3, 36, 1.5, 150, "1 cup"],
+  ["Kozhukattai (steamed)", 165, 3, 33, 2.5, 40, "1 pc"],
+  ["Aval / poha upma", 150, 2.8, 27, 3.5, 200, "1 cup"],
+  ["Idli upma", 150, 3.5, 26, 3.5, 200, "1 cup"],
+  ["Khichdi", 120, 4, 20, 2.8, 250, "1 bowl"],
+  ["Rice kanji (porridge)", 60, 1.2, 13, 0.2, 250, "1 bowl"],
+  ["Quinoa upma", 140, 4.5, 22, 4, 200, "1 cup"],
+  ["Bread omelette", 230, 10, 22, 11, 150, "1 plate"],
+  ["Veg sandwich", 190, 5, 28, 6, 150, "1 sandwich"],
+  ["Aloo paratha", 260, 5.5, 36, 10, 120, "1 pc"],
+  ["Phulka (no oil)", 260, 9, 52, 1.5, 30, "1 pc"],
+  ["Corn flakes with milk", 105, 3.8, 18, 2, 200, "1 bowl"],
+  ["Muesli with milk", 120, 4.5, 19, 3, 200, "1 bowl"],
+  ["Sambar vadai", 190, 6, 20, 9, 150, "1 plate"],
+  ["Veg kurma", 120, 2.5, 9, 8, 150, "1 bowl"],
+  ["Coconut milk (thengai paal)", 180, 2, 4, 18, 50, "¼ cup"],
+  ["Samai (little millet) rice", 120, 3, 24, 1, 150, "1 cup"],
+  ["Thinai (foxtail millet) rice", 125, 3.5, 24, 1.2, 150, "1 cup"],
+  ["Red rice / matta (cooked)", 115, 2.6, 24, 0.6, 150, "1 cup"],
+  ["Jeera rice", 165, 3, 28, 4.5, 200, "1 cup"],
+  ["Ragi mudde / kali", 110, 2.5, 24, 0.5, 200, "1 ball"],
+  ["Drumstick sambar", 65, 3, 8.5, 2, 150, "1 bowl"],
+  ["Pepper rasam", 35, 1, 5.5, 1, 150, "1 bowl"],
+  ["Keerai kootu", 85, 4, 9, 3.5, 120, "1 serving"],
+  ["Chow chow kootu", 80, 3, 9, 3.5, 120, "1 serving"],
+  ["Vendakkai (okra) poriyal", 95, 2.2, 9, 6, 100, "1 serving"],
+  ["Kathirikai (brinjal) curry", 100, 2, 9, 6.5, 120, "1 serving"],
+  ["Pavakkai (bitter gourd) fry", 130, 2.5, 10, 9, 80, "1 serving"],
+  ["Beetroot poriyal", 85, 1.8, 11, 4, 100, "1 serving"],
+  ["Carrot poriyal", 90, 1.2, 10, 5, 100, "1 serving"],
+  ["Mushroom masala", 110, 4, 7, 7.5, 150, "1 bowl"],
+  ["Soya chunk curry", 130, 12, 9, 5, 150, "1 bowl"],
+  ["Palak paneer", 150, 7, 6, 11, 150, "1 bowl"],
+  ["Dal tadka", 120, 6, 15, 4, 150, "1 bowl"],
+  ["Moong dal (cooked)", 105, 7, 15, 1.5, 150, "1 bowl"],
+  ["Fish biryani", 180, 9, 23, 6, 300, "1 plate"],
+  ["Prawn biryani", 180, 9, 24, 5.5, 300, "1 plate"],
+  ["Chicken pepper fry", 210, 22, 4, 12, 120, "1 serving"],
+  ["Tandoori chicken", 165, 25, 3, 6, 150, "2 pcs"],
+  ["Chicken kebab", 200, 20, 5, 11, 100, "1 serving"],
+  ["Mutton chukka", 250, 20, 4, 17, 120, "1 serving"],
+  ["Crab curry", 110, 14, 4, 4.5, 150, "1 bowl"],
+  ["Nethili (anchovy) fry", 230, 22, 6, 13, 80, "1 serving"],
+  ["Chicken soup", 45, 5, 3, 1.5, 250, "1 bowl"],
+  ["Mutton / paya soup", 60, 6, 2, 3.5, 250, "1 bowl"],
+  ["Veg soup", 40, 1.5, 6, 1.2, 250, "1 bowl"],
+  ["Egg bhurji", 180, 12, 3, 13, 100, "1 serving"],
+  ["Grilled paneer", 280, 19, 4, 21, 100, "100 g"],
+  ["Green salad", 25, 1.2, 4.5, 0.3, 150, "1 bowl"],
+  ["Raita", 65, 2.8, 5, 3.5, 100, "1 bowl"],
+  ["Appalam / papad (fried)", 450, 18, 45, 22, 10, "1 pc"],
+  ["Pickle", 190, 2, 8, 17, 10, "1 tsp"],
+  ["Curd (plain bowl)", 61, 3.5, 4.7, 3.3, 150, "1 bowl"],
+  ["Chapati with chicken curry", 215, 11, 26, 8, 190, "1 roti + ½ bowl"],
+  ["Half boil egg", 150, 12.5, 1, 10.5, 50, "1 egg"],
+  ["Fried egg (bullseye)", 196, 13.6, 0.8, 15, 50, "1 egg"],
+  ["Masala omelette (2 eggs)", 165, 11, 3, 12, 130, "1 omelette"],
+  ["Egg white omelette (3 whites)", 70, 11, 1.5, 2, 110, "1 omelette"],
+  ["Scrambled eggs (2)", 150, 10, 2, 11, 120, "1 plate"],
+  ["Poached egg", 143, 12.5, 0.7, 9.5, 50, "1 egg"],
+  ["Kalakki", 190, 10, 2, 16, 60, "1 pc"],
+  ["Quail eggs (kaadai muttai)", 158, 13, 0.4, 11, 45, "5 eggs"],
+  ["Sprouted chana (raw)", 160, 9, 26, 2.5, 100, "1 cup"],
+  ["Sprouted horse gram (kollu)", 150, 11, 24, 0.8, 80, "½ cup"],
+  ["Mixed sprouts", 90, 6.5, 15, 0.8, 100, "1 cup"],
+  ["Sprouted moong salad", 60, 4, 10, 0.8, 150, "1 bowl"],
+  ["Kollu sundal", 150, 9, 22, 3, 100, "1 cup"],
+  ["Black chana sundal", 160, 8.5, 24, 3.5, 100, "1 cup"],
+  ["Green peas sundal", 120, 6, 17, 3, 100, "1 cup"],
+  ["Peanut sundal", 300, 13, 15, 21, 80, "½ cup"],
+  ["Rajma sundal", 140, 8, 22, 2.5, 100, "1 cup"],
+  ["Sprouted methi", 50, 4, 7, 0.8, 50, "½ cup"],
+  ["Sprouts chaat", 95, 6, 15, 1.5, 150, "1 bowl"],
+  ["Steamed moong sprouts", 35, 3.5, 6, 0.3, 100, "1 cup"],
+  ["Pistachios", 560, 20, 28, 45, 15, "20 pcs"],
+  ["Raisins", 299, 3, 79, 0.5, 15, "1 tbsp"],
+  ["Black raisins", 300, 3, 79, 0.5, 15, "1 tbsp"],
+  ["Chia seeds", 486, 17, 42, 31, 10, "1 tbsp"],
+  ["Flax seeds", 534, 18, 29, 42, 10, "1 tbsp"],
+  ["Sunflower seeds", 584, 21, 20, 51, 10, "1 tbsp"],
+  ["Watermelon seeds", 557, 28, 15, 47, 10, "1 tbsp"],
+  ["Sabja / basil seeds", 440, 14, 64, 13, 5, "1 tsp"],
+  ["Sesame seeds", 573, 18, 23, 50, 10, "1 tbsp"],
+  ["Hazelnuts", 628, 15, 17, 61, 15, "10 pcs"],
+  ["Brazil nuts", 659, 14, 12, 67, 10, "2 pcs"],
+  ["Pecans", 691, 9, 14, 72, 15, "8 halves"],
+  ["Macadamia", 718, 8, 14, 76, 15, "6 pcs"],
+  ["Pine nuts", 673, 14, 13, 68, 10, "1 tbsp"],
+  ["Mixed nuts", 600, 18, 22, 51, 30, "handful"],
+  ["Dried figs (anjeer)", 249, 3.3, 64, 0.9, 20, "1 pc"],
+  ["Dried apricots", 241, 3.4, 63, 0.5, 20, "3 pcs"],
+  ["Prunes", 240, 2.2, 64, 0.4, 25, "3 pcs"],
+  ["Fresh coconut", 354, 3.3, 15, 33, 30, "2 pieces"],
+  ["Groundnut chikki", 500, 14, 55, 25, 25, "1 pc"],
+  ["Almond butter", 614, 21, 19, 56, 16, "1 tbsp"],
+  ["Trail mix", 460, 13, 45, 29, 30, "handful"],
+  ["Soaked almonds", 579, 21, 22, 50, 15, "10 pcs"],
+  ["Kiwi", 61, 1.1, 15, 0.5, 75, "1 fruit"],
+  ["Pear", 57, 0.4, 15, 0.1, 170, "1 fruit"],
+  ["Strawberries", 32, 0.7, 7.7, 0.3, 150, "1 cup"],
+  ["Jackfruit (pala pazham)", 95, 1.7, 23, 0.6, 100, "5 bulbs"],
+  ["Custard apple (seethapazham)", 94, 2.1, 24, 0.3, 150, "1 fruit"],
+  ["Muskmelon", 34, 0.8, 8, 0.2, 200, "1 bowl"],
+  ["Litchi", 66, 0.8, 17, 0.4, 100, "10 pcs"],
+  ["Plum", 46, 0.7, 11, 0.3, 66, "1 fruit"],
+  ["Peach", 39, 0.9, 10, 0.3, 150, "1 fruit"],
+  ["Cherries", 63, 1.1, 16, 0.2, 100, "15 pcs"],
+  ["Blueberries", 57, 0.7, 14, 0.3, 100, "1 cup"],
+  ["Avocado", 160, 2, 8.5, 15, 70, "½ fruit"],
+  ["Amla (nellikai)", 44, 0.9, 10, 0.6, 30, "1 pc"],
+  ["Jamun (naval pazham)", 60, 0.7, 14, 0.2, 100, "15 pcs"],
+  ["Fresh fig", 74, 0.8, 19, 0.3, 50, "1 fruit"],
+  ["Dragon fruit", 60, 1.2, 13, 0, 150, "½ fruit"],
+  ["Star fruit", 31, 1, 6.7, 0.3, 90, "1 fruit"],
+  ["Wood apple (vilampazham)", 134, 7, 32, 3.7, 100, "½ fruit"],
+  ["Rambutan", 82, 0.7, 21, 0.2, 100, "6 pcs"],
+  ["Mangosteen", 73, 0.4, 18, 0.6, 80, "2 pcs"],
+  ["Kinnow / tangerine", 53, 0.8, 13, 0.3, 130, "1 fruit"],
+  ["Poovan banana (small)", 105, 1.2, 27, 0.3, 60, "1 fruit"],
+  ["Nendran banana", 122, 1.3, 31, 0.4, 150, "1 fruit"],
+  ["Hill banana", 100, 1.2, 26, 0.3, 90, "1 fruit"],
+  ["Green apple", 58, 0.4, 14, 0.2, 180, "1 medium"],
+  ["Tomato (raw)", 18, 0.9, 3.9, 0.2, 100, "1 medium"],
+  ["Sweet lime juice (no sugar)", 43, 0.7, 10, 0.1, 250, "1 glass"],
+  ["Pomegranate juice (no sugar)", 54, 0.2, 13, 0.3, 250, "1 glass"],
+  ["Masala chai (milk & sugar)", 55, 1.6, 8, 1.8, 150, "1 cup"],
+  ["Ginger tea (milk, no sugar)", 30, 1.5, 2.6, 1.5, 150, "1 cup"],
+  ["Green tea", 1, 0, 0.2, 0, 200, "1 cup"],
+  ["Lemon tea (no sugar)", 4, 0.1, 1, 0, 150, "1 cup"],
+  ["Instant coffee (milk & sugar)", 55, 1.6, 8, 1.6, 150, "1 cup"],
+  ["Sukku malli coffee", 40, 0.3, 9, 0.2, 150, "1 cup"],
+  ["Horlicks / Boost with milk", 85, 3.5, 12, 2.5, 200, "1 glass"],
+  ["Badam milk", 110, 3.5, 15, 4, 200, "1 glass"],
+  ["Lime juice (with sugar)", 40, 0.1, 10, 0, 250, "1 glass"],
+  ["Nannari sarbath", 55, 0, 14, 0, 250, "1 glass"],
+  ["Soft drink / cola", 42, 0, 10.6, 0, 300, "1 can"],
+  ["Lemon soda (salt)", 2, 0, 0.5, 0, 300, "1 glass"],
+  ["Onion pakoda", 350, 7, 32, 22, 60, "small plate"],
+  ["Vazhakkai bajji", 290, 4, 32, 16, 40, "1 pc"],
+  ["Kara sev", 530, 12, 50, 32, 30, "small cup"],
+  ["Thattai", 480, 8, 55, 25, 20, "2 pcs"],
+  ["Ribbon pakoda", 520, 10, 52, 30, 30, "small cup"],
+  ["Popcorn (salted)", 420, 10, 65, 13, 25, "1 cup"],
+  ["Rusk", 410, 11, 72, 8, 10, "1 pc"],
+  ["Digestive biscuit", 480, 7, 66, 21, 15, "1 pc"],
+  ["Cream biscuit", 500, 5, 70, 22, 12, "1 pc"],
+  ["Bun / sweet bun", 300, 8, 55, 5, 60, "1 pc"],
+  ["Cake (sponge, slice)", 350, 5, 50, 15, 60, "1 slice"],
+  ["Mysore pak", 560, 5, 50, 38, 30, "1 pc"],
+  ["Laddu (boondi)", 420, 6, 55, 20, 40, "1 pc"],
+  ["Jalebi", 380, 3, 60, 15, 40, "2 pcs"],
+  ["Halwa (wheat / carrot)", 360, 4, 50, 16, 80, "1 cup"],
+  ["Adhirasam", 400, 4, 65, 14, 40, "1 pc"],
+  ["Pani puri", 230, 5, 35, 8, 100, "6 pcs"],
+  ["Bhel puri", 200, 5, 32, 6, 120, "1 plate"],
+  ["Pav bhaji", 190, 4.5, 26, 8, 250, "1 plate"],
+  ["Vada pav", 290, 6, 40, 12, 130, "1 pc"],
+  ["Egg puff", 320, 9, 30, 18, 100, "1 pc"],
+  ["Chicken puff", 320, 10, 30, 18, 100, "1 pc"],
+  ["Veg cutlet", 220, 4, 25, 11, 60, "1 pc"],
+  ["French fries", 312, 3.4, 41, 15, 100, "small"],
+  ["Sweet corn cup (butter)", 120, 3.5, 21, 3.5, 150, "1 cup"],
+  ["Protein bar", 380, 25, 40, 12, 60, "1 bar"],
+  ["Banana milkshake", 95, 3, 15, 2.8, 250, "1 glass"],
+  ["Kollu (horse gram) rasam", 35, 2, 5, 0.8, 150, "1 bowl"],
+  ["Whey isolate (1 scoop)", 375, 85, 5, 1.5, 32, "1 scoop"],
+  ["Whey with milk (1 scoop + 200 ml)", 95, 10, 6, 3.5, 236, "1 shake"],
+  ["Whey + banana smoothie", 100, 9, 14, 1.5, 350, "1 glass"],
+  ["Plant protein (pea)", 380, 75, 8, 6, 33, "1 scoop"],
+  ["Soy protein isolate", 380, 80, 6, 3, 30, "1 scoop"],
+  ["Casein protein", 360, 75, 10, 3, 33, "1 scoop"],
+  ["Mass gainer (1 serving)", 380, 15, 75, 2.5, 100, "1 serving"],
+  ["Ready-to-drink protein shake", 70, 8, 6, 1.5, 250, "1 bottle"],
 ].map(a => ({ n: a[0], k: a[1], p: a[2], c: a[3], f: a[4], s: a[5], sl: a[6] }));
+// which Intake heading(s) each food belongs to: b breakfast, e egg, l lunch, d dinner, p sprouted, n nuts & seeds, f fruits, s tea & snacks, w whey
+const FOOD_HEADS = {"Set dosa": "bd", "Ghee roast dosa": "bd", "Kal dosa": "bd", "Adai": "bd", "Rava idli": "bd", "Mini idli with sambar": "bd", "Kuzhi paniyaram": "bds", "Wheat dosa": "bd", "Semiya upma": "bd", "Idli podi with oil": "bd", "Coconut chutney": "bd", "Tomato chutney": "bd", "Mint / coriander chutney": "bd", "Peanut chutney": "bd", "Idli": "bd", "Plain dosa": "bd", "Masala dosa": "bd", "Rava dosa": "bd", "Onion uttapam": "bd", "Ven pongal": "b", "Rava upma": "bd", "Poori": "bd", "Chapati / roti": "bld", "Parotta": "bd", "Appam": "bd", "Idiyappam": "bd", "Ragi dosa": "bd", "Medu vada": "bs", "Pesarattu": "bd", "Sambar": "bld", "Oats (dry)": "b", "Oats porridge with milk": "bd", "Bread (brown)": "b", "Bread (white)": "b", "Peanut butter": "bn", "Ragi koozh / malt": "bs", "Milk (toned)": "bds", "Milk (full cream)": "bs", "Sakkarai pongal (sweet)": "bs", "Banana": "bf", "Sambar rice (sambar sadam)": "l", "Rasam rice": "l", "Tamarind rice (puliyodarai)": "l", "Tomato rice": "l", "Coconut rice": "l", "Bisi bele bath": "l", "Vegetable pulao": "l", "Ghee rice": "l", "Kara kuzhambu": "l", "Vatha kuzhambu": "l", "Mor kuzhambu": "l", "Keerai poriyal (greens)": "l", "Beans poriyal": "l", "Cabbage poriyal": "l", "Potato fry / roast": "l", "Egg curry": "lde", "Chicken chettinad": "ld", "Mutton biryani": "ld", "Egg biryani": "ld", "Fish (grilled / tawa)": "ld", "Payasam (semiya)": "ls", "White rice (cooked)": "l", "Brown rice (cooked)": "l", "Curd rice": "ld", "Lemon rice": "l", "Rasam": "ld", "Dal / paruppu (cooked)": "ld", "Vegetable poriyal": "l", "Kootu": "ld", "Aviyal": "l", "Chana masala": "ld", "Rajma curry": "ld", "Paneer curry": "ld", "Paneer (raw)": "lw", "Chicken curry": "ld", "Chicken breast (grilled)": "ld", "Chicken 65": "l", "Chicken biryani": "ld", "Veg biryani": "ld", "Mutton curry": "ld", "Fish curry": "ld", "Fish fry": "ld", "Prawn curry": "ld", "Curd / yogurt": "ls", "Buttermilk": "ls", "Cucumber / salad": "ldf", "Carrot": "lf", "Chicken breast (nalla ennai)": "ld", "Ghee": "l", "Cooking oil": "l", "Soya chunks (dry)": "lw", "Kothu parotta": "d", "Fried rice": "d", "Veg noodles": "d", "Pizza": "ds", "Burger": "ds", "Boiled egg": "e", "Egg white (boiled)": "e", "Omelette (1 egg)": "e", "Sundal (chana, tempered)": "ps", "Boiled chickpeas / sundal": "p", "Moong sprouts": "p", "Sweet corn (boiled)": "ps", "Peanuts (roasted)": "ns", "Almonds": "n", "Cashews": "n", "Walnuts": "n", "Pumpkin seeds": "n", "Sesame balls (ellu urundai)": "ns", "Makhana (roasted)": "ns", "Roasted chana": "ns", "Dates": "nf", "Apple": "f", "Orange / mosambi": "f", "Papaya": "f", "Guava": "f", "Watermelon": "f", "Pomegranate": "f", "Grapes": "f", "Pineapple": "f", "Mango": "f", "Sapota / chikoo": "f", "Mixed fruit bowl": "f", "Red banana (sevvazhai)": "f", "Fresh juice (no sugar)": "fs", "Tender coconut water": "fs", "Paruppu vadai (masala vada)": "s", "Banana chips": "s", "Mixture / namkeen": "s", "Tea with milk (no sugar)": "s", "Filter coffee (milk, no sugar)": "s", "Black tea (no sugar)": "s", "Rose milk": "s", "Lassi (sweet)": "s", "Sugar (in tea / coffee)": "s", "Tea with milk & sugar": "s", "Filter coffee (milk & sugar)": "s", "Black coffee / green tea": "s", "Marie biscuit": "s", "Murukku": "s", "Samosa": "s", "Bajji / bonda": "s", "Veg puff": "s", "Gulab jamun": "s", "Kesari": "s", "Rava kesari": "s", "Chocolate": "s", "Ice cream": "s", "Sugar": "s", "Greek yogurt (plain)": "sw", "Whey protein": "w", "Ragi idli": "bd", "Oats idli": "bd", "Millet (kambu) dosa": "bd", "Neer dosa": "bd", "Egg dosa": "bde", "Paper roast dosa": "bd", "Podi dosa": "bd", "Puttu": "bd", "Kozhukattai (steamed)": "bds", "Aval / poha upma": "b", "Idli upma": "b", "Khichdi": "bd", "Rice kanji (porridge)": "bd", "Quinoa upma": "bd", "Bread omelette": "be", "Veg sandwich": "bs", "Aloo paratha": "bd", "Phulka (no oil)": "bld", "Corn flakes with milk": "b", "Muesli with milk": "b", "Sambar vadai": "bs", "Veg kurma": "bld", "Coconut milk (thengai paal)": "bd", "Samai (little millet) rice": "ld", "Thinai (foxtail millet) rice": "ld", "Red rice / matta (cooked)": "l", "Jeera rice": "ld", "Ragi mudde / kali": "ld", "Drumstick sambar": "l", "Pepper rasam": "ld", "Keerai kootu": "l", "Chow chow kootu": "l", "Vendakkai (okra) poriyal": "l", "Kathirikai (brinjal) curry": "l", "Pavakkai (bitter gourd) fry": "l", "Beetroot poriyal": "l", "Carrot poriyal": "l", "Mushroom masala": "ld", "Soya chunk curry": "ld", "Palak paneer": "ld", "Dal tadka": "ld", "Moong dal (cooked)": "ld", "Fish biryani": "ld", "Prawn biryani": "ld", "Chicken pepper fry": "ld", "Tandoori chicken": "ld", "Chicken kebab": "ds", "Mutton chukka": "ld", "Crab curry": "ld", "Nethili (anchovy) fry": "l", "Chicken soup": "ds", "Mutton / paya soup": "ds", "Veg soup": "ds", "Egg bhurji": "bed", "Grilled paneer": "ds", "Green salad": "ld", "Raita": "ld", "Appalam / papad (fried)": "l", "Pickle": "l", "Curd (plain bowl)": "ld", "Chapati with chicken curry": "d", "Half boil egg": "e", "Fried egg (bullseye)": "e", "Masala omelette (2 eggs)": "be", "Egg white omelette (3 whites)": "e", "Scrambled eggs (2)": "be", "Poached egg": "e", "Kalakki": "ed", "Quail eggs (kaadai muttai)": "e", "Sprouted chana (raw)": "p", "Sprouted horse gram (kollu)": "p", "Mixed sprouts": "p", "Sprouted moong salad": "p", "Kollu sundal": "p", "Black chana sundal": "ps", "Green peas sundal": "ps", "Peanut sundal": "ps", "Rajma sundal": "p", "Sprouted methi": "p", "Sprouts chaat": "ps", "Steamed moong sprouts": "p", "Pistachios": "ns", "Raisins": "n", "Black raisins": "n", "Chia seeds": "n", "Flax seeds": "n", "Sunflower seeds": "n", "Watermelon seeds": "n", "Sabja / basil seeds": "n", "Sesame seeds": "n", "Hazelnuts": "n", "Brazil nuts": "n", "Pecans": "n", "Macadamia": "n", "Pine nuts": "n", "Mixed nuts": "ns", "Dried figs (anjeer)": "n", "Dried apricots": "n", "Prunes": "n", "Fresh coconut": "ns", "Groundnut chikki": "ns", "Almond butter": "nb", "Trail mix": "ns", "Soaked almonds": "nb", "Kiwi": "f", "Pear": "f", "Strawberries": "f", "Jackfruit (pala pazham)": "f", "Custard apple (seethapazham)": "f", "Muskmelon": "f", "Litchi": "f", "Plum": "f", "Peach": "f", "Cherries": "f", "Blueberries": "f", "Avocado": "f", "Amla (nellikai)": "f", "Jamun (naval pazham)": "f", "Fresh fig": "f", "Dragon fruit": "f", "Star fruit": "f", "Wood apple (vilampazham)": "f", "Rambutan": "f", "Mangosteen": "f", "Kinnow / tangerine": "f", "Poovan banana (small)": "f", "Nendran banana": "f", "Hill banana": "f", "Green apple": "f", "Tomato (raw)": "fl", "Sweet lime juice (no sugar)": "fs", "Pomegranate juice (no sugar)": "fs", "Masala chai (milk & sugar)": "s", "Ginger tea (milk, no sugar)": "s", "Green tea": "s", "Lemon tea (no sugar)": "s", "Instant coffee (milk & sugar)": "s", "Sukku malli coffee": "s", "Horlicks / Boost with milk": "s", "Badam milk": "s", "Lime juice (with sugar)": "s", "Nannari sarbath": "s", "Soft drink / cola": "s", "Lemon soda (salt)": "s", "Onion pakoda": "s", "Vazhakkai bajji": "s", "Kara sev": "s", "Thattai": "s", "Ribbon pakoda": "s", "Popcorn (salted)": "s", "Rusk": "s", "Digestive biscuit": "s", "Cream biscuit": "s", "Bun / sweet bun": "s", "Cake (sponge, slice)": "s", "Mysore pak": "s", "Laddu (boondi)": "s", "Jalebi": "s", "Halwa (wheat / carrot)": "s", "Adhirasam": "s", "Pani puri": "s", "Bhel puri": "s", "Pav bhaji": "sd", "Vada pav": "s", "Egg puff": "s", "Chicken puff": "s", "Veg cutlet": "s", "French fries": "s", "Sweet corn cup (butter)": "s", "Protein bar": "sw", "Banana milkshake": "s", "Kollu (horse gram) rasam": "l", "Whey isolate (1 scoop)": "w", "Whey with milk (1 scoop + 200 ml)": "w", "Whey + banana smoothie": "w", "Plant protein (pea)": "w", "Soy protein isolate": "w", "Casein protein": "w", "Mass gainer (1 serving)": "w", "Ready-to-drink protein shake": "w"};
+const HEAD_OF = { b: 'breakfast', e: 'egg', l: 'lunch', d: 'dinner', p: 'sprouts', n: 'seeds', f: 'fruits', s: 'snacks', w: 'whey' };
+FOOD.forEach(f => { f.h = (FOOD_HEADS[f.n] || 'l').split('').map(c => HEAD_OF[c]).filter(Boolean); });
 
 const MICRO_KEYS = ['fiber', 'sugar', 'calcium', 'iron', 'magnesium', 'potassium', 'sodium', 'zinc', 'vitA', 'vitC', 'vitB12', 'folate', 'chol', 'satfat', 'transfat'];
 // per 100 g (approximate, IFCT/USDA-style values)
@@ -1047,7 +1232,7 @@ function viewAuth() {
   return `<div class="auth">
     <img class="logo" src="icons/logo.png" alt="">
     <h1>Minimal Health Tracker</h1>
-    <p class="sub">Your weight-loss tracker · v130</p>
+    <p class="sub">Your weight-loss tracker · v131</p>
     ${m !== 'forgot' ? `<div class="seg">
       <button data-act="authMode" data-v="login" class="${m === 'login' ? 'on' : ''}">Log in</button>
       <button data-act="authMode" data-v="create" class="${m === 'create' ? 'on' : ''}">Create account</button>
@@ -2020,6 +2205,7 @@ function quickCard(t) {
         <div class="photo-btns">
           <label class="btn primary">📸 Photo<input type="file" accept="image/*" capture="environment" class="food-check-input" aria-label="Take photo to check food"></label>
           <label class="btn">🖼️ Gallery<input type="file" accept="image/*" multiple class="food-check-input" aria-label="Choose 1 or 2 photos to check food"></label>
+          <button class="btn" data-act="openFoodList">📋 Food list</button>
           <button class="btn" data-act="openWheyQ">💪 Whey</button>
           <button class="btn" data-act="openEggQ">🥚 Egg</button>
           <button class="btn" data-act="openSproutQ">🌱 Sprouts</button>
@@ -2571,7 +2757,7 @@ function viewProfile() {
       <button class="btn blue block" data-act="exportXlsx">⬇️ Export to Excel</button>
     </div>
     <button class="btn danger block" data-act="logout" style="margin-top:6px">Log out</button>
-    <p class="explain" style="text-align:center;margin-top:14px">Minimal Health Tracker v130 · estimates only, not medical advice</p>
+    <p class="explain" style="text-align:center;margin-top:14px">Minimal Health Tracker v131 · estimates only, not medical advice</p>
   </main>`;
 }
 
@@ -2683,8 +2869,8 @@ function sheetFood() {
         ${sh.error ? `<div class="note bad">${esc(sh.error)}</div>${(sh.photos || []).length ? '<button class="btn block" style="margin-top:8px" data-act="retryPhoto">Try again</button>' : ''}` : ''}` : ''}
       ${sh.note && sh.items.length ? `<div class="note info" style="margin-bottom:10px">${esc(sh.note)}</div>` : ''}`;
   } else if (sh.mode === 'search') {
-    body = `<div class="field"><input id="foodQuery" placeholder="Search: idli, chicken, banana…" value="${esc(sh.query || '')}" autocomplete="off"></div>
-      <div id="searchResults" style="max-height:34vh;overflow:auto;margin-bottom:12px">${searchResults(sh.query || '')}</div>`;
+    body = `${foodCatChips(sh)}<div class="field"><input id="foodQuery" placeholder="Search ${sh.cat && sh.cat !== 'all' ? slotLabel(sh.cat).toLowerCase() + ' foods' : 'all foods'}…" value="${esc(sh.query || '')}" autocomplete="off"></div>
+      <div id="searchResults" style="max-height:${sh.check ? '46vh' : '38vh'};overflow:auto;margin-bottom:12px">${searchResults(sh.query || '')}</div>`;
   } else if (sh.mode === 'manual') {
     body = !sh.items.length ? '' : '';
   }
@@ -2742,11 +2928,23 @@ function checkTotals(items) {
     ${cholKnown && t.chol > 0 ? `<p class="explain" style="margin:8px 0 0">That is ${r0(t.chol / lim * 100)}% of your ${lim} mg cholesterol for the day.</p>` : ''}</div>`;
 }
 function refreshItems() { const w = $('#itemsWrap'); if (w) w.innerHTML = itemsBlock(); }
+function foodCatChips(sh) {
+  const cat = sh.cat || 'all', cnt = id => FOOD.filter(f => f.h.includes(id)).length;
+  return `<div class="chips" style="gap:6px;margin-bottom:10px">
+    <button class="chip${cat === 'all' ? ' on' : ''}" style="padding:6px 10px;font-size:13px" data-act="foodCat" data-v="all">All ${FOOD.length}</button>
+    ${SLOTS.map(s => `<button class="chip${cat === s.id ? ' on' : ''}" style="padding:6px 10px;font-size:13px" data-act="foodCat" data-v="${s.id}">${s.icon} ${s.label} ${cnt(s.id)}</button>`).join('')}</div>`;
+}
 function searchResults(q) {
-  q = q.trim().toLowerCase();
-  const list = q ? FOOD.filter(f => f.n.toLowerCase().includes(q)) : FOOD.slice(0, 15);
-  return list.slice(0, 40).map(f => `<button class="li" data-act="pickFood" data-n="${esc(f.n)}"><span>${esc(f.n)} <small>${f.sl} · ${f.s} g</small></span><span class="r">${r0(f.k * f.s / 100)} kcal</span></button>`).join('')
-    || `<p class="muted" style="font-size:14px">Not in the list — use ✏️ Manual.</p>`;
+  const sh = S.sheet || {}, cat = sh.cat || 'all';
+  q = (q || '').trim().toLowerCase();
+  const hit = f => !q || f.n.toLowerCase().includes(q);
+  const pool = cat === 'all' ? FOOD : FOOD.filter(f => f.h.includes(cat));
+  let list = pool.filter(hit), note = '';
+  if (q && !list.length && cat !== 'all') { list = FOOD.filter(hit); if (list.length) note = `Not under ${slotLabel(cat)} — showing from all foods:`; }
+  list = list.slice().sort((a, b) => a.n.localeCompare(b.n));
+  const row = f => `<button class="li" data-act="pickFood" data-n="${esc(f.n)}"><span>${esc(f.n)} <small>${f.sl} · ${f.s} g</small></span><span class="r">${r0(f.k * f.s / 100)} kcal</span></button>`;
+  return (note ? `<p class="explain" style="margin:0 0 6px">${note}</p>` : '') + (list.slice(0, 250).map(row).join('')
+    || `<p class="muted" style="font-size:14px">Not in the list — use ✏️ Manual.</p>`);
 }
 function onItemInput(t) {
   const i = +t.dataset.it, k = t.dataset.k, it = S.sheet.items[i]; if (!it) return;
@@ -3147,7 +3345,8 @@ const ACT = {
   },
 
   addFood(el) {
-    S.sheet = { kind: 'food', slot: el.dataset.slot, mode: (S.session.geminiKey || S.session.apiKey) ? 'photo' : 'search', items: [], photos: [], busy: false, query: '', note: '', error: '', cook: 'home' };
+    const slot = el.dataset.slot;
+    S.sheet = { kind: 'food', slot, cat: FOOD.some(f => f.h.includes(slot)) ? slot : 'all', mode: (S.session.geminiKey || S.session.apiKey) ? 'photo' : 'search', items: [], photos: [], busy: false, query: '', note: '', error: '', cook: 'home' };
     renderSheet();
   },
   foodMode(el) {
@@ -3157,8 +3356,14 @@ const ACT = {
     renderSheet();
     if (sh.mode === 'search') setTimeout(() => { const q = $('#foodQuery'); if (q) q.focus(); }, 50);
   },
+  foodCat(el) { const sh = S.sheet; sh.cat = el.dataset.v; sh.query = ''; renderSheet(); },
+  openFoodList() {
+    S.sheet = { kind: 'food', check: true, slot: slotByTime(), cat: 'all', mode: 'search', items: [], photos: [], busy: false, query: '', note: '', error: '', cook: 'home' };
+    renderSheet();
+  },
   pickFood(el) {
     const f = FOOD.find(x => x.n === el.dataset.n); if (!f) return;
+    if (S.sheet.check) { const sh = S.sheet, t = slotByTime(); sh.slot = f.h.includes(sh.cat) ? sh.cat : f.h.includes(t) ? t : f.h[0] || t; sh.slotWhy = true; }
     const g = f.s / 100;
     S.sheet.items.push(mkItem({ name: f.n, grams: f.s, kcal: f.k * g, protein: f.p * g, carbs: f.c * g, fat: f.f * g, source: 'list' }));
     applyCook(S.sheet);
@@ -3759,7 +3964,7 @@ async function boot() {
 boot();
 
 // expose for testing
-window.__fittrack = { sheetMedPick, viewAuth, viewVerify, viewAdmin, sheetCal, dateBar, sheetReading, healthCard, suggestSlot, sheetWheyQ, sheetSnackQ, snackTotals, migrateWheyMeals, wheyDefaults, sheetSprouts, sproutDefaults, sproutTotals, sheetSteps, quickCard, sheetAddWeight, calcCard, openScaleSheet, analyseScaleRun, sheetScale, maybeHashWeight, sheetConfirm, viewBurn, addPhotosToSheet, openWorkoutSheet, sheetWorkout, runAnalysis, sheetFood, viewHome, viewFood, viewToday, viewMeds, wheyCard, ACT, profileForm, startWorkoutPhoto, sheetWorkout, FOOD, nutritionCard, needsCard, todayTable, viewSuggest, viewHome, viewFood, viewBurn, sheetWorkout, bmiOf, bmiCat, fatPct, bmr, treadKcal, bikeKcal, wkSuggest, S, plan, dayStats };
+window.__fittrack = { searchResults, sheetFood, FOOD, sheetMedPick, viewAuth, viewVerify, viewAdmin, sheetCal, dateBar, sheetReading, healthCard, suggestSlot, sheetWheyQ, sheetSnackQ, snackTotals, migrateWheyMeals, wheyDefaults, sheetSprouts, sproutDefaults, sproutTotals, sheetSteps, quickCard, sheetAddWeight, calcCard, openScaleSheet, analyseScaleRun, sheetScale, maybeHashWeight, sheetConfirm, viewBurn, addPhotosToSheet, openWorkoutSheet, sheetWorkout, runAnalysis, sheetFood, viewHome, viewFood, viewToday, viewMeds, wheyCard, ACT, profileForm, startWorkoutPhoto, sheetWorkout, FOOD, nutritionCard, needsCard, todayTable, viewSuggest, viewHome, viewFood, viewBurn, sheetWorkout, bmiOf, bmiCat, fatPct, bmr, treadKcal, bikeKcal, wkSuggest, S, plan, dayStats };
 })();
 </script>
 </body>
