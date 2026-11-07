@@ -1019,7 +1019,7 @@ async function fbLoadUser(uid) {
   const ref = userRef(uid);
   const [doc, days] = await Promise.all([ref.get(), ref.collection('days').get()]);
   const data = { version: 2, profile: null, days: {}, meta: {} };
-  if (doc.exists) { const x = doc.data(); data.profile = x.profile || null; data.meta = { legacy: x.legacy || null, email: x.email || '', updated: x.updated || '', created: x.created || '', lastActive: x.lastActive || '' }; }
+  if (doc.exists) { const x = doc.data(); data.profile = x.profile || null; data.meta = { remind: x.remind || null, legacy: x.legacy || null, email: x.email || '', updated: x.updated || '', created: x.created || '', lastActive: x.lastActive || '' }; }
   days.forEach(d => { data.days[d.id] = d.data(); });
   return { data, exists: doc.exists };
 }
@@ -1206,7 +1206,7 @@ async function loadData() {
     S.tab = 'home'; S.date = todayStr();
     S.screen = S.data.profile ? 'main' : 'onboard';
     render();
-    if (S.data.profile) { maybeHashWeight(); try { migrateWheyMeals(); } catch (e) { console.error(e); } }
+    if (S.data.profile) { maybeHashWeight(); try { migrateWheyMeals(); } catch (e) { console.error(e); } setTimeout(checkTalkLink, 300); }
     if (hadOutbox) syncNow(); else setSync('ok');
   } catch (e) {
     console.error(e);
@@ -1232,7 +1232,7 @@ function viewAuth() {
   return `<div class="auth">
     <img class="logo" src="icons/logo.png" alt="">
     <h1>Minimal Health Tracker</h1>
-    <p class="sub">Your weight-loss tracker · v131</p>
+    <p class="sub">Your weight-loss tracker · v132</p>
     ${m !== 'forgot' ? `<div class="seg">
       <button data-act="authMode" data-v="login" class="${m === 'login' ? 'on' : ''}">Log in</button>
       <button data-act="authMode" data-v="create" class="${m === 'create' ? 'on' : ''}">Create account</button>
@@ -1664,6 +1664,7 @@ function viewHome() {
     </div>
 
     ${quickCard(t)}
+    ${reminderCard()}
 
     <div class="section-label">Your body · now vs goal</div>
     <div class="card" style="padding:12px">
@@ -2194,6 +2195,136 @@ function maybeHashWeight() {
   const body = {}; BODY_KEYS.forEach(([k]) => { const v = num(q.get(k)); if (v != null) body[k] = r1(v); });
   S.sheet = { kind: 'confirm', date, weight: r1(w), body };
   renderSheet();
+}
+// ---------- meal reminders (free web push from a GitHub schedule) + voice logging
+const REMIND_TIMES = { breakfast: '9:00 AM', lunch: '1:00 PM', dinner: '8:30 PM' };
+function isIOSDev() { return /iphone|ipad|ipod/i.test(navigator.userAgent || '') || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1); }
+function isStandaloneApp() { return (window.matchMedia && matchMedia('(display-mode: standalone)').matches) || navigator.standalone === true; }
+function pushSupported() { return 'serviceWorker' in navigator && 'PushManager' in window && typeof Notification !== 'undefined'; }
+function remindIsOn() { return !!(S.data && S.data.meta && S.data.meta.remind && S.data.meta.remind.on) && pushSupported() && Notification.permission === 'granted'; }
+function mainSlotNow() { const h = new Date().getHours(); return h < 11 ? 'breakfast' : h < 17 ? 'lunch' : 'dinner'; }
+function reminderCard() {
+  if (S.viewing) return '';
+  const on = remindIsOn(), talkBtn = `<button class="btn" data-act="talkOpen" data-slot="${mainSlotNow()}">🎤 Tell by voice</button>`;
+  let body;
+  if (on) body = `<p class="explain" style="margin:0 0 10px"><b class="good">On ✓</b> — at 9:00 AM, 1:00 PM and 8:30 PM you get a reminder, only if that meal is not added yet. Tap it and just say what you ate.</p>
+      <div class="photo-btns">${talkBtn}<button class="btn" data-act="remindOff">🔕 Turn off</button></div>
+      ${S.session.email === ADMIN_EMAIL ? '<button class="muted" style="font-size:13px;text-decoration:underline;margin-top:8px" data-act="remindTest">Send me a test reminder now</button>' : ''}`;
+  else if (isIOSDev() && !isStandaloneApp()) body = `<p class="explain" style="margin:0 0 10px">To get reminders on iPhone, open this app from its <b>Home Screen icon</b> (Safari → Share → Add to Home Screen), then turn them on here.</p><div class="photo-btns">${talkBtn}</div>`;
+  else if (!pushSupported()) body = `<p class="explain" style="margin:0 0 10px">This browser can't show reminders. You can still tell your meals by voice.</p><div class="photo-btns">${talkBtn}</div>`;
+  else body = `<p class="explain" style="margin:0 0 10px">At 9:00 AM, 1:00 PM and 8:30 PM — if you haven't added that meal — your phone reminds you. Tap it, and just say what you ate and how many grams. I add it for you.</p>
+      <div class="photo-btns"><button class="btn primary" data-act="remindOn">🔔 Turn on reminders</button>${talkBtn}</div>`;
+  return `<div class="card"><h3>🔔 Meal reminders &amp; voice</h3>${body}</div>`;
+}
+function b64uToBytes(s) { const p = '='.repeat((4 - s.length % 4) % 4), b = atob((s + p).replace(/-/g, '+').replace(/_/g, '/')); return Uint8Array.from(b, c => c.charCodeAt(0)); }
+async function turnOnReminders() {
+  if (!pushSupported()) throw fail('This browser cannot show reminders.');
+  if (Notification.permission === 'denied') throw fail('Notifications are blocked — turn them on in iPhone Settings → Notifications → this app.');
+  const perm = Notification.permission === 'granted' ? 'granted' : await Notification.requestPermission();
+  if (perm !== 'granted') throw fail('Please tap Allow so the reminders can come.');
+  let key = '';
+  try { key = ((await (await fetch('push-key.json?x=' + Date.now(), { cache: 'no-store' })).json()) || {}).publicKey || ''; } catch (e) {}
+  if (!key) throw fail('Reminders are still being set up — please try again a little later.');
+  const reg = await navigator.serviceWorker.ready;
+  const old = await reg.pushManager.getSubscription(); if (old) { try { await old.unsubscribe(); } catch (e) {} }
+  const sub = await reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: b64uToBytes(key) });
+  const j = sub.toJSON(), at = new Date().toISOString();
+  await userRef(S.session.uid).set({ remind: { on: true, tz: 'Asia/Kolkata', at }, push: firebase.firestore.FieldValue.arrayUnion({ endpoint: j.endpoint, keys: j.keys, dev: isIOSDev() ? 'iphone' : 'other', at }) }, { merge: true });
+  S.data.meta = Object.assign(S.data.meta || {}, { remind: { on: true } });
+  toast('Reminders on ✓', 'good'); render();
+}
+async function testReminder() {
+  const reg = await navigator.serviceWorker.ready;
+  await reg.showNotification('🍛 Lunch time (test)', { body: 'Please take your lunch. Already eaten? Tap and tell me what you ate.', icon: 'icons/icon-192.png', tag: 'meal-test', data: { url: './?talk=lunch' } });
+  toast('Test reminder shown — tap it');
+}
+function talkMsg(slot) { const m = (slotLabel(slot) || 'meal').toLowerCase(); return `It is ${m} time. Please take your ${m}. If you have already eaten, tell me the food name and the weight in grams.`; }
+function sayIt(text) { try { if (!window.speechSynthesis) return; speechSynthesis.cancel(); const u = new SpeechSynthesisUtterance(text); u.lang = 'en-IN'; u.rate = 0.95; speechSynthesis.speak(u); } catch (e) {} }
+function openTalk(slot) {
+  if (!S.session || !S.data || !S.data.profile || S.screen !== 'main' || S.viewing) { S.pendingTalk = slot; return; }
+  S.pendingTalk = null;
+  if (!SLOTS.some(s => s.id === slot)) slot = mainSlotNow();
+  S.date = todayStr(); S.tab = 'home'; render();
+  S.sheet = { kind: 'talk', slot, busy: false, rec: null, error: '' }; renderSheet();
+  sayIt(talkMsg(slot));
+}
+function checkTalkLink() {
+  const q = new URLSearchParams(location.search), t = q.get('talk');
+  if (t) { try { history.replaceState(null, '', location.pathname); } catch (e) {} openTalk(t); }
+  else if (S.pendingTalk) openTalk(S.pendingTalk);
+}
+if ('serviceWorker' in navigator) navigator.serviceWorker.addEventListener('message', e => { if (e.data && e.data.talk) openTalk(e.data.talk); });
+function sheetTalk() {
+  const sh = S.sheet;
+  const btn = sh.busy ? `<div class="center" style="min-height:90px"><div class="spinner"></div><p class="muted">Understanding what you ate…</p></div>`
+    : sh.rec ? `<button class="btn danger block" style="min-height:72px;font-size:19px" data-act="talkStop">⏹ Done — I finished speaking</button><p class="muted" style="text-align:center;margin:8px 0 0">🔴 Listening… e.g. “3 idli 120 gram, sambar 150 gram”</p>`
+    : `<button class="btn primary block" style="min-height:72px;font-size:19px" data-act="talkRec">🎤 Tap and speak</button>`;
+  return `<div class="sheet-h"><h2>🎤 ${esc(slotLabel(sh.slot))} time</h2><button class="x" data-act="closeSheet">✕</button></div>
+    <div class="card" style="text-align:center"><p style="font-size:17px;line-height:1.45;margin:0">${esc(talkMsg(sh.slot))}</p>
+      <button class="btn small" style="margin-top:10px" data-act="talkSay">🔊 Hear again</button></div>
+    <div class="field"><label>Meal<select id="talkSlot">${SLOTS.map(s => `<option value="${s.id}" ${s.id === sh.slot ? 'selected' : ''}>${s.icon} ${s.label}</option>`).join('')}</select></label></div>
+    ${btn}
+    ${sh.error ? `<div class="note bad" style="margin-top:10px">${esc(sh.error)}</div>` : ''}
+    ${sh.rec || sh.busy ? '' : `<div class="field" style="margin-top:16px"><label>Or type it<input id="talkText" placeholder="2 chapati 80 g, chicken curry 150 g" value="${esc(sh.typed || '')}" autocomplete="off"></label></div>
+    <button class="btn block" data-act="talkSend">Send</button>
+    <button class="btn block" style="margin-top:8px" data-act="closeSheet">I haven't eaten yet</button>`}`;
+}
+function bufToB64(buf) { const b = new Uint8Array(buf); let s = ''; for (let i = 0; i < b.length; i += 0x8000) s += String.fromCharCode.apply(null, b.subarray(i, i + 0x8000)); return btoa(s); }
+async function audioForGemini(blob) {
+  try {                                   // decode whatever the phone recorded and send a small 16 kHz WAV (Gemini reads WAV everywhere)
+    const AC = window.AudioContext || window.webkitAudioContext, ac = new AC(), raw = await blob.arrayBuffer();
+    const ab = await new Promise((res, rej) => { const p = ac.decodeAudioData(raw, res, rej); if (p && p.then) p.then(res, rej); });
+    try { ac.close(); } catch (e) {}
+    const rate = 16000, src = ab.getChannelData(0), ratio = ab.sampleRate / rate, n = Math.max(1, Math.floor(src.length / ratio));
+    const dv = new DataView(new ArrayBuffer(44 + n * 2)), w = (o, s) => { for (let i = 0; i < s.length; i++) dv.setUint8(o + i, s.charCodeAt(i)); };
+    w(0, 'RIFF'); dv.setUint32(4, 36 + n * 2, true); w(8, 'WAVE'); w(12, 'fmt '); dv.setUint32(16, 16, true); dv.setUint16(20, 1, true); dv.setUint16(22, 1, true);
+    dv.setUint32(24, rate, true); dv.setUint32(28, rate * 2, true); dv.setUint16(32, 2, true); dv.setUint16(34, 16, true); w(36, 'data'); dv.setUint32(40, n * 2, true);
+    for (let i = 0; i < n; i++) { const v = Math.max(-1, Math.min(1, src[Math.floor(i * ratio)] || 0)); dv.setInt16(44 + i * 2, v < 0 ? v * 0x8000 : v * 0x7fff, true); }
+    return { mime: 'audio/wav', data: bufToB64(dv.buffer) };
+  } catch (e) { return { mime: (blob.type || 'audio/mp4').split(';')[0], data: bufToB64(await blob.arrayBuffer()) }; }
+}
+async function talkRecord() {
+  const sh = S.sheet;
+  if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia || !window.MediaRecorder) throw fail('Voice is not supported here — please type it below.');
+  if (!S.session.geminiKey) throw fail('Voice needs your free Gemini key (add it on the 📷 Photo screen) — or type it below.');
+  try { speechSynthesis.cancel(); } catch (e) {}
+  let stream;
+  try { stream = await navigator.mediaDevices.getUserMedia({ audio: true }); } catch (e) { throw fail('Please allow the microphone so I can hear you — or type it below.'); }
+  const mime = ['audio/mp4', 'audio/webm;codecs=opus', 'audio/webm'].find(m => MediaRecorder.isTypeSupported && MediaRecorder.isTypeSupported(m)) || '';
+  const rec = new MediaRecorder(stream, mime ? { mimeType: mime } : undefined), chunks = [];
+  rec.ondataavailable = e => { if (e.data && e.data.size) chunks.push(e.data); };
+  rec.onstop = async () => {
+    stream.getTracks().forEach(t => t.stop()); clearTimeout(sh.recTimer);
+    sh.rec = null; if (sh.cancel || S.sheet !== sh) return;
+    if (!chunks.length) { sh.error = 'I did not hear anything — try again.'; return renderSheet(); }
+    sh.busy = true; sh.error = ''; renderSheet();
+    try { await talkProcess(sh, { audio: await audioForGemini(new Blob(chunks, { type: rec.mimeType || mime || 'audio/mp4' })) }); }
+    catch (e) { if (S.sheet === sh) { sh.busy = false; sh.error = e.message; renderSheet(); } }
+  };
+  rec.start(); sh.rec = rec; sh.error = ''; renderSheet();
+  sh.recTimer = setTimeout(() => { if (sh.rec === rec) rec.stop(); }, 45000);
+}
+async function talkProcess(sh, inp) {
+  const slot = (($('#talkSlot') || {}).value) || sh.slot; sh.slot = slot;
+  const prompt = `The person was asked what they ate for ${slotLabel(slot)}. They live in Chennai, India and may speak English, Tamil or Tanglish.
+${inp.audio ? 'Listen to the audio.' : `Their answer: "${inp.text}"`}
+List every food they ate with its weight in grams as they said it. If they gave a count but no grams, use a typical weight (idli 40 g each, dosa 80 g, chapati 40 g, egg 50 g, poori 30 g, 1 cup rice 150 g, 1 bowl sambar/curry 150 g, 1 glass 200 ml). Give nutrition for that weight.
+For tea or coffee give the drink without sugar, and a separate item "Sugar (in tea / coffee)" if they took sugar.
+If they say they have not eaten yet, set "notEaten": true and give no items.
+Reply with ONLY JSON: {"heard":"what they said, in simple English","notEaten":false,"items":[{"name":"Idli","type":"meal","grams":120,"kcal":175,"protein":5.4,"carbs":36,"fat":0.5,"fiber":1.8,"sugar":0.6}]}`;
+  const text = inp.audio ? await askGemini(S.session.geminiKey, [inp.audio], prompt) : await askVision([], prompt);
+  if (S.sheet !== sh) return;
+  const m = text.match(/\{[\s\S]*\}/); if (!m) throw fail('Could not understand that — please try again or type it.');
+  const out = JSON.parse(m[0]), heard = String(out.heard || '').trim();
+  const items = (out.items || []).filter(x => x && x.name && Number(x.grams) > 0).map(x => Object.assign(mkItem({ ...x, source: 'voice' }), { type: x.type || '' }));
+  if (!items.length) {
+    sh.busy = false;
+    sh.error = out.notEaten ? `Okay. Please take your ${slotLabel(slot).toLowerCase()} on time, and tell me after you eat.` : `I couldn't catch any food${heard ? ` (I heard: “${heard}”)` : ''}. Please try again or type it.`;
+    renderSheet(); sayIt(sh.error); return;
+  }
+  S.sheet = { kind: 'food', slot, mode: 'voice', items, photos: [], busy: false, query: '', note: heard ? 'I heard: “' + heard + '”. Check the grams and tap save.' : 'Check the grams and tap save.', error: '', cook: 'home' };
+  applyCook(S.sheet); renderSheet();
+  sayIt(`Got it. ${items.map(i => i.name).join(', ')}. Please check and tap save.`);
 }
 function quickCard(t) {
   const d = S.data.days[t] || {}, st = dayStats(t), ws = d.workouts || [];
@@ -2757,7 +2888,7 @@ function viewProfile() {
       <button class="btn blue block" data-act="exportXlsx">⬇️ Export to Excel</button>
     </div>
     <button class="btn danger block" data-act="logout" style="margin-top:6px">Log out</button>
-    <p class="explain" style="text-align:center;margin-top:14px">Minimal Health Tracker v131 · estimates only, not medical advice</p>
+    <p class="explain" style="text-align:center;margin-top:14px">Minimal Health Tracker v132 · estimates only, not medical advice</p>
   </main>`;
 }
 
@@ -2871,6 +3002,8 @@ function sheetFood() {
   } else if (sh.mode === 'search') {
     body = `${foodCatChips(sh)}<div class="field"><input id="foodQuery" placeholder="Search ${sh.cat && sh.cat !== 'all' ? slotLabel(sh.cat).toLowerCase() + ' foods' : 'all foods'}…" value="${esc(sh.query || '')}" autocomplete="off"></div>
       <div id="searchResults" style="max-height:${sh.check ? '46vh' : '38vh'};overflow:auto;margin-bottom:12px">${searchResults(sh.query || '')}</div>`;
+  } else if (sh.mode === 'voice') {
+    body = sh.note ? `<div class="note info" style="margin-bottom:10px">🎤 ${esc(sh.note)}</div>` : '';
   } else if (sh.mode === 'manual') {
     body = !sh.items.length ? '' : '';
   }
@@ -3032,7 +3165,7 @@ If no food is visible, return {"items":[],"note":"No food found"}.`;
 }
 const GEMINI_MODELS = ['gemini-3.8-flash', 'gemini-3.6-flash', 'gemini-3.5-flash-lite', 'gemini-3-flash-preview'];
 async function askGemini(key, b64, prompt) {
-  const imgs = (Array.isArray(b64) ? b64 : [b64]).map(d => ({ inline_data: { mime_type: 'image/jpeg', data: d } }));
+  const imgs = (Array.isArray(b64) ? b64 : [b64]).map(d => ({ inline_data: typeof d === 'string' ? { mime_type: 'image/jpeg', data: d } : { mime_type: d.mime, data: d.data } }));
   const body = JSON.stringify({ contents: [{ parts: [...imgs, { text: prompt }] }],
     generationConfig: { responseMimeType: 'application/json', temperature: 0.2 } });
   const authWays = [
@@ -3240,7 +3373,7 @@ function onWorkoutInput(t) {
 function renderSheet() {
   const root = $('#sheet-root');
   if (!S.sheet) { root.innerHTML = ''; document.body.classList.remove('lock'); return; }
-  const inner = S.sheet.kind === 'food' ? sheetFood() : S.sheet.kind === 'confirm' ? sheetConfirm() : S.sheet.kind === 'scale' ? sheetScale() : S.sheet.kind === 'weight' ? sheetAddWeight() : S.sheet.kind === 'steps' ? sheetSteps() : S.sheet.kind === 'wheyq' ? sheetWheyQ() : S.sheet.kind === 'sprouts' ? sheetSprouts() : S.sheet.kind === 'snackq' ? sheetSnackQ() : S.sheet.kind === 'medPick' ? sheetMedPick() : S.sheet.kind === 'cal' ? sheetCal() : S.sheet.kind === 'reading' ? sheetReading() : sheetWorkout();
+  const inner = S.sheet.kind === 'food' ? sheetFood() : S.sheet.kind === 'confirm' ? sheetConfirm() : S.sheet.kind === 'scale' ? sheetScale() : S.sheet.kind === 'weight' ? sheetAddWeight() : S.sheet.kind === 'steps' ? sheetSteps() : S.sheet.kind === 'wheyq' ? sheetWheyQ() : S.sheet.kind === 'sprouts' ? sheetSprouts() : S.sheet.kind === 'snackq' ? sheetSnackQ() : S.sheet.kind === 'medPick' ? sheetMedPick() : S.sheet.kind === 'cal' ? sheetCal() : S.sheet.kind === 'reading' ? sheetReading() : S.sheet.kind === 'talk' ? sheetTalk() : sheetWorkout();
   const existing = $('.sheet', root);
   if (existing) { const st = existing.scrollTop; existing.innerHTML = '<div class="grab"></div>' + inner; existing.scrollTop = st; }
   else root.innerHTML = `<div class="sheet-backdrop" data-act="closeSheet" data-backdrop="1"><div class="sheet"><div class="grab"></div>${inner}</div></div>`;
@@ -3698,7 +3831,22 @@ const ACT = {
     const id = S.sheet.editId; mutateDay(S.date, d => { d.workouts = d.workouts.filter(q => q.id !== id); });
     S.sheet = null; render(); toast('Deleted');
   },
-  closeSheet() { S.sheet = null; renderSheet(); },
+  closeSheet() { const sh = S.sheet; if (sh && sh.rec) { sh.cancel = true; try { sh.rec.stop(); } catch (e) {} } try { speechSynthesis.cancel(); } catch (e) {} S.sheet = null; renderSheet(); },
+  remindOn() { return turnOnReminders(); },
+  async remindOff() { await userRef(S.session.uid).set({ remind: { on: false, at: new Date().toISOString() } }, { merge: true }); S.data.meta.remind = { on: false }; toast('Reminders off'); render(); },
+  remindTest() { return testReminder(); },
+  talkOpen(el) { openTalk(el.dataset.slot || mainSlotNow()); },
+  talkSay() { sayIt(talkMsg(S.sheet.slot)); },
+  talkSlot(el) { S.sheet.slot = el.value || el.dataset.v; },
+  talkRec() { return talkRecord(); },
+  talkStop() { const sh = S.sheet; if (sh && sh.rec) sh.rec.stop(); },
+  async talkSend() {
+    const sh = S.sheet, t = (($('#talkText') || {}).value || '').trim();
+    if (!t) throw fail('Type what you ate, e.g. 2 chapati 80 g, chicken curry 150 g.');
+    if (!S.session.geminiKey && !S.session.apiKey) throw fail('Add your free Gemini key on the Photo screen first.');
+    sh.busy = true; sh.error = ''; sh.typed = t; renderSheet();
+    try { await talkProcess(sh, { text: t }); } catch (e) { if (S.sheet === sh) { sh.busy = false; sh.error = e.message; renderSheet(); } }
+  },
   changeKey() { S.sheet.changeKey = true; renderSheet(); },
   async saveGemini(el) {
     const k = (($('#gemKeyIn') || {}).value || '').trim(), s = S.session;
@@ -3821,6 +3969,7 @@ document.addEventListener('input', (e) => {
   if (t.id === 'foodQuery') { S.sheet.query = t.value; const r = $('#searchResults'); if (r) r.innerHTML = searchResults(t.value); }
 });
 document.addEventListener('change', async (e) => {
+  if (e.target && e.target.id === 'talkSlot' && S.sheet) { S.sheet.slot = e.target.value; return; }
   const t = e.target;
   if (t.classList.contains('scale-photo-input') && t.files && t.files[0]) {
     const files = [...t.files].slice(0, 2), slot = Number(t.dataset.slot || 0); t.value = '';
@@ -3964,7 +4113,7 @@ async function boot() {
 boot();
 
 // expose for testing
-window.__fittrack = { searchResults, sheetFood, FOOD, sheetMedPick, viewAuth, viewVerify, viewAdmin, sheetCal, dateBar, sheetReading, healthCard, suggestSlot, sheetWheyQ, sheetSnackQ, snackTotals, migrateWheyMeals, wheyDefaults, sheetSprouts, sproutDefaults, sproutTotals, sheetSteps, quickCard, sheetAddWeight, calcCard, openScaleSheet, analyseScaleRun, sheetScale, maybeHashWeight, sheetConfirm, viewBurn, addPhotosToSheet, openWorkoutSheet, sheetWorkout, runAnalysis, sheetFood, viewHome, viewFood, viewToday, viewMeds, wheyCard, ACT, profileForm, startWorkoutPhoto, sheetWorkout, FOOD, nutritionCard, needsCard, todayTable, viewSuggest, viewHome, viewFood, viewBurn, sheetWorkout, bmiOf, bmiCat, fatPct, bmr, treadKcal, bikeKcal, wkSuggest, S, plan, dayStats };
+window.__fittrack = { reminderCard, sheetTalk, openTalk, talkProcess, searchResults, sheetFood, FOOD, sheetMedPick, viewAuth, viewVerify, viewAdmin, sheetCal, dateBar, sheetReading, healthCard, suggestSlot, sheetWheyQ, sheetSnackQ, snackTotals, migrateWheyMeals, wheyDefaults, sheetSprouts, sproutDefaults, sproutTotals, sheetSteps, quickCard, sheetAddWeight, calcCard, openScaleSheet, analyseScaleRun, sheetScale, maybeHashWeight, sheetConfirm, viewBurn, addPhotosToSheet, openWorkoutSheet, sheetWorkout, runAnalysis, sheetFood, viewHome, viewFood, viewToday, viewMeds, wheyCard, ACT, profileForm, startWorkoutPhoto, sheetWorkout, FOOD, nutritionCard, needsCard, todayTable, viewSuggest, viewHome, viewFood, viewBurn, sheetWorkout, bmiOf, bmiCat, fatPct, bmr, treadKcal, bikeKcal, wkSuggest, S, plan, dayStats };
 })();
 </script>
 </body>

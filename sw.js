@@ -1,5 +1,5 @@
 // Caches only the app itself so it opens fast. Your data always goes to/from GitHub, never this cache.
-const CACHE = 'fittracker-v131';
+const CACHE = 'fittracker-v132';
 const SHELL = ['./', './index.html', './manifest.webmanifest', './icons/icon-192.png', './icons/icon-512.png', './icons/apple-touch-icon.png', './icons/logo.png'];
 
 self.addEventListener('install', (e) => {
@@ -19,4 +19,23 @@ self.addEventListener('fetch', (e) => {
   } else {
     e.respondWith(caches.match(e.request).then((r) => r || fetch(e.request)));
   }
+});
+
+// meal reminders: show the push, and open the app's "tell me what you ate" screen when tapped
+self.addEventListener('push', (e) => {
+  let d = {};
+  try { d = e.data ? e.data.json() : {}; } catch (x) { d = { body: e.data ? e.data.text() : '' }; }
+  e.waitUntil(self.registration.showNotification(d.title || '🍽️ Meal time', {
+    body: d.body || 'Already eaten? Tap and tell me what you ate.', icon: './icons/icon-192.png', badge: './icons/icon-192.png',
+    tag: 'meal-' + (d.slot || ''), renotify: true, data: { url: d.url || './' },
+  }));
+});
+self.addEventListener('notificationclick', (e) => {
+  e.notification.close();
+  const url = new URL((e.notification.data || {}).url || './', self.registration.scope).href;
+  const talk = new URL(url).searchParams.get('talk');
+  e.waitUntil(self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then((cs) => {
+    for (const c of cs) if (c.url.startsWith(self.registration.scope)) { if (talk) c.postMessage({ talk }); return c.focus(); }
+    return self.clients.openWindow(url);
+  }));
 });
