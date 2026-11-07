@@ -1232,7 +1232,7 @@ function viewAuth() {
   return `<div class="auth">
     <img class="logo" src="icons/logo.png" alt="">
     <h1>Minimal Health Tracker</h1>
-    <p class="sub">Your weight-loss tracker · v132</p>
+    <p class="sub">Your weight-loss tracker · v133</p>
     ${m !== 'forgot' ? `<div class="seg">
       <button data-act="authMode" data-v="login" class="${m === 'login' ? 'on' : ''}">Log in</button>
       <button data-act="authMode" data-v="create" class="${m === 'create' ? 'on' : ''}">Create account</button>
@@ -2197,7 +2197,16 @@ function maybeHashWeight() {
   renderSheet();
 }
 // ---------- meal reminders (free web push from a GitHub schedule) + voice logging
-const REMIND_TIMES = { breakfast: '9:00 AM', lunch: '1:00 PM', dinner: '8:30 PM' };
+const REMIND_DEF = { breakfast: '09:00', lunch: '13:00', dinner: '20:30' };
+function remindTimes() { const t = ((S.data && S.data.meta && S.data.meta.remind) || {}).times || {}; const o = {}; Object.keys(REMIND_DEF).forEach(k => { o[k] = /^\d{2}:\d{2}$/.test(t[k] || '') ? t[k] : REMIND_DEF[k]; }); return o; }
+function hm12(t) { const [H, M] = t.split(':').map(Number); return `${(H % 12) || 12}:${String(M).padStart(2, '0')} ${H < 12 ? 'AM' : 'PM'}`; }
+function remindTimesLine() { const t = remindTimes(); return `${hm12(t.breakfast)}, ${hm12(t.lunch)} and ${hm12(t.dinner)}`; }
+function remindTimesEditor() {
+  const t = remindTimes(), lab = { breakfast: '🍳 Breakfast', lunch: '🍛 Lunch', dinner: '🍲 Dinner' };
+  return `<details style="margin-top:10px"><summary style="cursor:pointer;font-weight:600;color:var(--blue,#2563eb)">⏰ Change reminder times</summary>
+    <div style="margin-top:10px;display:grid;gap:8px">${Object.keys(REMIND_DEF).map(k => `<label style="display:flex;align-items:center;justify-content:space-between;gap:10px;font-size:15px;font-weight:600;margin:0">${lab[k]}<input type="time" id="rt_${k}" value="${t[k]}" style="height:46px;width:150px;flex:none;text-align:center"></label>`).join('')}</div>
+    <button class="btn primary block" style="margin-top:10px" data-act="remindSaveTimes">Save times</button></details>`;
+}
 function isIOSDev() { return /iphone|ipad|ipod/i.test(navigator.userAgent || '') || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1); }
 function isStandaloneApp() { return (window.matchMedia && matchMedia('(display-mode: standalone)').matches) || navigator.standalone === true; }
 function pushSupported() { return 'serviceWorker' in navigator && 'PushManager' in window && typeof Notification !== 'undefined'; }
@@ -2207,13 +2216,13 @@ function reminderCard() {
   if (S.viewing) return '';
   const on = remindIsOn(), talkBtn = `<button class="btn" data-act="talkOpen" data-slot="${mainSlotNow()}">🎤 Tell by voice</button>`;
   let body;
-  if (on) body = `<p class="explain" style="margin:0 0 10px"><b class="good">On ✓</b> — at 9:00 AM, 1:00 PM and 8:30 PM you get a reminder, only if that meal is not added yet. Tap it and just say what you ate.</p>
-      <div class="photo-btns">${talkBtn}<button class="btn" data-act="remindOff">🔕 Turn off</button></div>
+  if (on) body = `<p class="explain" style="margin:0 0 10px"><b class="good">On ✓</b> — at ${remindTimesLine()} you get a reminder, only if that meal is not added yet. Tap it and just say what you ate.</p>
+      <div class="photo-btns">${talkBtn}<button class="btn" data-act="remindOff">🔕 Turn off</button></div>${remindTimesEditor()}
       ${S.session.email === ADMIN_EMAIL ? '<button class="muted" style="font-size:13px;text-decoration:underline;margin-top:8px" data-act="remindTest">Send me a test reminder now</button>' : ''}`;
   else if (isIOSDev() && !isStandaloneApp()) body = `<p class="explain" style="margin:0 0 10px">To get reminders on iPhone, open this app from its <b>Home Screen icon</b> (Safari → Share → Add to Home Screen), then turn them on here.</p><div class="photo-btns">${talkBtn}</div>`;
   else if (!pushSupported()) body = `<p class="explain" style="margin:0 0 10px">This browser can't show reminders. You can still tell your meals by voice.</p><div class="photo-btns">${talkBtn}</div>`;
-  else body = `<p class="explain" style="margin:0 0 10px">At 9:00 AM, 1:00 PM and 8:30 PM — if you haven't added that meal — your phone reminds you. Tap it, and just say what you ate and how many grams. I add it for you.</p>
-      <div class="photo-btns"><button class="btn primary" data-act="remindOn">🔔 Turn on reminders</button>${talkBtn}</div>`;
+  else body = `<p class="explain" style="margin:0 0 10px">At ${remindTimesLine()} — if you haven't added that meal — your phone reminds you. Tap it, and just say what you ate and how many grams. I add it for you.</p>
+      <div class="photo-btns"><button class="btn primary" data-act="remindOn">🔔 Turn on reminders</button>${talkBtn}</div>${remindTimesEditor()}`;
   return `<div class="card"><h3>🔔 Meal reminders &amp; voice</h3>${body}</div>`;
 }
 function b64uToBytes(s) { const p = '='.repeat((4 - s.length % 4) % 4), b = atob((s + p).replace(/-/g, '+').replace(/_/g, '/')); return Uint8Array.from(b, c => c.charCodeAt(0)); }
@@ -2248,6 +2257,11 @@ function openTalk(slot) {
   S.sheet = { kind: 'talk', slot, busy: false, rec: null, error: '' }; renderSheet();
   sayIt(talkMsg(slot));
 }
+function startSpeak(slot) {
+  if (!SLOTS.some(s => s.id === slot)) slot = slotByTime();
+  S.sheet = { kind: 'talk', slot, quick: true, busy: false, rec: null, error: '' }; renderSheet();
+  return talkRecord();
+}
 function checkTalkLink() {
   const q = new URLSearchParams(location.search), t = q.get('talk');
   if (t) { try { history.replaceState(null, '', location.pathname); } catch (e) {} openTalk(t); }
@@ -2259,9 +2273,9 @@ function sheetTalk() {
   const btn = sh.busy ? `<div class="center" style="min-height:90px"><div class="spinner"></div><p class="muted">Understanding what you ate…</p></div>`
     : sh.rec ? `<button class="btn danger block" style="min-height:72px;font-size:19px" data-act="talkStop">⏹ Done — I finished speaking</button><p class="muted" style="text-align:center;margin:8px 0 0">🔴 Listening… e.g. “3 idli 120 gram, sambar 150 gram”</p>`
     : `<button class="btn primary block" style="min-height:72px;font-size:19px" data-act="talkRec">🎤 Tap and speak</button>`;
-  return `<div class="sheet-h"><h2>🎤 ${esc(slotLabel(sh.slot))} time</h2><button class="x" data-act="closeSheet">✕</button></div>
-    <div class="card" style="text-align:center"><p style="font-size:17px;line-height:1.45;margin:0">${esc(talkMsg(sh.slot))}</p>
-      <button class="btn small" style="margin-top:10px" data-act="talkSay">🔊 Hear again</button></div>
+  return `<div class="sheet-h"><h2>🎤 ${sh.quick ? 'Speak — ' + esc(slotLabel(sh.slot)) : esc(slotLabel(sh.slot)) + ' time'}</h2><button class="x" data-act="closeSheet">✕</button></div>
+    ${sh.quick ? `<p class="explain" style="margin:0 0 10px">Say the food name and grams, e.g. “2 idli 80 gram, sambar 150 gram”. Tap ⏹ Done when you finish.</p>` : `<div class="card" style="text-align:center"><p style="font-size:17px;line-height:1.45;margin:0">${esc(talkMsg(sh.slot))}</p>
+      <button class="btn small" style="margin-top:10px" data-act="talkSay">🔊 Hear again</button></div>`}
     <div class="field"><label>Meal<select id="talkSlot">${SLOTS.map(s => `<option value="${s.id}" ${s.id === sh.slot ? 'selected' : ''}>${s.icon} ${s.label}</option>`).join('')}</select></label></div>
     ${btn}
     ${sh.error ? `<div class="note bad" style="margin-top:10px">${esc(sh.error)}</div>` : ''}
@@ -2336,6 +2350,7 @@ function quickCard(t) {
         <div class="photo-btns">
           <label class="btn primary">📸 Photo<input type="file" accept="image/*" capture="environment" class="food-check-input" aria-label="Take photo to check food"></label>
           <label class="btn">🖼️ Gallery<input type="file" accept="image/*" multiple class="food-check-input" aria-label="Choose 1 or 2 photos to check food"></label>
+          <button class="btn" data-act="speakNow">🎤 Speak</button>
           <button class="btn" data-act="openFoodList">📋 Food list</button>
           <button class="btn" data-act="openWheyQ">💪 Whey</button>
           <button class="btn" data-act="openEggQ">🥚 Egg</button>
@@ -2888,7 +2903,7 @@ function viewProfile() {
       <button class="btn blue block" data-act="exportXlsx">⬇️ Export to Excel</button>
     </div>
     <button class="btn danger block" data-act="logout" style="margin-top:6px">Log out</button>
-    <p class="explain" style="text-align:center;margin-top:14px">Minimal Health Tracker v132 · estimates only, not medical advice</p>
+    <p class="explain" style="text-align:center;margin-top:14px">Minimal Health Tracker v133 · estimates only, not medical advice</p>
   </main>`;
 }
 
@@ -2986,7 +3001,7 @@ function slotLabel(id) { return (SLOTS.find(s => s.id === id) || {}).label || id
 function sheetFood() {
   const sh = S.sheet;
   const edit = sh.mode === 'edit';
-  const modes = [['photo', '📷 Photo'], ['search', '🔎 Food list'], ['manual', '✏️ Manual']];
+  const modes = [['photo', '📷 Photo'], ['speak', '🎤 Speak'], ['search', '🔎 List'], ['manual', '✏️ Manual']];
   let body = '';
   if (sh.mode === 'photo') {
     const ph = sh.photos || [];
@@ -3010,7 +3025,7 @@ function sheetFood() {
   if (sh.check) return `<div class="sheet-h"><h2>🔍 Check food</h2><button class="x" data-act="closeSheet">✕</button></div>${body}<div id="itemsWrap">${itemsBlock()}</div>`;
   return `<div class="sheet-h"><h2>${edit ? 'Edit food' : 'Add to ' + slotLabel(sh.slot)}</h2><button class="x" data-act="closeSheet">✕</button></div>
     ${edit ? `<div class="field"><label>Meal<select id="editSlot">${SLOTS.map(s => `<option value="${s.id}" ${s.id === sh.slot ? 'selected' : ''}>${s.label}</option>`).join('')}</select></label></div>` :
-      `<div class="seg">${modes.map(([m, l]) => `<button data-act="foodMode" data-v="${m}" class="${sh.mode === m ? 'on' : ''}">${l}</button>`).join('')}</div>`}
+      `<div class="seg" style="gap:2px">${modes.map(([m, l]) => `<button style="font-size:13px;padding:8px 2px" data-act="foodMode" data-v="${m}" class="${sh.mode === m ? 'on' : ''}">${l}</button>`).join('')}</div>`}
     ${body}
     <div id="itemsWrap">${itemsBlock()}</div>`;
 }
@@ -3484,6 +3499,7 @@ const ACT = {
   },
   foodMode(el) {
     const sh = S.sheet; if (sh.busy) return;
+    if (el.dataset.v === 'speak') return startSpeak(sh.slot);
     sh.mode = el.dataset.v;
     if (sh.mode === 'manual' && !sh.items.length) sh.items.push(mkItem({ name: '', grams: 100, kcal: 0 }));
     renderSheet();
@@ -3835,6 +3851,16 @@ const ACT = {
   remindOn() { return turnOnReminders(); },
   async remindOff() { await userRef(S.session.uid).set({ remind: { on: false, at: new Date().toISOString() } }, { merge: true }); S.data.meta.remind = { on: false }; toast('Reminders off'); render(); },
   remindTest() { return testReminder(); },
+  async remindSaveTimes() {
+    const t = {};
+    for (const k of Object.keys(REMIND_DEF)) { const v = (($('#rt_' + k) || {}).value || '').slice(0, 5); if (!/^\d{2}:\d{2}$/.test(v)) throw fail('Pick a time for each meal.'); t[k] = v; }
+    const m = x => { const [H, M] = x.split(':').map(Number); return H * 60 + M; };
+    if (!(m(t.breakfast) < m(t.lunch) && m(t.lunch) < m(t.dinner))) throw fail('Times should be in order: breakfast, then lunch, then dinner.');
+    await userRef(S.session.uid).set({ remind: { times: t } }, { merge: true });
+    S.data.meta = S.data.meta || {}; S.data.meta.remind = Object.assign({}, S.data.meta.remind || {}, { times: t });
+    toast('Reminder times saved ✓', 'good'); render();
+  },
+  speakNow(el) { return startSpeak(el.dataset.slot || slotByTime()); },
   talkOpen(el) { openTalk(el.dataset.slot || mainSlotNow()); },
   talkSay() { sayIt(talkMsg(S.sheet.slot)); },
   talkSlot(el) { S.sheet.slot = el.value || el.dataset.v; },
