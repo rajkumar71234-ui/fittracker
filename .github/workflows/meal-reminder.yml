@@ -2,13 +2,11 @@ name: Meal reminders
 
 on:
   schedule:
-    - cron: '30 3 * * *'   # 9:00 AM India
-    - cron: '30 7 * * *'   # 1:00 PM India
-    - cron: '0 15 * * *'   # 8:30 PM India
+    - cron: '*/15 * * * *'   # every 15 min; each user's own breakfast / lunch / dinner times are checked
   workflow_dispatch:
     inputs:
       slot:
-        description: 'breakfast, lunch or dinner (leave empty = by current time)'
+        description: 'breakfast, lunch or dinner (empty = everyone by their own times; setup = only make keys)'
         required: false
         default: ''
       test:
