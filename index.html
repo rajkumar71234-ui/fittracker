@@ -1232,7 +1232,7 @@ function viewAuth() {
   return `<div class="auth">
     <img class="logo" src="icons/logo.png" alt="">
     <h1>Minimal Health Tracker</h1>
-    <p class="sub">Your weight-loss tracker · v134</p>
+    <p class="sub">Your weight-loss tracker · v135</p>
     ${m !== 'forgot' ? `<div class="seg">
       <button data-act="authMode" data-v="login" class="${m === 'login' ? 'on' : ''}">Log in</button>
       <button data-act="authMode" data-v="create" class="${m === 'create' ? 'on' : ''}">Create account</button>
@@ -2903,7 +2903,7 @@ function viewProfile() {
       <button class="btn blue block" data-act="exportXlsx">⬇️ Export to Excel</button>
     </div>
     <button class="btn danger block" data-act="logout" style="margin-top:6px">Log out</button>
-    <p class="explain" style="text-align:center;margin-top:14px">Minimal Health Tracker v134 · estimates only, not medical advice</p>
+    <p class="explain" style="text-align:center;margin-top:14px">Minimal Health Tracker v135 · estimates only, not medical advice</p>
   </main>`;
 }
 
@@ -3178,36 +3178,52 @@ If no food is visible, return {"items":[],"note":"No food found"}.`;
   const out = JSON.parse(m[0]);
   return { items: (out.items || []).map(x => Object.assign(mkItem({ ...x, source: 'ai' }), { type: x.type || '' })), note: out.note || '' };
 }
-const GEMINI_MODELS = ['gemini-3.8-flash', 'gemini-3.6-flash', 'gemini-3.5-flash-lite', 'gemini-3-flash-preview'];
+const GEMINI_MODELS = ['gemini-3.8-flash', 'gemini-3.5-flash-lite', 'gemini-3.6-flash'];
 async function askGemini(key, b64, prompt) {
   const imgs = (Array.isArray(b64) ? b64 : [b64]).map(d => ({ inline_data: typeof d === 'string' ? { mime_type: 'image/jpeg', data: d } : { mime_type: d.mime, data: d.data } }));
-  const body = JSON.stringify({ contents: [{ parts: [...imgs, { text: prompt }] }],
-    generationConfig: { responseMimeType: 'application/json', temperature: 0.2 } });
+  const mkBody = think => JSON.stringify({ contents: [{ parts: [...imgs, { text: prompt }] }],
+    generationConfig: Object.assign({ responseMimeType: 'application/json', temperature: 0.2 }, think ? { thinkingConfig: { thinkingLevel: 'low' } } : {}) });
   const authWays = [
     m => ({ url: `https://generativelanguage.googleapis.com/v1beta/models/${m}:generateContent`, headers: { 'content-type': 'application/json', 'x-goog-api-key': key } }),
     m => ({ url: `https://generativelanguage.googleapis.com/v1beta/models/${m}:generateContent?key=${encodeURIComponent(key)}`, headers: { 'content-type': 'application/json' } }),
     m => ({ url: `https://generativelanguage.googleapis.com/v1beta/models/${m}:generateContent`, headers: { 'content-type': 'application/json', Authorization: 'Bearer ' + key } }),
   ];
-  let lastErr = 'Gemini could not read the photo.';
+  // the model that answered last time goes first; each try has a time limit so the phone never waits minutes
+  const gm = LS.get('ft_gem_model'), good = gm && typeof gm === 'object' && gm.d === todayStr() ? gm.m : '';
+  const models = good && GEMINI_MODELS.includes(good) ? [good, ...GEMINI_MODELS.filter(m => m !== good)] : GEMINI_MODELS.slice();
+  const noThink = LS.get('ft_gem_nothink') || {};
+  let lastErr = 'Gemini could not read it.', slow = 0, limited = 0, tried = 0;
   let wayIdx = Number(LS.get('ft_gem_way') || 0);
-  for (const model of GEMINI_MODELS) {
+  for (let mi = 0; mi < models.length; mi++) {
+    const model = models[mi], limitMs = mi === 0 ? 35000 : 25000;
+    let think = !noThink[model];
     for (let a = 0; a < authWays.length; a++) {
       const wi = (wayIdx + a) % authWays.length, w = authWays[wi](model);
-      let res;
-      try { res = await fetch(w.url, { method: 'POST', headers: w.headers, body }); }
-      catch (e) { throw fail('No internet connection — could not reach Google Gemini.'); }
-      if (res.ok) {
-        LS.set('ft_gem_way', wi);
-        const j = await res.json();
-        return ((((j.candidates || [])[0] || {}).content || {}).parts || []).map(p => p.text || '').join('');
+      const ctl = new AbortController(), timer = setTimeout(() => ctl.abort(), limitMs);
+      let res; tried++;
+      try { res = await fetch(w.url, { method: 'POST', headers: w.headers, body: mkBody(think), signal: ctl.signal }); }
+      catch (e) {
+        clearTimeout(timer);
+        if (navigator.onLine === false) throw fail('No internet connection — please check your mobile data or Wi-Fi.');
+        slow++; lastErr = 'slow'; break;                                   // timed out or dropped → try the next (faster) model
       }
-      let m = ''; try { m = ((await res.json()).error || {}).message || ''; } catch (e) {}
+      let j = null, m = '';
+      try { j = await res.json(); } catch (e) {}
+      clearTimeout(timer);
+      if (res.ok && j) {
+        LS.set('ft_gem_way', wi); LS.set('ft_gem_model', { m: model, d: todayStr() });
+        return ((((j.candidates || [])[0] || {}).content || {}).parts || []).filter(p => !p.thought).map(p => p.text || '').join('');
+      }
+      m = ((j && j.error) || {}).message || '';
       lastErr = 'Gemini error ' + res.status + (m ? ': ' + m : '');
-      if (res.status === 429) throw fail('Free Gemini limit reached for now — try again in a minute, or use the food list.');
+      if (res.status === 400 && think && /think/i.test(m)) { think = false; noThink[model] = 1; LS.set('ft_gem_nothink', noThink); a--; continue; }   // model has no thinking setting
+      if (res.status === 429) { limited++; break; }                       // this model's free limit is used up → try another
       const authProblem = res.status === 401 || res.status === 403 || (res.status === 400 && /key|auth|credential/i.test(m));
       if (!authProblem) break;           // model problem → try next model
     }
   }
+  if (limited && limited + slow >= models.length) throw fail('Free Gemini limit reached for now — try again in a minute, or use the food list.');
+  if (lastErr === 'slow' || (slow && slow >= models.length - limited)) throw fail('Google Gemini is very slow right now — please try again in a minute.');
   if (/key|auth|credential|401|403/i.test(lastErr)) throw fail('Google did not accept this key (' + lastErr.slice(0, 120) + '). Create a new key at aistudio.google.com/apikey and paste it on the Photo screen.');
   throw fail(lastErr);
 }
@@ -4139,7 +4155,7 @@ async function boot() {
 boot();
 
 // expose for testing
-window.__fittrack = { reminderCard, sheetTalk, openTalk, talkProcess, searchResults, sheetFood, FOOD, sheetMedPick, viewAuth, viewVerify, viewAdmin, sheetCal, dateBar, sheetReading, healthCard, suggestSlot, sheetWheyQ, sheetSnackQ, snackTotals, migrateWheyMeals, wheyDefaults, sheetSprouts, sproutDefaults, sproutTotals, sheetSteps, quickCard, sheetAddWeight, calcCard, openScaleSheet, analyseScaleRun, sheetScale, maybeHashWeight, sheetConfirm, viewBurn, addPhotosToSheet, openWorkoutSheet, sheetWorkout, runAnalysis, sheetFood, viewHome, viewFood, viewToday, viewMeds, wheyCard, ACT, profileForm, startWorkoutPhoto, sheetWorkout, FOOD, nutritionCard, needsCard, todayTable, viewSuggest, viewHome, viewFood, viewBurn, sheetWorkout, bmiOf, bmiCat, fatPct, bmr, treadKcal, bikeKcal, wkSuggest, S, plan, dayStats };
+window.__fittrack = { askGeminiT: askGemini, reminderCard, sheetTalk, openTalk, talkProcess, searchResults, sheetFood, FOOD, sheetMedPick, viewAuth, viewVerify, viewAdmin, sheetCal, dateBar, sheetReading, healthCard, suggestSlot, sheetWheyQ, sheetSnackQ, snackTotals, migrateWheyMeals, wheyDefaults, sheetSprouts, sproutDefaults, sproutTotals, sheetSteps, quickCard, sheetAddWeight, calcCard, openScaleSheet, analyseScaleRun, sheetScale, maybeHashWeight, sheetConfirm, viewBurn, addPhotosToSheet, openWorkoutSheet, sheetWorkout, runAnalysis, sheetFood, viewHome, viewFood, viewToday, viewMeds, wheyCard, ACT, profileForm, startWorkoutPhoto, sheetWorkout, FOOD, nutritionCard, needsCard, todayTable, viewSuggest, viewHome, viewFood, viewBurn, sheetWorkout, bmiOf, bmiCat, fatPct, bmr, treadKcal, bikeKcal, wkSuggest, S, plan, dayStats };
 })();
 </script>
 </body>
