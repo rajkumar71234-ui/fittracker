@@ -8,7 +8,18 @@ const ADMIN = 'rajkumar71234@gmail.com';
 const SLOTS = { breakfast: ['Breakfast', '🍳'], lunch: ['Lunch', '🍛'], dinner: ['Dinner', '🍲'] };
 
 if (!process.env.FIREBASE_SA) { console.error('The FIREBASE_SA secret is missing — add it in GitHub → Settings → Secrets → Actions.'); process.exit(1); }
-admin.initializeApp({ credential: admin.credential.cert(JSON.parse(process.env.FIREBASE_SA)) });
+function readKey(raw) {
+  let s = String(raw).replace(/^﻿/, '').trim().replace(/^```(json)?/i, '').replace(/```$/, '').trim();
+  if (/^['"]/.test(s) && /['"]$/.test(s)) s = s.slice(1, -1).trim();
+  const tries = [s];
+  if (!s.startsWith('{')) { try { tries.push(Buffer.from(s, 'base64').toString('utf8').trim()); } catch (e) {} }
+  const i = s.indexOf('{'), j = s.lastIndexOf('}'); if (i > 0 && j > i) tries.push(s.slice(i, j + 1));
+  for (const t of tries) { try { const o = JSON.parse(t); if (o && o.private_key && o.client_email) return o; } catch (e) {} }
+  const kind = !s ? 'empty' : s[0] === '{' ? 'starts with { but is not a complete key file' : /^\d/.test(s) ? 'starts with a number' : 'does not start with {';
+  console.error(`The FIREBASE_SA secret is not the Firebase key file (it is ${s.length} characters and ${kind}). Open the downloaded .json file, copy ALL of it (it starts with { and contains "private_key"), and paste it again into the secret.`);
+  process.exit(1);
+}
+admin.initializeApp({ credential: admin.credential.cert(readKey(process.env.FIREBASE_SA)) });
 const db = admin.firestore();
 
 const ist = new Date(Date.now() + 330 * 60000);
