@@ -1232,7 +1232,7 @@ function viewAuth() {
   return `<div class="auth">
     <img class="logo" src="icons/logo.png" alt="">
     <h1>Minimal Health Tracker</h1>
-    <p class="sub">Your weight-loss tracker · v133</p>
+    <p class="sub">Your weight-loss tracker · v134</p>
     ${m !== 'forgot' ? `<div class="seg">
       <button data-act="authMode" data-v="login" class="${m === 'login' ? 'on' : ''}">Log in</button>
       <button data-act="authMode" data-v="create" class="${m === 'create' ? 'on' : ''}">Create account</button>
@@ -2903,7 +2903,7 @@ function viewProfile() {
       <button class="btn blue block" data-act="exportXlsx">⬇️ Export to Excel</button>
     </div>
     <button class="btn danger block" data-act="logout" style="margin-top:6px">Log out</button>
-    <p class="explain" style="text-align:center;margin-top:14px">Minimal Health Tracker v133 · estimates only, not medical advice</p>
+    <p class="explain" style="text-align:center;margin-top:14px">Minimal Health Tracker v134 · estimates only, not medical advice</p>
   </main>`;
 }
 
@@ -4074,7 +4074,7 @@ function viewAdmin() {
   if (!S.admin) setTimeout(() => adminLoadUsers(false), 0);
   const a = S.admin || { loading: true, users: [] };
   const rows = (a.users || []).map(u => `<div class="li" style="flex-wrap:wrap;row-gap:6px">
-      <span style="min-width:0"><b>${esc(u.name || '(no profile yet)')}</b><br><small>${esc(u.email)}${u.legacy ? ' · old: ' + esc(u.legacy) : ''}</small><br>
+      <span style="min-width:0"><b>${esc(u.name || '(no profile yet)')}</b><br><small>${esc(u.email)}</small><br>
         <small class="muted">${u.p.startWeight ? `${u.p.startWeight} kg → ${r1(u.p.startWeight - (u.p.targetLoss || 0))} kg · ` : ''}last active ${u.lastActive ? niceDate(u.lastActive, { day: 'numeric', month: 'short' }) : '—'}</small></span>
       <span style="display:flex;gap:6px;margin-left:auto"><button class="btn small" data-act="adminOpen" data-uid="${u.uid}">Open</button></span>
     </div>`).join('');
@@ -4108,7 +4108,7 @@ async function adminExport() {
           'Medicines': ((d.meds || {}).list || []).map(x => [x.name, x.dose, x.time].filter(Boolean).join(' ')).join(', ') });
       });
       const pl = p ? plan() : null;
-      summary.push({ Name: u.name, Email: u.email, 'Old username': u.legacy, 'Start date': p ? p.startDate : '', 'Start weight': p ? p.startWeight : '', 'Target weight': pl ? R(pl.targetW) : '',
+      summary.push({ Name: u.name, Email: u.email, 'Start date': p ? p.startDate : '', 'Start weight': p ? p.startWeight : '', 'Target weight': pl ? R(pl.targetW) : '',
         'Current weight': pl ? R(pl.curW) : '', 'Lost so far (kg)': pl ? R(p.startWeight - pl.curW) : '', 'Days logged': days.length, 'Last active': u.lastActive });
       let name = (u.name || u.email.split('@')[0] || 'user').replace(/[\\/?*\[\]:]/g, ' ').slice(0, 28) || 'user', n = name, i = 2;
       while (used.has(n.toLowerCase()) || n.toLowerCase() === 'all users') n = name.slice(0, 26) + ' ' + i++;
