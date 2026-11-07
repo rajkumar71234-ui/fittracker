@@ -1,0 +1,44 @@
+name: Meal reminders
+
+on:
+  schedule:
+    - cron: '30 3 * * *'   # 9:00 AM India
+    - cron: '30 7 * * *'   # 1:00 PM India
+    - cron: '0 15 * * *'   # 8:30 PM India
+  workflow_dispatch:
+    inputs:
+      slot:
+        description: 'breakfast, lunch or dinner (leave empty = by current time)'
+        required: false
+        default: ''
+      test:
+        description: 'true = send to the admin phone now, even if the meal is added'
+        required: false
+        default: 'false'
+
+permissions:
+  contents: read
+
+concurrency: meal-reminders
+
+jobs:
+  remind:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          sparse-checkout: reminder
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Install
+        working-directory: reminder
+        run: npm install --no-audit --no-fund --no-save firebase-admin@12 web-push@3
+      - name: Send reminders
+        working-directory: reminder
+        env:
+          FIREBASE_SA: ${{ secrets.FIREBASE_SA }}
+          SLOT: ${{ github.event.inputs.slot }}
+          TEST: ${{ github.event.inputs.test }}
+        run: node remind.mjs
