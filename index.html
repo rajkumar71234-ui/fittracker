@@ -1232,7 +1232,7 @@ function viewAuth() {
   return `<div class="auth">
     <img class="logo" src="icons/logo.png" alt="">
     <h1>Minimal Health Tracker</h1>
-    <p class="sub">Your weight-loss tracker · v136</p>
+    <p class="sub">Your weight-loss tracker · v137</p>
     ${m !== 'forgot' ? `<div class="seg">
       <button data-act="authMode" data-v="login" class="${m === 'login' ? 'on' : ''}">Log in</button>
       <button data-act="authMode" data-v="create" class="${m === 'create' ? 'on' : ''}">Create account</button>
@@ -2260,7 +2260,6 @@ function openTalk(slot) {
 function startSpeak(slot) {
   if (!SLOTS.some(s => s.id === slot)) slot = slotByTime();
   S.sheet = { kind: 'talk', slot, quick: true, busy: false, rec: null, error: '' }; renderSheet();
-  return talkRecord();
 }
 function checkTalkLink() {
   const q = new URLSearchParams(location.search), t = q.get('talk');
@@ -2268,20 +2267,27 @@ function checkTalkLink() {
   else if (S.pendingTalk) openTalk(S.pendingTalk);
 }
 if ('serviceWorker' in navigator) navigator.serviceWorker.addEventListener('message', e => { if (e.data && e.data.talk) openTalk(e.data.talk); });
+function talkBubble(who, html) {
+  const me = who === 'you';
+  return `<div style="display:flex;justify-content:${me ? 'flex-end' : 'flex-start'};margin:8px 0"><div style="max-width:86%;padding:10px 14px;border-radius:18px;${me ? 'border-bottom-right-radius:6px;background:#2563eb;color:#fff' : 'border-bottom-left-radius:6px;background:#eef2ff;color:#0f172a'};font-size:16px;line-height:1.45">${html}</div></div>`;
+}
 function sheetTalk() {
-  const sh = S.sheet;
-  const btn = sh.busy ? `<div class="center" style="min-height:90px"><div class="spinner"></div><p class="muted">Understanding what you ate…</p></div>`
-    : sh.rec ? `<button class="btn danger block" style="min-height:72px;font-size:19px" data-act="talkStop">⏹ Done — I finished speaking</button><p class="muted" style="text-align:center;margin:8px 0 0">🔴 Listening… e.g. “3 idli 120 gram, sambar 150 gram”</p>`
-    : `<button class="btn primary block" style="min-height:72px;font-size:19px" data-act="talkRec">🎤 Tap and speak</button>`;
-  return `<div class="sheet-h"><h2>🎤 ${sh.quick ? 'Speak — ' + esc(slotLabel(sh.slot)) : esc(slotLabel(sh.slot)) + ' time'}</h2><button class="x" data-act="closeSheet">✕</button></div>
-    ${sh.quick ? `<p class="explain" style="margin:0 0 10px">Say the food name and grams, e.g. “2 idli 80 gram, sambar 150 gram”. Tap ⏹ Done when you finish.</p>` : `<div class="card" style="text-align:center"><p style="font-size:17px;line-height:1.45;margin:0">${esc(talkMsg(sh.slot))}</p>
-      <button class="btn small" style="margin-top:10px" data-act="talkSay">🔊 Hear again</button></div>`}
+  const sh = S.sheet, said = sh.live || sh.heard || '';
+  const convo = [
+    sh.quick ? '' : talkBubble('app', esc(talkMsg(sh.slot)) + ` <button class="btn small" style="margin-left:6px" data-act="talkSay">🔊</button>`),
+    sh.rec ? talkBubble('you', `<span id="talkLive">${esc(said) || (sh.recAudio ? '🔴 Recording… the words show after you tap Done' : '🎙️ Listening… start speaking')}</span>`)
+      : said ? talkBubble('you', esc(said)) : '',
+    sh.busy ? talkBubble('app', '<span class="spinner" style="display:inline-block;width:16px;height:16px;vertical-align:-3px;margin-right:6px"></span>Checking the foods…') : '',
+    sh.error ? talkBubble('app', esc(sh.error)) : '',
+  ].join('');
+  const btn = sh.busy ? ''
+    : sh.rec ? `<button class="btn danger block" style="min-height:72px;font-size:19px" data-act="talkStop">⏹ Done</button>`
+    : `<button class="btn primary block" style="min-height:72px;font-size:19px" data-act="talkRec">🎤 ${said || sh.error ? 'Speak again' : 'Tap and speak'}</button>`;
+  return `<div class="sheet-h"><h2>🎤 ${sh.quick ? 'Speak' : esc(slotLabel(sh.slot)) + ' time'}</h2><button class="x" data-act="closeSheet">✕</button></div>
     <div class="field"><label>Meal<select id="talkSlot">${SLOTS.map(s => `<option value="${s.id}" ${s.id === sh.slot ? 'selected' : ''}>${s.icon} ${s.label}</option>`).join('')}</select></label></div>
+    <div style="min-height:60px;margin-bottom:12px">${convo || `<p class="explain" style="text-align:center;margin:18px 0">Tap the button and say the food and grams,<br>e.g. “idli 200 gram, sambar 50 gram”.</p>`}</div>
     ${btn}
-    ${sh.error ? `<div class="note bad" style="margin-top:10px">${esc(sh.error)}</div>` : ''}
-    ${sh.rec || sh.busy ? '' : `<div class="field" style="margin-top:16px"><label>Or type it<input id="talkText" placeholder="2 chapati 80 g, chicken curry 150 g" value="${esc(sh.typed || '')}" autocomplete="off"></label></div>
-    <button class="btn block" data-act="talkSend">Send</button>
-    <button class="btn block" style="margin-top:8px" data-act="closeSheet">I haven't eaten yet</button>`}`;
+    ${!sh.quick && !sh.rec && !sh.busy ? `<button class="btn block" style="margin-top:8px" data-act="closeSheet">I haven't eaten yet</button>` : ''}`;
 }
 function bufToB64(buf) { const b = new Uint8Array(buf); let s = ''; for (let i = 0; i < b.length; i += 0x8000) s += String.fromCharCode.apply(null, b.subarray(i, i + 0x8000)); return btoa(s); }
 async function audioForGemini(blob) {
@@ -2297,8 +2303,39 @@ async function audioForGemini(blob) {
     return { mime: 'audio/wav', data: bufToB64(dv.buffer) };
   } catch (e) { return { mime: (blob.type || 'audio/mp4').split(';')[0], data: bufToB64(await blob.arrayBuffer()) }; }
 }
+function speechRecClass() { return window.SpeechRecognition || window.webkitSpeechRecognition; }
+function srStart(sh, SR) {
+  const r = new SR(); r.lang = 'en-IN'; r.continuous = true; r.interimResults = true; r.maxAlternatives = 1;
+  sh.live = ''; sh.heard = ''; sh.srErr = ''; sh.error = ''; sh.recAudio = false;
+  sh.rec = { stop: () => { try { r.stop(); } catch (e) {} } };
+  r.onresult = e => {
+    let txt = ''; for (let i = 0; i < e.results.length; i++) txt += e.results[i][0].transcript + (e.results[i].isFinal ? ' ' : '');
+    sh.live = txt.replace(/\s+/g, ' ').trim();
+    const el = document.getElementById('talkLive'); if (el) el.textContent = sh.live || '🎙️ Listening…';
+  };
+  r.onerror = e => { sh.srErr = e.error || 'error'; };
+  r.onend = async () => {
+    clearTimeout(sh.recTimer); sh.rec = null;
+    if (sh.cancel || S.sheet !== sh) return;
+    const txt = (sh.live || '').trim();
+    if (!txt) {
+      if (sh.srErr === 'not-allowed' || sh.srErr === 'service-not-allowed') { S.noSR = true; sh.error = 'Live speech-to-text is off on this phone. Tap Speak again — I will record your voice instead.'; }
+      else sh.error = 'I did not hear anything. Tap Speak again and say the food and grams.';
+      return renderSheet();
+    }
+    sh.heard = txt; sh.live = ''; sh.busy = true; sh.error = ''; renderSheet();
+    try { await foodFromText(sh, txt, 'voice'); } catch (e) { if (S.sheet === sh) { sh.busy = false; sh.error = e.message; renderSheet(); } }
+  };
+  try { r.start(); } catch (e) { S.noSR = true; sh.rec = null; throw fail('Could not start listening — tap Speak again.'); }
+  renderSheet();
+  sh.recTimer = setTimeout(() => { if (sh.rec) sh.rec.stop(); }, 60000);
+}
 async function talkRecord() {
   const sh = S.sheet;
+  try { speechSynthesis.cancel(); } catch (e) {}
+  const SR = speechRecClass();
+  if (SR && !S.noSR) return srStart(sh, SR);
+  sh.live = ''; sh.heard = ''; sh.error = ''; sh.recAudio = true;
   if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia || !window.MediaRecorder) throw fail('Voice is not supported here — please type it below.');
   if (!S.session.geminiKey) throw fail('Voice needs your free Gemini key (add it on the 📷 Photo screen) — or type it below.');
   try { speechSynthesis.cancel(); } catch (e) {}
@@ -2330,6 +2367,7 @@ Reply with ONLY JSON: {"heard":"what they said, in simple English","notEaten":fa
   if (S.sheet !== sh) return;
   const m = text.match(/\{[\s\S]*\}/); if (!m) throw fail('Could not understand that — please try again or type it.');
   const out = JSON.parse(m[0]), heard = String(out.heard || '').trim();
+  if (heard && !inp.text) return foodFromText(Object.assign(sh, { heard }), heard, 'voice', out);
   const items = (out.items || []).filter(x => x && x.name && Number(x.grams) > 0).map(x => Object.assign(mkItem({ ...x, source: 'voice' }), { type: x.type || '' }));
   if (!items.length) {
     sh.busy = false;
@@ -2339,6 +2377,103 @@ Reply with ONLY JSON: {"heard":"what they said, in simple English","notEaten":fa
   S.sheet = { kind: 'food', slot, mode: 'voice', items, photos: [], busy: false, query: '', note: heard ? 'I heard: “' + heard + '”. Check the grams and tap save.' : 'Check the grams and tap save.', error: '', cook: 'home' };
   applyCook(S.sheet); renderSheet();
   sayIt(`Got it. ${items.map(i => i.name).join(', ')}. Please check and tap save.`);
+}
+const FOOD_ALIAS = { egg: 'Boiled egg', eggs: 'Boiled egg', rice: 'White rice (cooked)', 'white rice': 'White rice (cooked)', tea: 'Tea with milk (no sugar)',
+  coffee: 'Filter coffee (milk, no sugar)', milk: 'Milk (toned)', chapati: 'Chapati / roti', chapathi: 'Chapati / roti', chappathi: 'Chapati / roti', roti: 'Chapati / roti',
+  dosa: 'Plain dosa', dosai: 'Plain dosa', curd: 'Curd / yogurt', thayir: 'Curd / yogurt', dal: 'Dal / paruppu (cooked)', paruppu: 'Dal / paruppu (cooked)',
+  poori: 'Poori', puri: 'Poori', sambhar: 'Sambar', idly: 'Idli', idle: 'Idli', iddli: 'Idli', chicken: 'Chicken curry', fish: 'Fish curry', mutton: 'Mutton curry',
+  upma: 'Rava upma', pongal: 'Ven pongal', parotta: 'Parotta', porotta: 'Parotta', vada: 'Medu vada', vadai: 'Medu vada', biryani: 'Chicken biryani', sugar: 'Sugar',
+  whey: 'Whey protein', 'whey protein': 'Whey protein', apple: 'Apple', banana: 'Banana', oats: 'Oats porridge with milk', buttermilk: 'Buttermilk', moor: 'Buttermilk' };
+const NUM_WORDS = { half: 0.5, one: 1, two: 2, three: 3, four: 4, five: 5, six: 6, seven: 7, eight: 8, nine: 9, ten: 10, eleven: 11, twelve: 12, a: 1, an: 1 };
+function lev(a, b) { const m = a.length, n = b.length; if (!m || !n) return m || n; let p = Array.from({ length: n + 1 }, (_, j) => j);
+  for (let i = 1; i <= m; i++) { const c = [i]; for (let j = 1; j <= n; j++) c[j] = Math.min(p[j] + 1, c[j - 1] + 1, p[j - 1] + (a[i - 1] === b[j - 1] ? 0 : 1)); p = c; } return p[n]; }
+function normFood(s) { return String(s || '').toLowerCase().replace(/[^a-z\s]/g, ' ').replace(/\s+/g, ' ').trim(); }
+function matchFood(name) {
+  const q = normFood(name); if (!q) return null;
+  if (FOOD_ALIAS[q]) return FOOD.find(f => f.n === FOOD_ALIAS[q]) || null;
+  const exact = FOOD.find(f => normFood(f.n) === q); if (exact) return exact;
+  const qt = q.split(' ').filter(w => w.length > 1 && !['and', 'with', 'of', 'the', 'gram', 'grams'].includes(w)); if (!qt.length) return null;
+  const sim = (a, b) => a === b ? 1 : (b.startsWith(a) && a.length >= 3) ? 0.9 : (a.startsWith(b) && b.length >= 3) ? 0.85
+    : (a.length >= 4 && lev(a, b) <= 1) ? 0.8 : (a.length >= 6 && lev(a, b) <= 2) ? 0.65 : 0;
+  let best = null, bs = 0;
+  for (const f of FOOD) {
+    const all = normFood(f.n).split(' '), neg = new Set(), ft = [];
+    all.forEach((w, i) => { if (all[i - 1] === 'no') neg.add(w); else if (w.length > 1 && !['no', 'with', 'and', 'of'].includes(w)) ft.push(w); });
+    let tot = 0; const used = new Set();
+    for (const a of qt) { if (neg.has(a)) { tot -= 1; continue; } let mx = 0, mi = -1; ft.forEach((b, i) => { const v = sim(a, b); if (v > mx) { mx = v; mi = i; } }); tot += mx; if (mi >= 0 && mx > 0) used.add(mi); }
+    let sc = tot / qt.length - 0.06 * (ft.length - used.size);
+    if (sc > bs + 1e-9 || (Math.abs(sc - bs) < 1e-9 && best && f.n.length < best.n.length)) { bs = sc; best = f; }
+  }
+  return bs >= 0.6 ? best : null;
+}
+function parseFoodText(text) {
+  const found = [], unknown = [];
+  String(text || '').split(/,|;|\n|\+|&|\band\b|\bum\b|\bmatrum\b/i).map(x => x.trim()).filter(Boolean).forEach(seg => {
+    let s = ' ' + seg.toLowerCase().replace(/(\d)\s*(?=[a-z])/g, '$1 ') + ' ';
+    s = s.replace(/\b(half|one|two|three|four|five|six|seven|eight|nine|ten|eleven|twelve)\b/g, w => ' ' + NUM_WORDS[w] + ' ');
+    const m = /(\d+(?:\.\d+)?)\s*(kg|kilo|grams?|gms?|g|ml|litres?|liters?|l|pcs?|pieces?|piece|nos?|numbers?|cups?|bowls?|glass(?:es)?|scoops?)?(?![a-z])/.exec(s);
+    let num = null, unit = '', before = false;
+    if (m) { num = Number(m[1]); unit = m[2] || ''; before = !s.slice(0, m.index).replace(/[^a-z]/g, ''); s = s.slice(0, m.index) + ' ' + s.slice(m.index + m[0].length); }
+    const name = s.replace(/\b(of|gram|grams|g|gm|i|ate|had|eat|eaten|saapten|sapten|for|my|today)\b/g, ' ').replace(/\s+/g, ' ').trim();
+    if (!name) return;
+    const f = matchFood(name);
+    let grams = null;
+    if (num != null) {
+      if (/^(kg|kilo)$/.test(unit)) grams = num * 1000;
+      else if (/^(g|gm|gms|gram|grams|ml)$/.test(unit)) grams = num;
+      else if (/^(l|litre|litres|liter|liters)$/.test(unit)) grams = num * 1000;
+      else if (unit) grams = f ? num * f.s : null;                                   // pieces / cups / bowls → servings
+      else grams = (before && num <= 20) || num < 25 ? (f ? num * f.s : null) : num;  // "2 idli" = count, "idli 200" = grams
+    }
+    if (f) found.push({ seg: seg.trim(), f, grams: grams || f.s });
+    else unknown.push({ seg: seg.trim(), name, grams: grams || (unit ? null : num) });
+  });
+  return { found, unknown };
+}
+async function aiFoods(slot, text) {
+  const prompt = `The person told what they ate for ${slotLabel(slot)}. They live in Chennai, India and may use English, Tamil or Tanglish words.
+Their words: "${text}"
+List every food with its weight in grams as they said it. If they gave a count but no grams, use a typical weight (idli 40 g each, dosa 80 g, chapati 40 g, egg 50 g, poori 30 g, 1 cup rice 150 g, 1 bowl sambar/curry 150 g, 1 glass 200 ml). Give nutrition for that weight.
+For tea or coffee give the drink without sugar, and a separate item "Sugar (in tea / coffee)" if they took sugar.
+If they say they have not eaten yet, set "notEaten": true and give no items.
+Reply with ONLY JSON: {"notEaten":false,"items":[{"name":"Idli","type":"meal","grams":120,"kcal":175,"protein":5.4,"carbs":36,"fat":0.5,"fiber":1.8,"sugar":0.6}]}`;
+  const t = await askVision([], prompt), m = t.match(/\{[\s\S]*\}/);
+  if (!m) throw fail('Could not understand that — please try again.');
+  const o = JSON.parse(m[0]); o.items = (o.items || []).filter(x => x && x.name && Number(x.grams) > 0); return o;
+}
+async function foodFromText(sh, text, source, aiOut) {
+  const slot = (($('#talkSlot') || $('#typeSlot') || {}).value) || sh.slot;
+  const { found, unknown } = parseFoodText(text);
+  const items = [], lines = [];
+  found.forEach(x => { const g = x.grams / 100, f = x.f; items.push(mkItem({ name: f.n, grams: x.grams, kcal: f.k * g, protein: f.p * g, carbs: f.c * g, fat: f.f * g, source })); lines.push(`${x.seg} → ${f.n} · ${r0(x.grams)} g`); });
+  if (unknown.length) {
+    const hasKey = S.session.geminiKey || S.session.apiKey;
+    let out = null;
+    if (aiOut && !found.length) out = aiOut;                                  // voice already understood by Gemini
+    else if (hasKey) out = await aiFoods(slot, unknown.map(u => u.seg).join(', '));
+    if (S.sheet !== sh) return;
+    if (out) {
+      if (!items.length && out.notEaten) { sh.busy = false; sh.error = `Okay. Please take your ${slotLabel(slot).toLowerCase()} on time, and tell me after you eat.`; renderSheet(); sayIt(sh.error); return; }
+      (out.items || []).filter(x => x && x.name && Number(x.grams) > 0).forEach(x => { items.push(Object.assign(mkItem({ ...x, source }), { type: x.type || '' })); lines.push(`${x.name} · ${r0(x.grams)} g (estimated)`); });
+    } else unknown.forEach(u => { items.push(mkItem({ name: u.name.replace(/\b\w/g, c => c.toUpperCase()), grams: u.grams || 100, kcal: 0, source: 'manual' })); lines.push(`${u.seg} → not in the food list — please type its kcal`); });
+  }
+  if (!items.length) throw fail(`I couldn't find a food in “${text}”. Try like: idli 200, sambar 50.`);
+  S.sheet = { kind: 'food', slot, mode: 'voice', items, photos: [], busy: false, query: '', note: (source === 'voice' ? 'You said: “' : 'You typed: “') + text + '”', lines, error: '', cook: 'home' };
+  applyCook(S.sheet); renderSheet();
+}
+function openTypeFood(slot) {
+  if (!SLOTS.some(s => s.id === slot)) slot = slotByTime();
+  S.sheet = { kind: 'typefood', slot, text: '', busy: false, error: '' }; renderSheet();
+  setTimeout(() => { const t = $('#typeText'); if (t) t.focus(); }, 30);
+}
+function sheetTypeFood() {
+  const sh = S.sheet;
+  return `<div class="sheet-h"><h2>⌨️ Type what you ate</h2><button class="x" data-act="closeSheet">✕</button></div>
+    <div class="field"><label>Meal<select id="typeSlot">${SLOTS.map(s => `<option value="${s.id}" ${s.id === sh.slot ? 'selected' : ''}>${s.icon} ${s.label}</option>`).join('')}</select></label></div>
+    <div class="field"><label>Food and grams<textarea id="typeText" rows="3" autocomplete="off" autocapitalize="none" placeholder="idli 200, sambar 50" style="font-size:18px;line-height:1.4">${esc(sh.text || '')}</textarea></label></div>
+    <p class="explain" style="margin:0 0 12px">Put a comma between foods and the grams after the name — e.g. <b>idli 200, sambar 50</b>. For pieces write <b>2 idli</b> or <b>chapati 3 pcs</b>.</p>
+    ${sh.error ? `<div class="note bad" style="margin-bottom:10px">${esc(sh.error)}</div>` : ''}
+    ${sh.busy ? `<div class="center" style="min-height:70px"><div class="spinner"></div><p class="muted">Checking the foods…</p></div>` : `<button class="btn primary block" style="min-height:56px;font-size:18px" data-act="typeGo">Check &amp; add →</button>`}`;
 }
 function quickCard(t) {
   const d = S.data.days[t] || {}, st = dayStats(t), ws = d.workouts || [];
@@ -2351,6 +2486,7 @@ function quickCard(t) {
           <label class="btn primary">📸 Photo<input type="file" accept="image/*" capture="environment" class="food-check-input" aria-label="Take photo to check food"></label>
           <label class="btn">🖼️ Gallery<input type="file" accept="image/*" multiple class="food-check-input" aria-label="Choose 1 or 2 photos to check food"></label>
           <button class="btn" data-act="speakNow">🎤 Speak</button>
+          <button class="btn" data-act="typeNow">⌨️ Type</button>
           <button class="btn" data-act="openFoodList">📋 Food list</button>
           <button class="btn" data-act="openWheyQ">💪 Whey</button>
           <button class="btn" data-act="openEggQ">🥚 Egg</button>
@@ -2362,6 +2498,7 @@ function quickCard(t) {
           <button class="btn" data-act="openSnackQ" data-w="almond">🌰 Almonds</button>
           <button class="btn" data-act="openSnackQ" data-w="ellu">🟤 Sesame balls</button>
           <button class="btn" data-act="openSnackQ" data-w="fig">🟣 Dry fig</button>
+          <button class="btn" data-act="openSnackQ" data-w="electro">💧 Electrolytes</button>
         </div>
       </div>
       <div class="q-sec">
@@ -2511,8 +2648,17 @@ const SNACKQ = {
     hi: m => `${r0(m.magnesium)} mg magnesium \u00b7 ${r1(m.fiber)} g fibre`,
     note: 'One almond is about 1.5 g, so 10 make a 15 g handful. No cholesterol, and only about a twelfth of the fat is saturated \u2014 the rest is the kind that helps your LDL.',
   },
+  electro: {
+    icon: '\u{1F4A7}', title: 'Electrolytes', unit: ['tablet', 'tablets'], step: 1, max: 4, n0: 1,
+    gKey: 'electroG', gDef: 4, gLabel: 'Grams in one tablet', slot: 'snacks',
+    // per 100 g, from the pack label: 1 tablet (4 g) = 12.16 kcal, 2.97 g carbs (0.72 g sugar), 180 mg sodium, 77 mg potassium, 20 mg magnesium, 12.5 mg calcium, 37.5 mg vitamin C, 1 mcg B12
+    per100: { k: 304, p: 0.75, c: 74.25, f: 0.5 },
+    micro100: { fiber: 0, sugar: 18, calcium: 312.5, iron: 0, magnesium: 500, potassium: 1925, sodium: 4500, zinc: 0, vitA: 0, vitC: 937.5, vitB12: 25, folate: 0, chol: 0, satfat: 0, transfat: 0 },
+    hi: m => `${r0(m.sodium)} mg sodium \u00b7 ${r0(m.vitC)} mg vitamin C`,
+    note: 'Effervescent tablet (lime & lemon) in a glass of water. One tablet: 12 kcal, 180 mg sodium, 77 mg potassium, 20 mg magnesium, 37.5 mg vitamin C. Good after a sweaty workout; the sodium counts toward your daily salt.',
+  },
   fig: {
-    icon: '\u{1F7E3}', title: 'Dry fig (athi pazham)', unit: ['fig', 'figs'], step: 1, max: 15, n0: 5,
+    icon: '\u{1F7E3}', title: 'Dry fig', unit: ['fig', 'figs'], step: 1, max: 15, n0: 5,
     gKey: 'figG', gDef: 8.5, gLabel: 'Grams in one dry fig', slot: 'seeds',
     per100: { k: 249, p: 3.3, c: 63.9, f: 0.9 },
     micro100: { fiber: 9.8, sugar: 47.9, calcium: 162, iron: 2, magnesium: 68, potassium: 680, sodium: 10, zinc: 0.55, vitA: 0, vitC: 1.2, vitB12: 0, folate: 9, chol: 0, satfat: 0.14, transfat: 0 },
@@ -2912,7 +3058,7 @@ function viewProfile() {
       <button class="btn blue block" data-act="exportXlsx">⬇️ Export to Excel</button>
     </div>
     <button class="btn danger block" data-act="logout" style="margin-top:6px">Log out</button>
-    <p class="explain" style="text-align:center;margin-top:14px">Minimal Health Tracker v136 · estimates only, not medical advice</p>
+    <p class="explain" style="text-align:center;margin-top:14px">Minimal Health Tracker v137 · estimates only, not medical advice</p>
   </main>`;
 }
 
@@ -3010,7 +3156,7 @@ function slotLabel(id) { return (SLOTS.find(s => s.id === id) || {}).label || id
 function sheetFood() {
   const sh = S.sheet;
   const edit = sh.mode === 'edit';
-  const modes = [['photo', '📷 Photo'], ['speak', '🎤 Speak'], ['search', '🔎 List'], ['manual', '✏️ Manual']];
+  const modes = [['photo', '📷 Photo'], ['speak', '🎤 Speak'], ['type', '⌨️ Type'], ['search', '🔎 List'], ['manual', '✏️ Manual']];
   let body = '';
   if (sh.mode === 'photo') {
     const ph = sh.photos || [];
@@ -3027,7 +3173,7 @@ function sheetFood() {
     body = `${foodCatChips(sh)}<div class="field"><input id="foodQuery" placeholder="Search ${sh.cat && sh.cat !== 'all' ? slotLabel(sh.cat).toLowerCase() + ' foods' : 'all foods'}…" value="${esc(sh.query || '')}" autocomplete="off"></div>
       <div id="searchResults" style="max-height:${sh.check ? '46vh' : '38vh'};overflow:auto;margin-bottom:12px">${searchResults(sh.query || '')}</div>`;
   } else if (sh.mode === 'voice') {
-    body = sh.note ? `<div class="note info" style="margin-bottom:10px">🎤 ${esc(sh.note)}</div>` : '';
+    body = sh.note ? `<div class="note info" style="margin-bottom:10px">${/^You typed/.test(sh.note) ? '⌨️' : '🎤'} ${esc(sh.note)}${(sh.lines || []).length ? `<div style="margin-top:6px;font-size:14px;line-height:1.5">${sh.lines.map(l => '• ' + esc(l)).join('<br>')}</div>` : ''}<div style="margin-top:6px;font-size:13px">Check the grams below and tap save.</div></div>` : '';
   } else if (sh.mode === 'manual') {
     body = !sh.items.length ? '' : '';
   }
@@ -3413,7 +3559,7 @@ function onWorkoutInput(t) {
 function renderSheet() {
   const root = $('#sheet-root');
   if (!S.sheet) { root.innerHTML = ''; document.body.classList.remove('lock'); return; }
-  const inner = S.sheet.kind === 'food' ? sheetFood() : S.sheet.kind === 'confirm' ? sheetConfirm() : S.sheet.kind === 'scale' ? sheetScale() : S.sheet.kind === 'weight' ? sheetAddWeight() : S.sheet.kind === 'steps' ? sheetSteps() : S.sheet.kind === 'wheyq' ? sheetWheyQ() : S.sheet.kind === 'sprouts' ? sheetSprouts() : S.sheet.kind === 'snackq' ? sheetSnackQ() : S.sheet.kind === 'medPick' ? sheetMedPick() : S.sheet.kind === 'cal' ? sheetCal() : S.sheet.kind === 'reading' ? sheetReading() : S.sheet.kind === 'talk' ? sheetTalk() : sheetWorkout();
+  const inner = S.sheet.kind === 'food' ? sheetFood() : S.sheet.kind === 'confirm' ? sheetConfirm() : S.sheet.kind === 'scale' ? sheetScale() : S.sheet.kind === 'weight' ? sheetAddWeight() : S.sheet.kind === 'steps' ? sheetSteps() : S.sheet.kind === 'wheyq' ? sheetWheyQ() : S.sheet.kind === 'sprouts' ? sheetSprouts() : S.sheet.kind === 'snackq' ? sheetSnackQ() : S.sheet.kind === 'medPick' ? sheetMedPick() : S.sheet.kind === 'cal' ? sheetCal() : S.sheet.kind === 'reading' ? sheetReading() : S.sheet.kind === 'talk' ? sheetTalk() : S.sheet.kind === 'typefood' ? sheetTypeFood() : sheetWorkout();
   const existing = $('.sheet', root);
   if (existing) { const st = existing.scrollTop; existing.innerHTML = '<div class="grab"></div>' + inner; existing.scrollTop = st; }
   else root.innerHTML = `<div class="sheet-backdrop" data-act="closeSheet" data-backdrop="1"><div class="sheet"><div class="grab"></div>${inner}</div></div>`;
@@ -3525,6 +3671,7 @@ const ACT = {
   foodMode(el) {
     const sh = S.sheet; if (sh.busy) return;
     if (el.dataset.v === 'speak') return startSpeak(sh.slot);
+    if (el.dataset.v === 'type') return openTypeFood(sh.slot);
     sh.mode = el.dataset.v;
     if (sh.mode === 'manual' && !sh.items.length) sh.items.push(mkItem({ name: '', grams: 100, kcal: 0 }));
     renderSheet();
@@ -3886,18 +4033,18 @@ const ACT = {
     toast('Reminder times saved ✓', 'good'); render();
   },
   speakNow(el) { return startSpeak(el.dataset.slot || slotByTime()); },
+  typeNow(el) { openTypeFood(el.dataset.slot || slotByTime()); },
+  async typeGo() {
+    const sh = S.sheet, t = (($('#typeText') || {}).value || '').trim(); sh.text = t;
+    if (!t) throw fail('Type the food and grams, e.g. idli 200, sambar 50.');
+    sh.busy = true; sh.error = ''; renderSheet();
+    try { await foodFromText(sh, t, 'typed'); } catch (e) { if (S.sheet === sh) { sh.busy = false; sh.error = e.message; renderSheet(); } }
+  },
   talkOpen(el) { openTalk(el.dataset.slot || mainSlotNow()); },
   talkSay() { sayIt(talkMsg(S.sheet.slot)); },
   talkSlot(el) { S.sheet.slot = el.value || el.dataset.v; },
   talkRec() { return talkRecord(); },
   talkStop() { const sh = S.sheet; if (sh && sh.rec) sh.rec.stop(); },
-  async talkSend() {
-    const sh = S.sheet, t = (($('#talkText') || {}).value || '').trim();
-    if (!t) throw fail('Type what you ate, e.g. 2 chapati 80 g, chicken curry 150 g.');
-    if (!S.session.geminiKey && !S.session.apiKey) throw fail('Add your free Gemini key on the Photo screen first.');
-    sh.busy = true; sh.error = ''; sh.typed = t; renderSheet();
-    try { await talkProcess(sh, { text: t }); } catch (e) { if (S.sheet === sh) { sh.busy = false; sh.error = e.message; renderSheet(); } }
-  },
   changeKey() { S.sheet.changeKey = true; renderSheet(); },
   async saveGemini(el) {
     const k = (($('#gemKeyIn') || {}).value || '').trim(), s = S.session;
@@ -4020,7 +4167,7 @@ document.addEventListener('input', (e) => {
   if (t.id === 'foodQuery') { S.sheet.query = t.value; const r = $('#searchResults'); if (r) r.innerHTML = searchResults(t.value); }
 });
 document.addEventListener('change', async (e) => {
-  if (e.target && e.target.id === 'talkSlot' && S.sheet) { S.sheet.slot = e.target.value; return; }
+  if (e.target && (e.target.id === 'talkSlot' || e.target.id === 'typeSlot') && S.sheet) { S.sheet.slot = e.target.value; return; }
   const t = e.target;
   if (t.classList.contains('scale-photo-input') && t.files && t.files[0]) {
     const files = [...t.files].slice(0, 2), slot = Number(t.dataset.slot || 0); t.value = '';
@@ -4164,7 +4311,7 @@ async function boot() {
 boot();
 
 // expose for testing
-window.__fittrack = { askGeminiT: askGemini, reminderCard, sheetTalk, openTalk, talkProcess, searchResults, sheetFood, FOOD, sheetMedPick, viewAuth, viewVerify, viewAdmin, sheetCal, dateBar, sheetReading, healthCard, suggestSlot, sheetWheyQ, sheetSnackQ, snackTotals, migrateWheyMeals, wheyDefaults, sheetSprouts, sproutDefaults, sproutTotals, sheetSteps, quickCard, sheetAddWeight, calcCard, openScaleSheet, analyseScaleRun, sheetScale, maybeHashWeight, sheetConfirm, viewBurn, addPhotosToSheet, openWorkoutSheet, sheetWorkout, runAnalysis, sheetFood, viewHome, viewFood, viewToday, viewMeds, wheyCard, ACT, profileForm, startWorkoutPhoto, sheetWorkout, FOOD, nutritionCard, needsCard, todayTable, viewSuggest, viewHome, viewFood, viewBurn, sheetWorkout, bmiOf, bmiCat, fatPct, bmr, treadKcal, bikeKcal, wkSuggest, S, plan, dayStats };
+window.__fittrack = { parseFoodText, matchFood, foodFromText, sheetTypeFood, askGeminiT: askGemini, reminderCard, sheetTalk, openTalk, talkProcess, searchResults, sheetFood, FOOD, sheetMedPick, viewAuth, viewVerify, viewAdmin, sheetCal, dateBar, sheetReading, healthCard, suggestSlot, sheetWheyQ, sheetSnackQ, snackTotals, migrateWheyMeals, wheyDefaults, sheetSprouts, sproutDefaults, sproutTotals, sheetSteps, quickCard, sheetAddWeight, calcCard, openScaleSheet, analyseScaleRun, sheetScale, maybeHashWeight, sheetConfirm, viewBurn, addPhotosToSheet, openWorkoutSheet, sheetWorkout, runAnalysis, sheetFood, viewHome, viewFood, viewToday, viewMeds, wheyCard, ACT, profileForm, startWorkoutPhoto, sheetWorkout, FOOD, nutritionCard, needsCard, todayTable, viewSuggest, viewHome, viewFood, viewBurn, sheetWorkout, bmiOf, bmiCat, fatPct, bmr, treadKcal, bikeKcal, wkSuggest, S, plan, dayStats };
 })();
 </script>
 </body>
